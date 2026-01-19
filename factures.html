@@ -643,6 +643,46 @@
             <div id="invoice-list" class="invoice-list"></div>
         </div>
     </div>
+<div id="successModal" class="modal">
+  <div class="modal-content">
+    <p>✅ Facture sauvegardée avec succès</p>
+    <button onclick="closeModal()">OK</button>
+  </div>
+</div>
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modal-content {
+  background: #1f2937;
+  color: white;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  min-width: 250px;
+}
+
+.modal button {
+  margin-top: 15px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  background: #3b82f6;
+  color: white;
+}
+function showSuccess() {
+  document.getElementById("successModal").style.display = "flex";
+}
+
+function closeModal() {
+  document.getElementById("successModal").style.display = "none";
+}
 
     <script>
         let logoDataUrl = null;
