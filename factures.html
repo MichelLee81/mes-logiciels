@@ -642,7 +642,12 @@
             <h2>📂 Factures Sauvegardées</h2>
             <div id="invoice-list" class="invoice-list"></div>
         </div>
-         // Générer le manifeste PWA dynamiquement pour le mode plein écran
+    </div>
+
+    <script>
+        let logoDataUrl = null;
+
+        // Générer le manifeste PWA dynamiquement pour le mode plein écran
         const manifest = {
             name: "Générateur de Factures Pro",
             short_name: "Factures",
