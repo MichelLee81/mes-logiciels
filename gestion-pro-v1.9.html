@@ -1,0 +1,2745 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Gestion Pro">
+    <meta name="theme-color" content="#667eea">
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIkdlc3Rpb24gUHJvIiwKICAic2hvcnRfbmFtZSI6ICJHZXN0aW9uIFBybyIsCiAgImRlc2NyaXB0aW9uIjogIlNvbHV0aW9uIGNvbXBsw6h0ZSBwb3VyIGF1dG8tZW50cmVwcmVuZXVycyIsCiAgInN0YXJ0X3VybCI6ICIuLyIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiI2ZmZmZmZiIsCiAgInRoZW1lX2NvbG9yIjogIiM2NjdlZWEiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjJaeUI0Yld4dWN6MGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TUM5emRtY2lJSFpwWlhkQ2IzZzlJakFnTUNBeE1qZ2dNVEk0SWo0OGNtVmpkQ0IzYVdSMGFEMGlNVEk0SWlCb1pXbG5hSFE5SWpFeU9DSWdabWxzYkQwaUl6WTJOMlZsWVNJdlBqeDBaWGgwSUhnOUlqWTBJaUI1UFNJMk5DSWdabTl1ZEMxemFYcGxQU0kwT0NJZ1ptbHNiRDBpSTJabVptWm1aaUkrOERBd1BDOTBaWGgwUGp3dmMzWm5QZz09IiwKICAgICAgInNpemVzIjogIjEyOHgxMjgiLAogICAgICAidHlwZSI6ICJpbWFnZS9zdmcreG1sIgogICAgfSwKICAgIHsKICAgICAgInNyYyI6ICJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjJaeUI0Yld4dWN6MGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TUM5emRtY2lJSFpwWlhkQ2IzZzlJakFnTUNBeE1qZ2dNVEk0SWo0OGNtVmpkQ0IzYVdSMGFEMGlNVEk0SWlCb1pXbG5hSFE5SWpFeU9DSWdabWxzYkQwaUl6WTJOMlZsWVNJdlBqeDBaWGgwSUhnOUlqWTBJaUI1UFNJMk5DSWdabTl1ZEMxemFYcGxQU0kwT0NJZ1ptbHNiRDBpSTJabVptWm1aaUkrOERBd1BDOTBaWGgwUGp3dmMzWm5QZz09IiwKICAgICAgInNpemVzIjogIjUxMng1MTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9zdmcreG1sIgogICAgfQogIF0KfQ==">
+    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjggMTI4Ij48cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgZmlsbD0iIzY2N2VlYSIvPjx0ZXh0IHg9IjY0IiB5PSI2NCIgZm9udC1zaXplPSI0OCIgZmlsbD0iI2ZmZmZmZiI+8J+SvDwvdGV4dD48L3N2Zz4=">
+    <title>Gestion Pro v2.0 - Clients</title>
+    
+    <!-- Firebase + jsPDF + Chart.js -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 5px;
+        }
+        .container { max-width: 500px; margin: 30px auto; }
+        .dashboard { max-width: 1200px; margin: 0 auto; }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            margin-bottom: 15px;
+        }
+        .logo { text-align: center; font-size: 3em; margin-bottom: 10px; }
+        h1 { text-align: center; color: #4a5568; margin-bottom: 5px; font-size: 1.8em; }
+        h2 { color: #4a5568; margin-bottom: 15px; border-bottom: 3px solid #667eea; padding-bottom: 10px; font-size: 1.3em; }
+        h3 { color: #4a5568; margin: 20px 0 10px 0; font-size: 1.1em; }
+        .subtitle { text-align: center; color: #718096; font-size: 0.9em; margin-bottom: 20px; }
+        .version-badge {
+            display: block; text-align: center; background: #667eea; color: white;
+            padding: 4px 12px; border-radius: 20px; font-size: 0.75em;
+            margin: 0 auto 20px auto; width: fit-content;
+        }
+        .form-group { margin-bottom: 15px; }
+        .form-group label {
+            display: block; margin-bottom: 5px; color: #4a5568;
+            font-weight: 600; font-size: 13px;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 10px; border: 2px solid #e2e8f0;
+            border-radius: 8px; font-size: 14px; transition: border-color 0.3s;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none; border-color: #667eea;
+        }
+        .btn {
+            padding: 12px 20px; border: none; border-radius: 8px;
+            font-size: 14px; font-weight: 600; cursor: pointer;
+            transition: all 0.3s; margin-right: 8px; margin-bottom: 8px;
+        }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-primary:hover { background: #5a67d8; transform: translateY(-2px); }
+        .btn-success { background: #48bb78; color: white; }
+        .btn-danger { background: #f56565; color: white; }
+        .btn-secondary { background: #e2e8f0; color: #4a5568; }
+        .alert {
+            padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 14px;
+        }
+        .alert-error { background: #fed7d7; color: #742a2a; }
+        .alert-success { background: #c6f6d5; color: #22543d; }
+        .alert-info { background: #bee3f8; color: #2c5282; }
+        .hidden { display: none !important; }
+        .header {
+            background: white; border-radius: 12px; padding: 15px 20px;
+            margin-bottom: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .user-info strong { color: #4a5568; }
+        .user-email { font-size: 0.85em; color: #718096; }
+        .btn-logout {
+            padding: 8px 15px; background: #f56565; color: white;
+            border: none; border-radius: 6px; cursor: pointer; font-size: 13px;
+        }
+        .tabs {
+            display: flex; gap: 5px; margin-bottom: 15px;
+            background: rgba(255,255,255,0.15); padding: 8px; border-radius: 12px;
+            overflow-x: auto;
+        }
+        .tab {
+            flex: 1; min-width: 80px; padding: 10px; background: rgba(255,255,255,0.25);
+            color: white; border: none; border-radius: 8px; cursor: pointer;
+            font-weight: 600; font-size: 13px; transition: all 0.3s; white-space: nowrap;
+        }
+        .tab.active { background: white; color: #667eea; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .table thead { background: #667eea; color: white; }
+        .table th, .table td {
+            padding: 10px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 13px;
+        }
+        .table tbody tr:hover { background: #f7fafc; }
+        .empty-state { text-align: center; padding: 40px 20px; color: #a0aec0; }
+        .empty-icon { font-size: 3em; margin-bottom: 10px; }
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 9999; align-items: center;
+            justify-content: center; padding: 20px; overflow-y: auto;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: white; border-radius: 12px; padding: 25px;
+            max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto;
+        }
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+        }
+        .modal-header h3 { color: #4a5568; }
+        .modal-close {
+            background: none; border: none; font-size: 1.5em;
+            cursor: pointer; color: #a0aec0;
+        }
+        .text-center { text-align: center; margin-top: 15px; font-size: 14px; color: #718096; }
+        .link { 
+            color: #667eea; 
+            cursor: pointer; 
+            text-decoration: underline;
+            font-weight: 600;
+            padding: 5px 8px;
+            display: inline-block;
+            transition: all 0.3s;
+        }
+        .link:hover {
+            color: #5a67d8;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 4px;
+        }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        
+        /* Signature Canvas */
+        .signature-box {
+            border: 2px dashed #e2e8f0; border-radius: 8px;
+            padding: 10px; background: #f7fafc; margin-top: 10px;
+            position: relative;
+        }
+        #signature-canvas {
+            border: 1px solid #cbd5e0; background: white;
+            border-radius: 5px; cursor: crosshair; display: block;
+            width: 100%; max-width: 400px; margin: 0 auto;
+        }
+        .signature-placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #cbd5e0;
+            font-size: 16px;
+            pointer-events: none;
+            z-index: 1;
+            font-style: italic;
+        }
+        
+        /* Notification personnalisée */
+        .custom-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            animation: slideIn 0.3s ease-out;
+            min-width: 250px;
+            max-width: 400px;
+        }
+        .custom-notification.success {
+            border-left: 5px solid #48bb78;
+            color: #22543d;
+        }
+        .custom-notification.error {
+            border-left: 5px solid #f56565;
+            color: #742a2a;
+        }
+        .custom-notification.warning {
+            border-left: 5px solid #ed8936;
+            color: #7c2d12;
+        }
+        .custom-notification.info {
+            border-left: 5px solid #667eea;
+            color: #2c5282;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container { margin: 15px auto; }
+            .card { padding: 15px; }
+            .header { flex-direction: column; gap: 10px; text-align: center; }
+            .tabs { flex-wrap: wrap; }
+            .tab { font-size: 12px; padding: 8px; }
+            .btn { width: 100%; margin-right: 0; }
+            .grid-2 { grid-template-columns: 1fr; }
+            .table { font-size: 12px; }
+            .table th, .table td { padding: 8px 5px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- AUTH SCREEN -->
+    <div id="auth-screen" class="container">
+        <div class="card">
+            <div class="logo">💼</div>
+            <h1>Gestion Pro</h1>
+            <p class="subtitle">Solution complète pour auto-entrepreneurs</p>
+            <span class="version-badge">v2.0 - Gestion Clients ☁️</span>
+            <div id="alert-container"></div>
+
+            <div id="login-form">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="login-email" placeholder="votre@email.fr">
+                </div>
+                <div class="form-group">
+                    <label>Mot de passe</label>
+                    <input type="password" id="login-password" placeholder="••••••••">
+                </div>
+                <button class="btn btn-primary" style="width: 100%;" onclick="login()">🔐 Se connecter</button>
+                <div class="text-center" style="margin-top: 20px;">
+                    Pas de compte ? <a href="javascript:void(0)" class="link" onclick="showSignup()">Créer un compte</a>
+                </div>
+            </div>
+
+            <div id="signup-form" class="hidden">
+                <div class="form-group">
+                    <label>Nom entreprise</label>
+                    <input type="text" id="signup-company" placeholder="Mon Entreprise">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="signup-email" placeholder="votre@email.fr">
+                </div>
+                <div class="form-group">
+                    <label>Mot de passe (min 6 caractères)</label>
+                    <input type="password" id="signup-password" placeholder="••••••••">
+                </div>
+                <button class="btn btn-primary" style="width: 100%;" onclick="signup()">✅ Créer mon compte</button>
+                <div class="text-center" style="margin-top: 20px;">
+                    Déjà un compte ? <a href="javascript:void(0)" class="link" onclick="showLogin()">Se connecter</a>
+                </div>
+            </div>
+        </div>
+        <div class="alert alert-info">
+            <strong>☁️ Cloud Synchronisé</strong><br>
+            Vos données sont sauvegardées dans le cloud Firebase et synchronisées sur tous vos appareils !
+        </div>
+    </div>
+
+    <!-- APP SCREEN -->
+    <div id="app-screen" class="hidden">
+        <div class="dashboard">
+            <div class="header">
+                <div class="user-info">
+                    <strong id="user-company">Mon Entreprise</strong>
+                    <div class="user-email" id="user-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e58088848c89a5809d8488958980cb868a88">[email&#160;protected]</a></div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-logout" onclick="showFirebaseGuide()" style="background: #48bb78;">☁️ Cloud Activé ✓</button>
+                    <button class="btn-logout" onclick="logout()">🚪 Déconnexion</button>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('catalogue')">📦 Catalogue</button>
+                <button class="tab" onclick="switchTab('clients')">👥 Clients</button>
+                <button class="tab" onclick="switchTab('devis')">📋 Devis</button>
+                <button class="tab" onclick="switchTab('factures')">📄 Factures</button>
+                <button class="tab" onclick="switchTab('compta')">💰 Compta</button>
+                <button class="tab" onclick="switchTab('parametres')">⚙️ Paramètres</button>
+            </div>
+
+            <!-- CATALOGUE (identique v1.6) -->
+            <div id="tab-catalogue" class="tab-content active">
+                <div class="card">
+                    <h2>📦 Mon Catalogue</h2>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label>🔍 Rechercher un article</label>
+                            <input type="text" id="catalogue-search" placeholder="Tapez pour rechercher..." oninput="filterCatalogue()" style="font-size: 15px;">
+                        </div>
+                        <button class="btn btn-success" onclick="openArticleModal()">➕ Ajouter un article</button>
+                        <button class="btn btn-secondary" onclick="openVendeurModal()">👤 Mes informations</button>
+                    </div>
+                    
+                    <div id="catalogue-list"></div>
+                </div>
+            </div>
+
+            <!-- CLIENTS -->
+            <div id="tab-clients" class="tab-content">
+                <div class="card">
+                    <h2>👥 Mes Clients</h2>
+                    
+                    <div style="margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn btn-success" onclick="openClientModal()">➕ Ajouter un client</button>
+                        <button class="btn btn-secondary" onclick="syncClientsFromDocuments()">🔄 Synchroniser depuis devis/factures</button>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>🔍 Rechercher un client</label>
+                        <input type="text" id="clients-search" placeholder="Nom, email, téléphone..." oninput="filterClients()" style="font-size: 15px;">
+                    </div>
+                    
+                    <div id="clients-list"></div>
+                </div>
+            </div>
+
+            <!-- DEVIS (identique v1.6) -->
+            <div id="tab-devis" class="tab-content">
+                <div class="card">
+                    <h2>📋 Créer un Devis</h2>
+                    <h3>Informations Client</h3>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Nom du client *</label>
+                            <input type="text" id="devis-client-nom" placeholder="Nom">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="devis-client-email" placeholder="email@client.fr">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Téléphone</label>
+                        <input type="tel" id="devis-client-tel" placeholder="06 12 34 56 78">
+                    </div>
+                    <h3>Ajouter des articles</h3>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn btn-primary" onclick="openCatalogueSelect('devis')">📦 Depuis le catalogue</button>
+                        <button class="btn btn-secondary" onclick="openManualLineModal('devis')">➕ Ligne manuelle</button>
+                    </div>
+                    <div id="devis-articles-container"></div>
+                    <div style="margin-top: 20px; padding: 15px; background: #f7fafc; border-radius: 8px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span>Total HT:</span>
+                            <strong id="devis-total-ht">0,00 €</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span>Total TVA:</span>
+                            <strong id="devis-total-tva">0,00 €</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 1.2em; color: #667eea; border-top: 2px solid #e2e8f0; padding-top: 8px;">
+                            <span><strong>Total TTC:</strong></span>
+                            <strong id="devis-total-ttc">0,00 €</strong>
+                        </div>
+                    </div>
+                    <button class="btn btn-success" onclick="saveDevis()" style="width: 100%; margin-top: 15px;">💾 Sauvegarder le devis</button>
+                </div>
+                <div class="card">
+                    <h2>📋 Mes Devis</h2>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>🔍 Rechercher un client</label>
+                        <input type="text" id="devis-search" placeholder="Nom du client..." oninput="filterDevis()" style="font-size: 15px;">
+                    </div>
+                    <div id="devis-list"></div>
+                </div>
+            </div>
+
+            <!-- FACTURES (NOUVEAU) -->
+            <div id="tab-factures" class="tab-content">
+                <div class="card">
+                    <h2>📄 Créer une Facture</h2>
+                    
+                    <h3>Informations Client</h3>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Nom du client *</label>
+                            <input type="text" id="facture-client-nom" placeholder="Nom">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="facture-client-email" placeholder="email@client.fr">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Téléphone</label>
+                        <input type="tel" id="facture-client-tel" placeholder="06 12 34 56 78">
+                    </div>
+                    
+                    <h3>Ajouter des articles</h3>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn btn-primary" onclick="openCatalogueSelect('facture')">📦 Depuis le catalogue</button>
+                        <button class="btn btn-secondary" onclick="openManualLineModal('facture')">➕ Ligne manuelle</button>
+                    </div>
+                    <div id="facture-articles-container"></div>
+                    
+                    <h3>Remise (optionnel)</h3>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Montant remise</label>
+                            <input type="number" id="facture-remise-montant" step="0.01" placeholder="0" oninput="calculateFactureTotal()">
+                        </div>
+                        <div class="form-group">
+                            <label>Type</label>
+                            <select id="facture-remise-type" onchange="calculateFactureTotal()">
+                                <option value="euro">€ (euros)</option>
+                                <option value="pourcent">% (pourcentage)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: #f7fafc; border-radius: 8px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span>Total HT:</span>
+                            <strong id="facture-total-ht">0,00 €</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span>Total TVA:</span>
+                            <strong id="facture-total-tva">0,00 €</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #f56565;">
+                            <span>Remise:</span>
+                            <strong id="facture-remise-affichage">0,00 €</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 1.2em; color: #667eea; border-top: 2px solid #e2e8f0; padding-top: 8px;">
+                            <span><strong>Total TTC:</strong></span>
+                            <strong id="facture-total-ttc">0,00 €</strong>
+                        </div>
+                    </div>
+                    
+                    <h3>Signature vendeur</h3>
+                    <div class="signature-box">
+                        <span class="signature-placeholder" id="signature-placeholder">✍️ Signez ici</span>
+                        <canvas id="signature-canvas" width="400" height="150"></canvas>
+                        <div style="margin-top: 10px; display: flex; gap: 10px;">
+                            <button class="btn btn-secondary" onclick="clearSignature()" style="flex: 1;">🗑️ Effacer</button>
+                            <button class="btn btn-success" onclick="saveSignature()" style="flex: 1;">✓ Valider</button>
+                        </div>
+                        <img id="signature-preview" style="display: none; margin-top: 10px; max-width: 200px; border: 1px solid #e2e8f0; border-radius: 5px;">
+                    </div>
+                    
+                    <button class="btn btn-success" onclick="saveFacture()" style="width: 100%; margin-top: 15px;">💾 Sauvegarder la facture</button>
+                </div>
+
+                <div class="card">
+                    <h2>📄 Mes Factures</h2>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>🔍 Rechercher un client</label>
+                        <input type="text" id="factures-search" placeholder="Nom du client..." oninput="filterFactures()" style="font-size: 15px;">
+                    </div>
+                    <div id="factures-list"></div>
+                </div>
+            </div>
+
+            <!-- COMPTA -->
+            <div id="tab-compta" class="tab-content">
+                <div class="card">
+                    <h2>💰 Tableau de Bord</h2>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px;">
+                            <div style="font-size: 0.9em; opacity: 0.9;">Chiffre d'Affaires</div>
+                            <div style="font-size: 1.8em; font-weight: bold; margin-top: 5px;" id="compta-ca-total">0,00 €</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; padding: 20px; border-radius: 10px;">
+                            <div style="font-size: 0.9em; opacity: 0.9;">Factures émises</div>
+                            <div style="font-size: 1.8em; font-weight: bold; margin-top: 5px;" id="compta-nb-factures">0</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%); color: white; padding: 20px; border-radius: 10px;">
+                            <div style="font-size: 0.9em; opacity: 0.9;">Cotisations estimées</div>
+                            <div style="font-size: 1.8em; font-weight: bold; margin-top: 5px;" id="compta-cotisations">0,00 €</div>
+                            <div style="font-size: 0.75em; opacity: 0.8; margin-top: 5px;">22% du CA (auto-entrepreneur)</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%); color: white; padding: 20px; border-radius: 10px;">
+                            <div style="font-size: 0.9em; opacity: 0.9;">Reste après cotisations</div>
+                            <div style="font-size: 1.8em; font-weight: bold; margin-top: 5px;" id="compta-net">0,00 €</div>
+                        </div>
+                    </div>
+                    
+                    <h3>📊 Évolution mensuelle</h3>
+                    <canvas id="compta-chart" style="max-height: 250px; margin-top: 15px;"></canvas>
+                    
+                    <h3 style="margin-top: 30px;">📄 Factures comptabilisées</h3>
+                    <div id="compta-factures-list"></div>
+                    
+                    <button class="btn btn-primary" onclick="exportComptaCSV()" style="margin-top: 15px;">📥 Exporter en CSV</button>
+                </div>
+            </div>
+
+            <!-- PARAMETRES -->
+            <div id="tab-parametres" class="tab-content">
+                <div class="card">
+                    <h2>⚙️ Paramètres de l'Entreprise</h2>
+                    <p style="color: #718096; margin-bottom: 20px;">Ces informations apparaîtront sur vos devis et factures</p>
+                    
+                    <form onsubmit="saveVendeurInfo(event)">
+                        <div class="form-group">
+                            <label>Nom de l'entreprise *</label>
+                            <input type="text" id="vendeur-nom" placeholder="Mon Entreprise" required>
+                        </div>
+                        
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label>SIRET</label>
+                                <input type="text" id="vendeur-siret" placeholder="123 456 789 00012">
+                            </div>
+                            <div class="form-group">
+                                <label>Code APE</label>
+                                <input type="text" id="vendeur-ape" placeholder="4520A">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Adresse</label>
+                            <input type="text" id="vendeur-adresse" placeholder="12 rue de l'Exemple">
+                        </div>
+                        
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label>Code postal</label>
+                                <input type="text" id="vendeur-cp" placeholder="75000">
+                            </div>
+                            <div class="form-group">
+                                <label>Ville</label>
+                                <input type="text" id="vendeur-ville" placeholder="Paris">
+                            </div>
+                        </div>
+                        
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label>Téléphone</label>
+                                <input type="tel" id="vendeur-tel" placeholder="06 12 34 56 78">
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="vendeur-email" placeholder="contact@entreprise.fr">
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 15px;">💾 Sauvegarder les informations</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    <div id="article-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="article-modal-title">➕ Ajouter un article</h3>
+                <button class="modal-close" onclick="closeArticleModal()">×</button>
+            </div>
+            <form onsubmit="saveArticle(event)">
+                <input type="hidden" id="article-id">
+                <div class="form-group">
+                    <label>Désignation *</label>
+                    <input type="text" id="article-designation" placeholder="Ex: Vidange moteur" required>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Prix HT *</label>
+                        <input type="number" id="article-prix" step="0.01" placeholder="45.00" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Unité</label>
+                        <select id="article-unite">
+                            <option value="h">Heure (h)</option>
+                            <option value="u">Unité (u)</option>
+                            <option value="pcs">Pièce (pcs)</option>
+                            <option value="forfait">Forfait</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>TVA</label>
+                    <select id="article-tva">
+                        <option value="0">0%</option>
+                        <option value="5.5">5,5%</option>
+                        <option value="10">10%</option>
+                        <option value="20">20%</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-success" style="width: 100%;">💾 Enregistrer</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="catalogue-select-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📦 Sélectionner des articles</h3>
+                <button class="modal-close" onclick="closeCatalogueSelect()">×</button>
+            </div>
+            <div id="catalogue-select-list"></div>
+            <button class="btn btn-primary" onclick="addSelectedArticles()" style="width: 100%; margin-top: 15px;">➕ Ajouter</button>
+        </div>
+    </div>
+
+    <!-- Modal Ligne Manuelle -->
+    <div id="manual-line-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>➕ Ajouter une ligne manuelle</h3>
+                <button class="modal-close" onclick="closeManualLineModal()">×</button>
+            </div>
+            <form onsubmit="addManualLine(event)">
+                <div class="form-group">
+                    <label>Désignation *</label>
+                    <input type="text" id="manual-designation" placeholder="Ex: Prestation spéciale" required>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Quantité *</label>
+                        <input type="number" id="manual-quantite" value="1" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Unité</label>
+                        <select id="manual-unite">
+                            <option value="h">Heure (h)</option>
+                            <option value="u">Unité (u)</option>
+                            <option value="pcs">Pièce (pcs)</option>
+                            <option value="forfait">Forfait</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Prix HT unitaire *</label>
+                        <input type="number" id="manual-prix" step="0.01" placeholder="0.00" required>
+                    </div>
+                    <div class="form-group">
+                        <label>TVA</label>
+                        <select id="manual-tva">
+                            <option value="0">0%</option>
+                            <option value="5.5">5,5%</option>
+                            <option value="10">10%</option>
+                            <option value="20">20%</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 15px;">✅ Ajouter à la ligne</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Infos Vendeur -->
+    <div id="vendeur-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>👤 Mes Informations</h3>
+                <button class="modal-close" onclick="closeVendeurModal()">×</button>
+            </div>
+            <form onsubmit="saveVendeurInfos(event)">
+                <div class="form-group">
+                    <label>Nom de l'entreprise *</label>
+                    <input type="text" id="vendeur-entreprise" required>
+                </div>
+                <div class="form-group">
+                    <label>SIRET</label>
+                    <input type="text" id="vendeur-siret" placeholder="123 456 789 00012">
+                </div>
+                <div class="form-group">
+                    <label>Adresse</label>
+                    <textarea id="vendeur-adresse" rows="2" placeholder="Rue, Code postal, Ville"></textarea>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="vendeur-email" placeholder="contact@entreprise.fr">
+                    </div>
+                    <div class="form-group">
+                        <label>Téléphone</label>
+                        <input type="tel" id="vendeur-tel" placeholder="01 23 45 67 89">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-success" style="width: 100%;">💾 Sauvegarder</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Client -->
+    <div id="client-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="client-modal-title">➕ Ajouter un client</h3>
+                <button class="modal-close" onclick="closeClientModal()">×</button>
+            </div>
+            <form onsubmit="saveClient(event)">
+                <input type="hidden" id="client-id">
+                <div class="form-group">
+                    <label>Nom *</label>
+                    <input type="text" id="client-nom" placeholder="Nom du client" required>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="client-email" placeholder="client@email.fr">
+                    </div>
+                    <div class="form-group">
+                        <label>Téléphone</label>
+                        <input type="tel" id="client-tel" placeholder="06 12 34 56 78">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Adresse</label>
+                    <textarea id="client-adresse" rows="2" placeholder="Adresse complète"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="client-notes" rows="3" placeholder="Notes sur le client..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-success" style="width: 100%;">💾 Enregistrer</button>
+            </form>
+        </div>
+    </div>
+
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+        // Config Firebase (démo)
+        const firebaseConfig = {
+            apiKey: "AIzaSyAIsJXj3ARwezW4otvRqVplTUpaZaLjVm0",
+            authDomain: "gestion-pro-ml81.firebaseapp.com",
+            projectId: "gestion-pro-ml81",
+            storageBucket: "gestion-pro-ml81.firebasestorage.app",
+            messagingSenderId: "564044952473",
+            appId: "1:564044952473:web:e3f87687e7747f49e7d908",
+            measurementId: "G-NDXB9XYGNY"
+        };
+        
+        // Variables globales
+        let currentUser = null;
+        let catalogueArticles = [];
+        let devisArticles = [];
+        let factureArticles = [];
+        let allDevis = [];
+        let allFactures = [];
+        let allClients = [];
+        let editingArticleId = null;
+        let editingClientId = null;
+        let currentSelectMode = 'devis';
+        let signatureDataUrl = null;
+        let canvas, ctx, isDrawing = false;
+        let vendeurInfos = {};
+
+        // Init Firebase
+        try { 
+            firebase.initializeApp(firebaseConfig);
+            // Activer la persistence pour rester connecté
+            firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        } catch(e) { 
+            console.log('Firebase init:', e.message); 
+        }
+
+        // Charger données
+        // Charger données depuis Firestore
+        async function loadData() {
+            if (!currentUser) return;
+            
+            try {
+                const userDoc = await firebase.firestore()
+                    .collection('users')
+                    .doc(currentUser.uid)
+                    .get();
+                
+                if (userDoc.exists) {
+                    const data = userDoc.data();
+                    catalogueArticles = data.catalogue || [];
+                    allDevis = data.devis || [];
+                    allFactures = data.factures || [];
+                    allClients = data.clients || [];
+                    signatureDataUrl = data.signature || null;
+                    vendeurInfos = data.vendeur || {};
+                    
+                    // Nettoyer les données corrompues
+                    const devisInitial = allDevis.length;
+                    allDevis = allDevis.filter(d => d && d.client && d.client.nom);
+                    if (allDevis.length < devisInitial) {
+                        console.warn(`⚠️ ${devisInitial - allDevis.length} devis corrompu(s) supprimé(s)`);
+                        saveData(); // Sauvegarder les données nettoyées
+                    }
+                    
+                    const facturesInitial = allFactures.length;
+                    allFactures = allFactures.filter(f => f && f.client && f.client.nom);
+                    if (allFactures.length < facturesInitial) {
+                        console.warn(`⚠️ ${facturesInitial - allFactures.length} facture(s) corrompue(s) supprimée(s)`);
+                        saveData(); // Sauvegarder les données nettoyées
+                    }
+                    
+                    if (signatureDataUrl) {
+                        document.getElementById('signature-preview').src = signatureDataUrl;
+                        document.getElementById('signature-preview').style.display = 'block';
+                    }
+                    
+                    // Rafraîchir les affichages
+                    displayCatalogue();
+                    displayDevisList();
+                    displayFacturesList();
+                    displayClientsList();
+                }
+            } catch (error) {
+                console.error('Erreur chargement:', error);
+            }
+        }
+
+        // Sauvegarder données dans Firestore
+        async function saveData() {
+            if (!currentUser) {
+                console.log('Pas d\'utilisateur connecté, impossible de sauvegarder');
+                return;
+            }
+            
+            console.log('Sauvegarde données dans Firebase...');
+            console.log('- Catalogue:', catalogueArticles.length);
+            console.log('- Devis:', allDevis.length);
+            console.log('- Factures:', allFactures.length);
+            console.log('- Clients:', allClients.length);
+            
+            try {
+                await firebase.firestore()
+                    .collection('users')
+                    .doc(currentUser.uid)
+                    .set({
+                        catalogue: catalogueArticles,
+                        devis: allDevis,
+                        factures: allFactures,
+                        clients: allClients,
+                        signature: signatureDataUrl,
+                        vendeur: vendeurInfos,
+                        lastUpdate: new Date().toISOString()
+                    });
+                console.log('✅ Données sauvegardées avec succès dans Firebase');
+            } catch (error) {
+                console.error('❌ Erreur sauvegarde:', error);
+                customAlert('❌ Erreur de sauvegarde: ' + error.message, 'error');
+            }
+        }
+
+        // Auth fictive
+        // Check auth avec Firebase
+        firebase.auth().onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                await loadData(); // Charger les données depuis Firestore
+                showApp();
+            } else {
+                currentUser = null;
+                showAuth();
+            }
+        });
+
+        function showAlert(type, message) {
+            const container = document.getElementById('alert-container');
+            container.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => container.innerHTML = '', 3000);
+        }
+
+        // Notification personnalisée pour remplacer customAlert()
+        function customAlert(message, type = 'success') {
+            // Déterminer le type automatiquement basé sur le message
+            if (message.includes('⚠️') || message.includes('requis') || message.includes('vide')) {
+                type = 'warning';
+            } else if (message.includes('❌')) {
+                type = 'error';
+            } else if (message.includes('ℹ️')) {
+                type = 'info';
+            }
+            
+            // Créer la notification
+            const notification = document.createElement('div');
+            notification.className = `custom-notification ${type}`;
+            notification.textContent = message;
+            
+            // Ajouter au body
+            document.body.appendChild(notification);
+            
+            // Supprimer après 3 secondes avec animation
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        function showLogin() {
+            document.getElementById('login-form').classList.remove('hidden');
+            document.getElementById('signup-form').classList.add('hidden');
+        }
+
+        function showSignup() {
+            document.getElementById('login-form').classList.add('hidden');
+            document.getElementById('signup-form').classList.remove('hidden');
+        }
+
+        async function login() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            if (!email || !password) {
+                showAlert('error', '❌ Remplissez tous les champs');
+                return;
+            }
+            await firebase.auth().signInWithEmailAndPassword(email, password);
+            showAlert('success', '✅ Connecté !');
+            setTimeout(() => showApp(), 500);
+        }
+
+        async function signup() {
+            const company = document.getElementById('signup-company').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            if (!company || !email || !password) {
+                showAlert('error', '❌ Remplissez tous les champs');
+                return;
+            }
+            await firebase.auth().createUserWithEmailAndPassword(email, password);
+            localStorage.setItem('company-name', company);
+            showAlert('success', '✅ Compte créé !');
+            setTimeout(() => showApp(), 500);
+        }
+
+        async function logout() {
+            if (confirm('Se déconnecter ?')) {
+                await firebase.auth().signOut();
+                showAuth();
+            }
+        }
+
+        function showAuth() {
+            document.getElementById('auth-screen').classList.remove('hidden');
+            document.getElementById('app-screen').classList.add('hidden');
+        }
+
+        function showApp() {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('app-screen').classList.remove('hidden');
+            document.getElementById('user-email').textContent = currentUser.email;
+            const company = localStorage.getItem('company-name') || 'Mon Entreprise';
+            document.getElementById('user-company').textContent = company;
+            loadData();
+            loadVendeurInfo();
+            displayCatalogue();
+            displayClientsList();
+            displayDevisList();
+            displayFacturesList();
+            updateComptabilite();
+            initSignatureCanvas();
+        }
+
+        function switchTab(name) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('tab-' + name).classList.add('active');
+        }
+
+        // CATALOGUE
+        function displayCatalogue(filteredArticles = null) {
+            const articlesToShow = filteredArticles || catalogueArticles;
+            const container = document.getElementById('catalogue-list');
+            
+            if (articlesToShow.length === 0) {
+                if (catalogueArticles.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><div class="empty-icon">📦</div><p>Aucun article</p></div>';
+                } else {
+                    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><p>Aucun résultat trouvé</p></div>';
+                }
+                return;
+            }
+            
+            let html = '<table class="table"><thead><tr><th>Désignation</th><th>Prix HT</th><th>Unité</th><th>TVA</th><th>Actions</th></tr></thead><tbody>';
+            articlesToShow.forEach(a => {
+                html += `<tr>
+                    <td><strong>${a.designation}</strong></td>
+                    <td>${formatEuro(a.prix)}</td>
+                    <td>${a.unite}</td>
+                    <td>${a.tva}%</td>
+                    <td>
+                        <button class="btn btn-primary" onclick="editArticle(${a.id})" style="padding: 6px 10px; margin: 2px;">✏️</button>
+                        <button class="btn btn-danger" onclick="deleteArticle(${a.id})" style="padding: 6px 10px; margin: 2px;">🗑️</button>
+                    </td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function filterCatalogue() {
+            const searchTerm = document.getElementById('catalogue-search').value.toLowerCase();
+            if (!searchTerm) {
+                displayCatalogue();
+                return;
+            }
+            
+            const filtered = catalogueArticles.filter(article => 
+                article.designation.toLowerCase().includes(searchTerm)
+            );
+            displayCatalogue(filtered);
+        }
+
+        function openArticleModal() {
+            editingArticleId = null;
+            document.getElementById('article-modal-title').textContent = '➕ Ajouter un article';
+            document.getElementById('article-id').value = '';
+            document.getElementById('article-designation').value = '';
+            document.getElementById('article-prix').value = '';
+            document.getElementById('article-unite').value = 'h';
+            document.getElementById('article-tva').value = '0';
+            document.getElementById('article-modal').classList.add('active');
+        }
+
+        function closeArticleModal() {
+            document.getElementById('article-modal').classList.remove('active');
+        }
+
+        function saveArticle(e) {
+            e.preventDefault();
+            const article = {
+                id: editingArticleId || Date.now(),
+                designation: document.getElementById('article-designation').value,
+                prix: parseFloat(document.getElementById('article-prix').value),
+                unite: document.getElementById('article-unite').value,
+                tva: parseFloat(document.getElementById('article-tva').value)
+            };
+            if (editingArticleId) {
+                const idx = catalogueArticles.findIndex(a => a.id === editingArticleId);
+                catalogueArticles[idx] = article;
+            } else {
+                catalogueArticles.push(article);
+            }
+            saveData();
+            displayCatalogue();
+            closeArticleModal();
+            customAlert(editingArticleId ? '✅ Modifié !' : '✅ Ajouté !');
+        }
+
+        function editArticle(id) {
+            const article = catalogueArticles.find(a => a.id === id);
+            editingArticleId = id;
+            document.getElementById('article-modal-title').textContent = '✏️ Modifier';
+            document.getElementById('article-designation').value = article.designation;
+            document.getElementById('article-prix').value = article.prix;
+            document.getElementById('article-unite').value = article.unite;
+            document.getElementById('article-tva').value = article.tva;
+            document.getElementById('article-modal').classList.add('active');
+        }
+
+        function deleteArticle(id) {
+            if (confirm('Supprimer cet article ?')) {
+                catalogueArticles = catalogueArticles.filter(a => a.id !== id);
+                saveData();
+                displayCatalogue();
+                customAlert('🗑️ Supprimé !');
+            }
+        }
+
+        // SÉLECTION CATALOGUE
+        function openCatalogueSelect(mode) {
+            currentSelectMode = mode;
+            if (catalogueArticles.length === 0) {
+                customAlert('⚠️ Votre catalogue est vide !');
+                return;
+            }
+            const container = document.getElementById('catalogue-select-list');
+            let html = '';
+            catalogueArticles.forEach(a => {
+                html += `
+                    <div style="padding: 10px; border-bottom: 1px solid #e2e8f0;">
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" value="${a.id}" style="margin-right: 10px;">
+                            <div>
+                                <strong>${a.designation}</strong><br>
+                                <small style="color: #718096;">${formatEuro(a.prix)} - ${a.unite} - TVA ${a.tva}%</small>
+                            </div>
+                        </label>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+            document.getElementById('catalogue-select-modal').classList.add('active');
+        }
+
+        function closeCatalogueSelect() {
+            document.getElementById('catalogue-select-modal').classList.remove('active');
+        }
+
+        // LIGNE MANUELLE
+        function openManualLineModal(mode) {
+            currentSelectMode = mode;
+            document.getElementById('manual-designation').value = '';
+            document.getElementById('manual-quantite').value = '1';
+            document.getElementById('manual-unite').value = 'h';
+            document.getElementById('manual-prix').value = '';
+            document.getElementById('manual-tva').value = '0';
+            document.getElementById('manual-line-modal').classList.add('active');
+        }
+
+        function closeManualLineModal() {
+            document.getElementById('manual-line-modal').classList.remove('active');
+        }
+
+        function addManualLine(e) {
+            e.preventDefault();
+            
+            const article = {
+                catalogueId: null,
+                designation: document.getElementById('manual-designation').value,
+                quantite: parseInt(document.getElementById('manual-quantite').value),
+                unite: document.getElementById('manual-unite').value,
+                prixHT: parseFloat(document.getElementById('manual-prix').value),
+                tva: parseFloat(document.getElementById('manual-tva').value)
+            };
+            
+            if (currentSelectMode === 'devis') {
+                devisArticles.push(article);
+                displayDevisArticles();
+            } else {
+                factureArticles.push(article);
+                displayFactureArticles();
+            }
+            
+            closeManualLineModal();
+        }
+
+        function addSelectedArticles() {
+            const checkboxes = document.querySelectorAll('#catalogue-select-list input[type="checkbox"]:checked');
+            const targetArticles = currentSelectMode === 'devis' ? devisArticles : factureArticles;
+            
+            checkboxes.forEach(cb => {
+                const id = parseInt(cb.value);
+                const article = catalogueArticles.find(a => a.id === id);
+                if (article && !targetArticles.find(a => a.catalogueId === id)) {
+                    targetArticles.push({
+                        catalogueId: id,
+                        designation: article.designation,
+                        quantite: 1,
+                        unite: article.unite,
+                        prixHT: article.prix,
+                        tva: article.tva
+                    });
+                }
+            });
+            
+            if (currentSelectMode === 'devis') {
+                displayDevisArticles();
+            } else {
+                displayFactureArticles();
+            }
+            closeCatalogueSelect();
+        }
+
+        // DEVIS
+        function displayDevisArticles() {
+            const container = document.getElementById('devis-articles-container');
+            if (devisArticles.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="padding: 20px;"><p style="color: #a0aec0;">Aucun article ajouté</p></div>';
+                calculateDevisTotal();
+                return;
+            }
+            let html = '<table class="table"><thead><tr><th>Article</th><th>Qté</th><th>Prix HT</th><th>TVA</th><th>Total TTC</th><th></th></tr></thead><tbody>';
+            devisArticles.forEach((a, idx) => {
+                const totalHT = a.quantite * a.prixHT;
+                const totalTVA = totalHT * (a.tva / 100);
+                const totalTTC = totalHT + totalTVA;
+                html += `<tr>
+                    <td><strong>${a.designation}</strong></td>
+                    <td><input type="number" value="${a.quantite}" min="1" style="width: 60px; padding: 5px;" onchange="updateDevisQuantite(${idx}, this.value)"></td>
+                    <td>${formatEuro(a.prixHT)}</td>
+                    <td>${a.tva}%</td>
+                    <td><strong>${formatEuro(totalTTC)}</strong></td>
+                    <td><button class="btn btn-danger" onclick="removeDevisArticle(${idx})" style="padding: 5px 8px;">🗑️</button></td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+            calculateDevisTotal();
+        }
+
+        function updateDevisQuantite(idx, value) {
+            devisArticles[idx].quantite = parseInt(value) || 1;
+            displayDevisArticles();
+        }
+
+        function removeDevisArticle(idx) {
+            devisArticles.splice(idx, 1);
+            displayDevisArticles();
+        }
+
+        function calculateDevisTotal() {
+            let totalHT = 0, totalTVA = 0;
+            devisArticles.forEach(a => {
+                const ht = a.quantite * a.prixHT;
+                totalHT += ht;
+                totalTVA += ht * (a.tva / 100);
+            });
+            document.getElementById('devis-total-ht').textContent = formatEuro(totalHT);
+            document.getElementById('devis-total-tva').textContent = formatEuro(totalTVA);
+            document.getElementById('devis-total-ttc').textContent = formatEuro(totalHT + totalTVA);
+        }
+
+        function saveDevis() {
+            const clientNom = document.getElementById('devis-client-nom').value;
+            if (!clientNom) {
+                customAlert('⚠️ Nom du client requis !');
+                return;
+            }
+            if (devisArticles.length === 0) {
+                customAlert('⚠️ Ajoutez des articles !');
+                return;
+            }
+
+            let totalHT = 0, totalTVA = 0;
+            devisArticles.forEach(a => {
+                const ht = a.quantite * a.prixHT;
+                totalHT += ht;
+                totalTVA += ht * (a.tva / 100);
+            });
+
+            const devis = {
+                id: Date.now(),
+                numero: 'DEV-' + (allDevis.length + 1).toString().padStart(3, '0'),
+                date: new Date().toISOString().split('T')[0],
+                client: {
+                    nom: clientNom,
+                    email: document.getElementById('devis-client-email').value,
+                    tel: document.getElementById('devis-client-tel').value
+                },
+                articles: [...devisArticles],
+                totalHT: totalHT,
+                totalTVA: totalTVA,
+                totalTTC: totalHT + totalTVA
+            };
+
+            console.log('Sauvegarde devis:', devis);
+            allDevis.push(devis);
+            console.log('Total devis après ajout:', allDevis.length);
+            
+            saveData();
+            
+            document.getElementById('devis-client-nom').value = '';
+            document.getElementById('devis-client-email').value = '';
+            document.getElementById('devis-client-tel').value = '';
+            devisArticles = [];
+            displayDevisArticles();
+            displayDevisList();
+            
+            customAlert('✅ Devis sauvegardé !');
+        }
+
+        function displayDevisList(filteredDevis = null) {
+            const devisToShow = filteredDevis || allDevis;
+            const container = document.getElementById('devis-list');
+            
+            if (devisToShow.length === 0) {
+                if (allDevis.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><p>Aucun devis</p></div>';
+                } else {
+                    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><p>Aucun résultat trouvé</p></div>';
+                }
+                return;
+            }
+            let html = '<table class="table"><thead><tr><th>N°</th><th>Date</th><th>Client</th><th>Total TTC</th><th>Statut</th><th>Actions</th></tr></thead><tbody>';
+            devisToShow.forEach(d => {
+                // Protection contre les données manquantes
+                if (!d.client || !d.client.nom) {
+                    console.warn('Devis sans client:', d);
+                    return;
+                }
+                
+                const statut = d.transforme ? 
+                    `<span style="color: #48bb78; font-weight: bold;">✅ Transformé en ${d.factureNumero || 'FAC-???'}</span>` : 
+                    '<span style="color: #ed8936;">🟡 En attente</span>';
+                
+                const checkbox = d.transforme ? '' : `
+                    <div style="background: #f7fafc; padding: 8px; border-radius: 6px; margin-bottom: 5px; border: 2px solid #e2e8f0;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; color: #48bb78;">
+                            <input type="checkbox" onchange="transformerEnFacture(${d.id})" style="width: 18px; height: 18px; cursor: pointer;">
+                            <span style="font-size: 13px;">✓ Devis accepté → Créer facture</span>
+                        </label>
+                    </div>`;
+                
+                html += `<tr>
+                    <td><strong>${d.numero || 'N/A'}</strong></td>
+                    <td>${d.date || 'N/A'}</td>
+                    <td>${d.client.nom}</td>
+                    <td><strong>${formatEuro(d.totalTTC || 0)}</strong></td>
+                    <td>${statut}</td>
+                    <td>
+                        ${checkbox}
+                        <button class="btn btn-secondary" onclick="genererPDF('devis', ${d.id})" style="padding: 6px 10px; margin: 2px; font-size: 12px;">📄 PDF</button>
+                        <button class="btn btn-primary" onclick="envoyerDevis(${d.id})" style="padding: 6px 10px; margin: 2px; font-size: 12px;">📧 Envoyer</button>
+                        <button class="btn btn-danger" onclick="deleteDevis(${d.id})" style="padding: 6px 10px; margin: 2px;">🗑️</button>
+                    </td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function filterDevis() {
+            const searchTerm = document.getElementById('devis-search').value.toLowerCase();
+            if (!searchTerm) {
+                displayDevisList();
+                return;
+            }
+            
+            const filtered = allDevis.filter(devis => 
+                devis.client.nom.toLowerCase().includes(searchTerm) ||
+                (devis.client.email && devis.client.email.toLowerCase().includes(searchTerm))
+            );
+            displayDevisList(filtered);
+        }
+
+        function deleteDevis(id) {
+            if (confirm('Supprimer ce devis ?')) {
+                allDevis = allDevis.filter(d => d.id !== id);
+                saveData();
+                displayDevisList();
+                customAlert('🗑️ Supprimé !');
+            }
+        }
+
+        // TRANSFORMATION DEVIS → FACTURE
+        function transformerEnFacture(devisId) {
+            const devis = allDevis.find(d => d.id === devisId);
+            if (!devis) return;
+            
+            if (!confirm(`Transformer le devis ${devis.numero} en facture ?`)) {
+                displayDevisList(); // Reset checkbox
+                return;
+            }
+            
+            // Créer la facture depuis le devis
+            const facture = {
+                id: Date.now(),
+                numero: 'FAC-' + (allFactures.length + 1).toString().padStart(3, '0'),
+                date: new Date().toISOString().split('T')[0],
+                client: { ...devis.client },
+                articles: devis.articles.map(a => ({ ...a })),
+                remise: { montant: 0, type: 'euro', valeur: 0 },
+                signature: signatureDataUrl,
+                totalHT: devis.totalHT,
+                totalTVA: devis.totalTVA,
+                totalTTC: devis.totalTTC,
+                devisOrigine: devis.numero
+            };
+            
+            // Marquer le devis comme transformé
+            devis.transforme = true;
+            devis.factureNumero = facture.numero;
+            
+            // Sauvegarder
+            allFactures.push(facture);
+            saveData();
+            
+            // Rafraîchir les listes
+            displayDevisList();
+            displayFacturesList();
+            updateComptabilite();
+            
+            // Notification
+            customAlert(`✅ Facture ${facture.numero} créée depuis le devis ${devis.numero} !`);
+            
+            // Basculer sur l'onglet factures (le 4ème onglet après Catalogue, Clients, Devis)
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab')[3].classList.add('active');
+            document.getElementById('tab-factures').classList.add('active');
+        }
+
+        // FACTURES
+        function displayFactureArticles() {
+            const container = document.getElementById('facture-articles-container');
+            if (factureArticles.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="padding: 20px;"><p style="color: #a0aec0;">Aucun article ajouté</p></div>';
+                calculateFactureTotal();
+                return;
+            }
+            let html = '<table class="table"><thead><tr><th>Article</th><th>Qté</th><th>Prix HT</th><th>TVA</th><th>Total TTC</th><th></th></tr></thead><tbody>';
+            factureArticles.forEach((a, idx) => {
+                const totalHT = a.quantite * a.prixHT;
+                const totalTVA = totalHT * (a.tva / 100);
+                const totalTTC = totalHT + totalTVA;
+                html += `<tr>
+                    <td><strong>${a.designation}</strong></td>
+                    <td><input type="number" value="${a.quantite}" min="1" style="width: 60px; padding: 5px;" onchange="updateFactureQuantite(${idx}, this.value)"></td>
+                    <td>${formatEuro(a.prixHT)}</td>
+                    <td>${a.tva}%</td>
+                    <td><strong>${formatEuro(totalTTC)}</strong></td>
+                    <td><button class="btn btn-danger" onclick="removeFactureArticle(${idx})" style="padding: 5px 8px;">🗑️</button></td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+            calculateFactureTotal();
+        }
+
+        function updateFactureQuantite(idx, value) {
+            factureArticles[idx].quantite = parseInt(value) || 1;
+            displayFactureArticles();
+        }
+
+        function removeFactureArticle(idx) {
+            factureArticles.splice(idx, 1);
+            displayFactureArticles();
+        }
+
+        function calculateFactureTotal() {
+            let totalHT = 0, totalTVA = 0;
+            factureArticles.forEach(a => {
+                const ht = a.quantite * a.prixHT;
+                totalHT += ht;
+                totalTVA += ht * (a.tva / 100);
+            });
+            
+            // Remise
+            const remiseMontant = parseFloat(document.getElementById('facture-remise-montant').value) || 0;
+            const remiseType = document.getElementById('facture-remise-type').value;
+            let remise = 0;
+            
+            if (remiseMontant > 0) {
+                if (remiseType === 'euro') {
+                    remise = remiseMontant;
+                } else {
+                    remise = totalHT * (remiseMontant / 100);
+                }
+            }
+            
+            totalHT = Math.max(0, totalHT - remise);
+            totalTVA = totalHT * 0.2; // Recalculer TVA après remise
+            
+            document.getElementById('facture-total-ht').textContent = formatEuro(totalHT);
+            document.getElementById('facture-total-tva').textContent = formatEuro(totalTVA);
+            document.getElementById('facture-remise-affichage').textContent = '- ' + formatEuro(remise);
+            document.getElementById('facture-total-ttc').textContent = formatEuro(totalHT + totalTVA);
+        }
+
+        // SIGNATURE
+        function initSignatureCanvas() {
+            canvas = document.getElementById('signature-canvas');
+            if (!canvas) return;
+            ctx = canvas.getContext('2d');
+            
+            // Remplir le fond en blanc pour masquer tout watermark
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseout', stopDrawing);
+            canvas.addEventListener('touchstart', handleTouch);
+            canvas.addEventListener('touchmove', handleTouch);
+            canvas.addEventListener('touchend', stopDrawing);
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            // Masquer le placeholder dès qu'on commence à dessiner
+            const placeholder = document.getElementById('signature-placeholder');
+            if (placeholder) placeholder.style.display = 'none';
+            
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            ctx.beginPath();
+            ctx.moveTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            ctx.lineTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
+            ctx.stroke();
+        }
+
+        function handleTouch(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent(e.type === 'touchstart' ? 'mousedown' : 'mousemove', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            canvas.dispatchEvent(mouseEvent);
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        function clearSignature() {
+            // Effacer le canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Remplir le fond en blanc pour masquer tout watermark
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // Réafficher le placeholder
+            const placeholder = document.getElementById('signature-placeholder');
+            if (placeholder) placeholder.style.display = 'block';
+            
+            signatureDataUrl = null;
+            document.getElementById('signature-preview').style.display = 'none';
+        }
+
+        function saveSignature() {
+            signatureDataUrl = canvas.toDataURL('image/png');
+            const preview = document.getElementById('signature-preview');
+            preview.src = signatureDataUrl;
+            preview.style.display = 'block';
+            saveData();
+            customAlert('✅ Signature sauvegardée !');
+        }
+
+        function saveFacture() {
+            const clientNom = document.getElementById('facture-client-nom').value;
+            if (!clientNom) {
+                customAlert('⚠️ Nom du client requis !');
+                return;
+            }
+            if (factureArticles.length === 0) {
+                customAlert('⚠️ Ajoutez des articles !');
+                return;
+            }
+
+            let totalHT = 0, totalTVA = 0;
+            factureArticles.forEach(a => {
+                const ht = a.quantite * a.prixHT;
+                totalHT += ht;
+                totalTVA += ht * (a.tva / 100);
+            });
+            
+            const remiseMontant = parseFloat(document.getElementById('facture-remise-montant').value) || 0;
+            const remiseType = document.getElementById('facture-remise-type').value;
+            let remise = 0;
+            if (remiseMontant > 0) {
+                remise = remiseType === 'euro' ? remiseMontant : (totalHT * (remiseMontant / 100));
+            }
+            totalHT = Math.max(0, totalHT - remise);
+
+            const facture = {
+                id: Date.now(),
+                numero: 'FAC-' + (allFactures.length + 1).toString().padStart(3, '0'),
+                date: new Date().toISOString().split('T')[0],
+                client: {
+                    nom: clientNom,
+                    email: document.getElementById('facture-client-email').value,
+                    tel: document.getElementById('facture-client-tel').value
+                },
+                articles: [...factureArticles],
+                remise: { montant: remiseMontant, type: remiseType, valeur: remise },
+                signature: signatureDataUrl,
+                totalHT: totalHT,
+                totalTVA: totalTVA,
+                totalTTC: totalHT + totalTVA
+            };
+
+            console.log('Sauvegarde facture:', facture);
+            allFactures.push(facture);
+            console.log('Total factures après ajout:', allFactures.length);
+            
+            saveData();
+            
+            document.getElementById('facture-client-nom').value = '';
+            document.getElementById('facture-client-email').value = '';
+            document.getElementById('facture-client-tel').value = '';
+            document.getElementById('facture-remise-montant').value = '';
+            factureArticles = [];
+            displayFactureArticles();
+            displayFacturesList();
+            updateComptabilite();
+            
+            customAlert('✅ Facture sauvegardée !');
+        }
+
+        function displayFacturesList(filteredFactures = null) {
+            const facturesToShow = filteredFactures || allFactures;
+            const container = document.getElementById('factures-list');
+            
+            if (facturesToShow.length === 0) {
+                if (allFactures.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><div class="empty-icon">📄</div><p>Aucune facture</p></div>';
+                } else {
+                    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><p>Aucun résultat trouvé</p></div>';
+                }
+                return;
+            }
+            let html = '<table class="table"><thead><tr><th>N°</th><th>Date</th><th>Client</th><th>Origine</th><th>Total TTC</th><th>Actions</th></tr></thead><tbody>';
+            facturesToShow.forEach(f => {
+                const origine = f.devisOrigine ? `<small style="color: #667eea;">📋 ${f.devisOrigine}</small>` : '<small style="color: #a0aec0;">Manuelle</small>';
+                html += `<tr>
+                    <td><strong>${f.numero}</strong></td>
+                    <td>${f.date}</td>
+                    <td>${f.client.nom}</td>
+                    <td>${origine}</td>
+                    <td><strong>${formatEuro(f.totalTTC)}</strong></td>
+                    <td>
+                        <button class="btn btn-secondary" onclick="genererFacturePDF(${f.id})" style="padding: 6px 10px; margin: 2px; font-size: 12px;">📄 PDF</button>
+                        <button class="btn btn-primary" onclick="envoyerFacture(${f.id})" style="padding: 6px 10px; margin: 2px; font-size: 12px;">📧 Envoyer</button>
+                        <button class="btn btn-danger" onclick="deleteFacture(${f.id})" style="padding: 6px 10px; margin: 2px;">🗑️</button>
+                    </td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function filterFactures() {
+            const searchTerm = document.getElementById('factures-search').value.toLowerCase();
+            if (!searchTerm) {
+                displayFacturesList();
+                return;
+            }
+            
+            const filtered = allFactures.filter(facture => 
+                facture.client.nom.toLowerCase().includes(searchTerm) ||
+                (facture.client.email && facture.client.email.toLowerCase().includes(searchTerm))
+            );
+            displayFacturesList(filtered);
+        }
+
+        function deleteFacture(id) {
+            if (confirm('Supprimer cette facture ?')) {
+                allFactures = allFactures.filter(f => f.id !== id);
+                saveData();
+                displayFacturesList();
+                updateComptabilite();
+                customAlert('🗑️ Supprimé !');
+            }
+        }
+
+        // ENVOI EMAIL/PARTAGE
+        function envoyerDevis(devisId) {
+            const devis = allDevis.find(d => d.id === devisId);
+            if (!devis) return;
+            
+            const company = localStorage.getItem('company-name') || 'Mon Entreprise';
+            const articlesText = devis.articles.map(a => 
+                `- ${a.designation} (${a.quantite} ${a.unite}) : ${formatEuro(a.quantite * a.prixHT)}`
+            ).join('\n');
+            
+            const message = `Bonjour ${devis.client.nom},
+
+Voici votre devis ${devis.numero} du ${devis.date}
+
+Détails :
+${articlesText}
+
+Total HT : ${formatEuro(devis.totalHT)}
+Total TVA : ${formatEuro(devis.totalTVA)}
+Total TTC : ${formatEuro(devis.totalTTC)}
+
+Cordialement,
+${company}`;
+
+            // Partage natif mobile ou mailto desktop
+            if (navigator.share) {
+                navigator.share({
+                    title: `Devis ${devis.numero}`,
+                    text: message
+                }).catch(() => {
+                    // Fallback mailto
+                    const mailto = `mailto:${devis.client.email || ''}?subject=Devis ${devis.numero}&body=${encodeURIComponent(message)}`;
+                    window.location.href = mailto;
+                });
+            } else {
+                // Mailto pour desktop
+                const mailto = `mailto:${devis.client.email || ''}?subject=Devis ${devis.numero}&body=${encodeURIComponent(message)}`;
+                window.location.href = mailto;
+            }
+        }
+
+        function envoyerFacture(factureId) {
+            const facture = allFactures.find(f => f.id === factureId);
+            if (!facture) return;
+            
+            const company = localStorage.getItem('company-name') || 'Mon Entreprise';
+            const articlesText = facture.articles.map(a => 
+                `- ${a.designation} (${a.quantite} ${a.unite}) : ${formatEuro(a.quantite * a.prixHT)}`
+            ).join('\n');
+            
+            const remiseText = facture.remise && facture.remise.valeur > 0 ? 
+                `\nRemise : -${formatEuro(facture.remise.valeur)}` : '';
+            
+            const message = `Bonjour ${facture.client.nom},
+
+Voici votre facture ${facture.numero} du ${facture.date}
+
+Détails :
+${articlesText}
+
+Total HT : ${formatEuro(facture.totalHT)}
+Total TVA : ${formatEuro(facture.totalTVA)}${remiseText}
+Total TTC : ${formatEuro(facture.totalTTC)}
+
+Merci pour votre confiance !
+
+Cordialement,
+${company}`;
+
+            // Partage natif mobile ou mailto desktop
+            if (navigator.share) {
+                navigator.share({
+                    title: `Facture ${facture.numero}`,
+                    text: message
+                }).catch(() => {
+                    const mailto = `mailto:${facture.client.email || ''}?subject=Facture ${facture.numero}&body=${encodeURIComponent(message)}`;
+                    window.location.href = mailto;
+                });
+            } else {
+                const mailto = `mailto:${facture.client.email || ''}?subject=Facture ${facture.numero}&body=${encodeURIComponent(message)}`;
+                window.location.href = mailto;
+            }
+        }
+
+        function downloadFacturePDF() {
+            customAlert('📄 Sauvegardez d\'abord la facture, puis téléchargez le PDF depuis la liste des factures !');
+        }
+
+        // Utilitaires
+        function formatEuro(amount) {
+            return amount.toFixed(2).replace('.', ',') + ' €';
+        }
+
+        // INFOS VENDEUR
+        function openVendeurModal() {
+            document.getElementById('vendeur-entreprise').value = vendeurInfos.entreprise || '';
+            document.getElementById('vendeur-siret').value = vendeurInfos.siret || '';
+            document.getElementById('vendeur-adresse').value = vendeurInfos.adresse || '';
+            document.getElementById('vendeur-email').value = vendeurInfos.email || '';
+            document.getElementById('vendeur-tel').value = vendeurInfos.tel || '';
+            document.getElementById('vendeur-modal').classList.add('active');
+        }
+
+        function closeVendeurModal() {
+            document.getElementById('vendeur-modal').classList.remove('active');
+        }
+
+        function saveVendeurInfos(e) {
+            e.preventDefault();
+            vendeurInfos = {
+                entreprise: document.getElementById('vendeur-entreprise').value,
+                siret: document.getElementById('vendeur-siret').value,
+                adresse: document.getElementById('vendeur-adresse').value,
+                email: document.getElementById('vendeur-email').value,
+                tel: document.getElementById('vendeur-tel').value
+            };
+            saveData();
+            closeVendeurModal();
+            customAlert('✅ Informations sauvegardées !');
+        }
+
+        // GÉNÉRATION PDF
+        function genererFacturePDF(factureId) {
+            const facture = allFactures.find(f => f.id === factureId);
+            if (!facture) return;
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // En-tête vendeur
+            doc.setFontSize(16);
+            doc.setFont(undefined, 'bold');
+            doc.text(vendeurInfos.entreprise || 'Mon Entreprise', 20, 20);
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            if (vendeurInfos.siret) doc.text('SIRET: ' + vendeurInfos.siret, 20, 27);
+            if (vendeurInfos.adresse) doc.text(vendeurInfos.adresse, 20, 33);
+            if (vendeurInfos.email) doc.text(vendeurInfos.email, 20, 39);
+            if (vendeurInfos.tel) doc.text(vendeurInfos.tel, 20, 45);
+            
+            // Titre Facture
+            doc.setFontSize(20);
+            doc.setFont(undefined, 'bold');
+            doc.text('FACTURE', 140, 20);
+            doc.setFontSize(12);
+            doc.text(facture.numero, 140, 28);
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            doc.text('Date: ' + facture.date, 140, 35);
+            
+            // Client
+            doc.setFont(undefined, 'bold');
+            doc.text('Client:', 20, 60);
+            doc.setFont(undefined, 'normal');
+            doc.text(facture.client.nom, 20, 67);
+            if (facture.client.email) doc.text(facture.client.email, 20, 73);
+            if (facture.client.tel) doc.text(facture.client.tel, 20, 79);
+            
+            // Tableau articles
+            let y = 95;
+            doc.setFillColor(102, 126, 234);
+            doc.rect(20, y, 170, 8, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFont(undefined, 'bold');
+            doc.text('Désignation', 22, y + 6);
+            doc.text('Qté', 120, y + 6);
+            doc.text('P.U. HT', 140, y + 6);
+            doc.text('Total TTC', 165, y + 6);
+            
+            doc.setTextColor(0, 0, 0);
+            doc.setFont(undefined, 'normal');
+            y += 12;
+            
+            facture.articles.forEach(a => {
+                const totalHT = a.quantite * a.prixHT;
+                const totalTVA = totalHT * (a.tva / 100);
+                const totalTTC = totalHT + totalTVA;
+                
+                doc.text(a.designation.substring(0, 40), 22, y);
+                doc.text(a.quantite + ' ' + a.unite, 120, y);
+                doc.text(a.prixHT.toFixed(2) + ' €', 140, y);
+                doc.text(totalTTC.toFixed(2) + ' €', 165, y);
+                y += 7;
+            });
+            
+            // Totaux
+            y += 10;
+            doc.text('Total HT:', 120, y);
+            doc.text(facture.totalHT.toFixed(2) + ' €', 165, y);
+            y += 7;
+            doc.text('TVA:', 120, y);
+            doc.text(facture.totalTVA.toFixed(2) + ' €', 165, y);
+            
+            if (facture.remise && facture.remise.valeur > 0) {
+                y += 7;
+                doc.setTextColor(245, 101, 101);
+                doc.text('Remise:', 120, y);
+                doc.text('-' + facture.remise.valeur.toFixed(2) + ' €', 165, y);
+                doc.setTextColor(0, 0, 0);
+            }
+            
+            y += 7;
+            doc.setFont(undefined, 'bold');
+            doc.setFontSize(14);
+            doc.text('Total TTC:', 120, y);
+            doc.text(facture.totalTTC.toFixed(2) + ' €', 165, y);
+            
+            // Signature
+            if (facture.signature) {
+                y += 15;
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'normal');
+                doc.text('Signature vendeur:', 20, y);
+                doc.addImage(facture.signature, 'PNG', 20, y + 2, 50, 20);
+            }
+            
+            // Télécharger
+            doc.save(facture.numero + '.pdf');
+            customAlert('✅ PDF téléchargé : ' + facture.numero + '.pdf');
+        }
+
+        // INFOS VENDEUR
+        let vendeurInfo = {};
+
+        function loadVendeurInfo() {
+            const saved = localStorage.getItem('vendeur-info');
+            if (saved) {
+                vendeurInfo = JSON.parse(saved);
+                document.getElementById('vendeur-nom').value = vendeurInfo.nom || '';
+                document.getElementById('vendeur-siret').value = vendeurInfo.siret || '';
+                document.getElementById('vendeur-ape').value = vendeurInfo.ape || '';
+                document.getElementById('vendeur-adresse').value = vendeurInfo.adresse || '';
+                document.getElementById('vendeur-cp').value = vendeurInfo.cp || '';
+                document.getElementById('vendeur-ville').value = vendeurInfo.ville || '';
+                document.getElementById('vendeur-tel').value = vendeurInfo.tel || '';
+                document.getElementById('vendeur-email').value = vendeurInfo.email || '';
+            }
+        }
+
+        function saveVendeurInfo(e) {
+            e.preventDefault();
+            vendeurInfo = {
+                nom: document.getElementById('vendeur-nom').value,
+                siret: document.getElementById('vendeur-siret').value,
+                ape: document.getElementById('vendeur-ape').value,
+                adresse: document.getElementById('vendeur-adresse').value,
+                cp: document.getElementById('vendeur-cp').value,
+                ville: document.getElementById('vendeur-ville').value,
+                tel: document.getElementById('vendeur-tel').value,
+                email: document.getElementById('vendeur-email').value
+            };
+            localStorage.setItem('vendeur-info', JSON.stringify(vendeurInfo));
+            localStorage.setItem('company-name', vendeurInfo.nom);
+            document.getElementById('user-company').textContent = vendeurInfo.nom;
+            customAlert('✅ Informations sauvegardées !');
+        }
+
+        // GÉNÉRATION PDF
+        async function telechargerFacturePDF(factureId) {
+            const facture = allFactures.find(f => f.id === factureId);
+            if (!facture) return;
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            let y = 20;
+            
+            // En-tête vendeur
+            doc.setFontSize(16);
+            doc.setFont(undefined, 'bold');
+            doc.text(vendeurInfo.nom || 'Mon Entreprise', 20, y);
+            y += 7;
+            
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            if (vendeurInfo.siret) { doc.text(`SIRET: ${vendeurInfo.siret}`, 20, y); y += 5; }
+            if (vendeurInfo.adresse) { doc.text(vendeurInfo.adresse, 20, y); y += 5; }
+            if (vendeurInfo.cp && vendeurInfo.ville) { doc.text(`${vendeurInfo.cp} ${vendeurInfo.ville}`, 20, y); y += 5; }
+            if (vendeurInfo.tel) { doc.text(`Tel: ${vendeurInfo.tel}`, 20, y); y += 5; }
+            if (vendeurInfo.email) { doc.text(`Email: ${vendeurInfo.email}`, 20, y); y += 5; }
+            
+            // Titre FACTURE
+            y += 10;
+            doc.setFontSize(20);
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(102, 126, 234);
+            doc.text(`FACTURE ${facture.numero}`, 20, y);
+            doc.setTextColor(0, 0, 0);
+            y += 10;
+            
+            // Date
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            doc.text(`Date: ${facture.date}`, 20, y);
+            y += 10;
+            
+            // Client
+            doc.setFont(undefined, 'bold');
+            doc.text('CLIENT:', 20, y);
+            y += 6;
+            doc.setFont(undefined, 'normal');
+            doc.text(facture.client.nom, 20, y);
+            y += 5;
+            if (facture.client.email) { doc.text(facture.client.email, 20, y); y += 5; }
+            if (facture.client.tel) { doc.text(facture.client.tel, 20, y); y += 5; }
+            
+            y += 10;
+            
+            // Tableau articles
+            doc.setFont(undefined, 'bold');
+            doc.setFillColor(102, 126, 234);
+            doc.setTextColor(255, 255, 255);
+            doc.rect(20, y, 170, 8, 'F');
+            doc.text('Designation', 22, y + 6);
+            doc.text('Qte', 120, y + 6);
+            doc.text('P.U. HT', 140, y + 6);
+            doc.text('Total HT', 165, y + 6);
+            y += 8;
+            
+            doc.setTextColor(0, 0, 0);
+            doc.setFont(undefined, 'normal');
+            
+            facture.articles.forEach(a => {
+                const totalLigne = a.quantite * a.prixHT;
+                doc.text(a.designation.substring(0, 40), 22, y + 5);
+                doc.text(a.quantite.toString(), 120, y + 5);
+                doc.text(a.prixHT.toFixed(2) + 'E', 140, y + 5);
+                doc.text(totalLigne.toFixed(2) + 'E', 165, y + 5);
+                y += 8;
+            });
+            
+            y += 5;
+            
+            // Totaux
+            doc.setFont(undefined, 'bold');
+            const xLabel = 120;
+            const xValue = 165;
+            
+            doc.text('Total HT:', xLabel, y);
+            doc.text(facture.totalHT.toFixed(2) + 'E', xValue, y);
+            y += 6;
+            
+            doc.text('Total TVA:', xLabel, y);
+            doc.text(facture.totalTVA.toFixed(2) + 'E', xValue, y);
+            y += 6;
+            
+            if (facture.remise && facture.remise.valeur > 0) {
+                doc.setTextColor(245, 101, 101);
+                doc.text('Remise:', xLabel, y);
+                doc.text('-' + facture.remise.valeur.toFixed(2) + 'E', xValue, y);
+                doc.setTextColor(0, 0, 0);
+                y += 6;
+            }
+            
+            doc.setFontSize(12);
+            doc.text('TOTAL TTC:', xLabel, y);
+            doc.text(facture.totalTTC.toFixed(2) + 'E', xValue, y);
+            
+            // Signature
+            if (facture.signature) {
+                y += 15;
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'normal');
+                doc.text('Signature:', 20, y);
+                try {
+                    doc.addImage(facture.signature, 'PNG', 20, y + 5, 60, 22);
+                } catch(e) {
+                    console.error('Erreur signature:', e);
+                }
+            }
+            
+            // Télécharger
+            doc.save(`Facture_${facture.numero}.pdf`);
+            customAlert('📄 PDF téléchargé !');
+        }
+
+        // COMPTABILITÉ
+        let comptaChart = null;
+
+        function showFirebaseGuide() {
+            const guide = `
+═══════════════════════════════════════════
+✅ FIREBASE ACTIVÉ !
+═══════════════════════════════════════════
+
+Votre Gestion Pro est connectée au cloud !
+
+🔐 Votre configuration :
+• Projet : gestion-pro-ml81
+• Synchronisation : ✅ Active
+• Multi-appareils : ✅ Activé
+
+📱 UTILISATION :
+
+1. Créez un compte ou connectez-vous
+2. Vos données sont automatiquement 
+   sauvegardées dans le cloud
+3. Connectez-vous sur un autre appareil
+   avec le MÊME compte
+4. Vos données se synchronisent ! ✨
+
+🔒 SÉCURITÉ :
+Vos données sont cryptées et protégées.
+Seul vous pouvez y accéder.
+
+═══════════════════════════════════════════
+            `;
+            
+            customAlert(guide);
+        }
+
+        function updateComptabilite() {
+            console.log('Mise à jour comptabilité, factures:', allFactures.length);
+            
+            // Calculs
+            const caTotal = allFactures.reduce((sum, f) => sum + f.totalTTC, 0);
+            const nbFactures = allFactures.length;
+            const cotisations = caTotal * 0.22; // 22% pour auto-entrepreneur
+            const net = caTotal - cotisations;
+            
+            console.log('CA Total:', caTotal, 'Nb factures:', nbFactures);
+            
+            // Mise à jour dashboard
+            const caTotalEl = document.getElementById('compta-ca-total');
+            const nbFacturesEl = document.getElementById('compta-nb-factures');
+            const cotisationsEl = document.getElementById('compta-cotisations');
+            const netEl = document.getElementById('compta-net');
+            
+            if (caTotalEl) caTotalEl.textContent = formatEuro(caTotal);
+            if (nbFacturesEl) nbFacturesEl.textContent = nbFactures;
+            if (cotisationsEl) cotisationsEl.textContent = formatEuro(cotisations);
+            if (netEl) netEl.textContent = formatEuro(net);
+            
+            // Graphique mensuel
+            updateComptaChart();
+            
+            // Liste des factures
+            displayComptaFactures();
+        }
+
+        function updateComptaChart() {
+            const canvas = document.getElementById('compta-chart');
+            if (!canvas) return;
+            
+            // Regrouper par mois
+            const facturesParMois = {};
+            allFactures.forEach(f => {
+                const mois = f.date.substring(0, 7); // YYYY-MM
+                if (!facturesParMois[mois]) {
+                    facturesParMois[mois] = 0;
+                }
+                facturesParMois[mois] += f.totalTTC;
+            });
+            
+            // Trier par date
+            const moisTries = Object.keys(facturesParMois).sort();
+            const labels = moisTries.map(m => {
+                const [year, month] = m.split('-');
+                const moisNoms = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+                return moisNoms[parseInt(month) - 1] + ' ' + year;
+            });
+            const data = moisTries.map(m => facturesParMois[m]);
+            
+            // Détruire l'ancien graphique
+            if (comptaChart) {
+                comptaChart.destroy();
+            }
+            
+            // Créer le graphique
+            const ctx = canvas.getContext('2d');
+            comptaChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels.length > 0 ? labels : ['Aucune donnée'],
+                    datasets: [{
+                        label: 'Chiffre d\'Affaires (€)',
+                        data: data.length > 0 ? data : [0],
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toFixed(0) + ' €';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function displayComptaFactures() {
+            const container = document.getElementById('compta-factures-list');
+            
+            if (!container) {
+                console.log('Container compta-factures-list non trouvé');
+                return;
+            }
+            
+            console.log('Affichage compta factures:', allFactures.length);
+            
+            if (allFactures.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="padding: 20px;"><p style="color: #a0aec0;">Aucune facture</p></div>';
+                return;
+            }
+            
+            let html = '<table class="table"><thead><tr><th>Date</th><th>N°</th><th>Client</th><th>Montant TTC</th></tr></thead><tbody>';
+            allFactures.slice().reverse().forEach(f => {
+                html += `<tr>
+                    <td>${f.date}</td>
+                    <td><strong>${f.numero}</strong></td>
+                    <td>${f.client.nom}</td>
+                    <td><strong>${formatEuro(f.totalTTC)}</strong></td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function exportComptaCSV() {
+            if (allFactures.length === 0) {
+                customAlert('⚠️ Aucune facture à exporter !');
+                return;
+            }
+            
+            let csv = 'Date;Numéro;Client;Total HT;TVA;Total TTC\n';
+            allFactures.forEach(f => {
+                csv += `${f.date};${f.numero};${f.client.nom};${f.totalHT.toFixed(2)};${f.totalTVA.toFixed(2)};${f.totalTTC.toFixed(2)}\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `comptabilite_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            
+            customAlert('✅ Fichier CSV téléchargé !');
+        }
+
+        // INFOS VENDEUR
+        function loadVendeurInfo() {
+            const saved = localStorage.getItem('vendeur-info');
+            if (saved) {
+                const info = JSON.parse(saved);
+                document.getElementById('vendeur-nom').value = info.nom || '';
+                document.getElementById('vendeur-siret').value = info.siret || '';
+                document.getElementById('vendeur-ape').value = info.ape || '';
+                document.getElementById('vendeur-adresse').value = info.adresse || '';
+                document.getElementById('vendeur-cp').value = info.cp || '';
+                document.getElementById('vendeur-ville').value = info.ville || '';
+                document.getElementById('vendeur-tel').value = info.tel || '';
+                document.getElementById('vendeur-email').value = info.email || '';
+            }
+        }
+
+        function saveVendeurInfo(e) {
+            e.preventDefault();
+            const info = {
+                nom: document.getElementById('vendeur-nom').value,
+                siret: document.getElementById('vendeur-siret').value,
+                ape: document.getElementById('vendeur-ape').value,
+                adresse: document.getElementById('vendeur-adresse').value,
+                cp: document.getElementById('vendeur-cp').value,
+                ville: document.getElementById('vendeur-ville').value,
+                tel: document.getElementById('vendeur-tel').value,
+                email: document.getElementById('vendeur-email').value
+            };
+            localStorage.setItem('vendeur-info', JSON.stringify(info));
+            localStorage.setItem('company-name', info.nom);
+            document.getElementById('user-company').textContent = info.nom;
+            customAlert('✅ Informations sauvegardées !');
+        }
+
+        // GÉNÉRATION PDF
+        async function genererPDF(type, id) {
+            const doc = type === 'devis' ? allDevis.find(d => d.id === id) : allFactures.find(f => f.id === id);
+            if (!doc) return;
+            
+            const vendeur = JSON.parse(localStorage.getItem('vendeur-info') || '{}');
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF();
+            
+            // En-tête vendeur
+            pdf.setFontSize(16);
+            pdf.setFont(undefined, 'bold');
+            pdf.text(vendeur.nom || 'Mon Entreprise', 20, 20);
+            pdf.setFontSize(10);
+            pdf.setFont(undefined, 'normal');
+            let y = 28;
+            if (vendeur.adresse) { pdf.text(vendeur.adresse, 20, y); y += 5; }
+            if (vendeur.cp && vendeur.ville) { pdf.text(`${vendeur.cp} ${vendeur.ville}`, 20, y); y += 5; }
+            if (vendeur.tel) { pdf.text(`Tél: ${vendeur.tel}`, 20, y); y += 5; }
+            if (vendeur.email) { pdf.text(`Email: ${vendeur.email}`, 20, y); y += 5; }
+            if (vendeur.siret) { pdf.text(`SIRET: ${vendeur.siret}`, 20, y); y += 5; }
+            
+            // Titre
+            pdf.setFontSize(18);
+            pdf.setFont(undefined, 'bold');
+            pdf.text(type === 'devis' ? 'DEVIS' : 'FACTURE', 150, 30);
+            pdf.setFontSize(12);
+            pdf.text(doc.numero, 150, 38);
+            pdf.setFontSize(10);
+            pdf.setFont(undefined, 'normal');
+            pdf.text(`Date: ${doc.date}`, 150, 45);
+            
+            // Client
+            y = 70;
+            pdf.setFont(undefined, 'bold');
+            pdf.text('CLIENT:', 20, y);
+            pdf.setFont(undefined, 'normal');
+            y += 7;
+            pdf.text(doc.client.nom, 20, y); y += 5;
+            if (doc.client.email) { pdf.text(doc.client.email, 20, y); y += 5; }
+            if (doc.client.tel) { pdf.text(doc.client.tel, 20, y); y += 5; }
+            
+            // Articles
+            y += 10;
+            pdf.setFont(undefined, 'bold');
+            pdf.text('Désignation', 20, y);
+            pdf.text('Qté', 100, y);
+            pdf.text('P.U. HT', 120, y);
+            pdf.text('Total HT', 160, y);
+            y += 2;
+            pdf.line(20, y, 190, y);
+            y += 7;
+            
+            pdf.setFont(undefined, 'normal');
+            doc.articles.forEach(a => {
+                if (y > 250) {
+                    pdf.addPage();
+                    y = 20;
+                }
+                pdf.text(a.designation.substring(0, 30), 20, y);
+                pdf.text(`${a.quantite}`, 100, y);
+                pdf.text(`${formatEuro(a.prixHT)}`, 120, y);
+                pdf.text(`${formatEuro(a.quantite * a.prixHT)}`, 160, y);
+                y += 7;
+            });
+            
+            // Totaux
+            y += 5;
+            pdf.line(20, y, 190, y);
+            y += 7;
+            pdf.text(`Total HT:`, 120, y);
+            pdf.text(`${formatEuro(doc.totalHT)}`, 160, y);
+            y += 7;
+            pdf.text(`Total TVA:`, 120, y);
+            pdf.text(`${formatEuro(doc.totalTVA)}`, 160, y);
+            y += 7;
+            
+            if (type === 'facture' && doc.remise && doc.remise.valeur > 0) {
+                pdf.text(`Remise:`, 120, y);
+                pdf.text(`-${formatEuro(doc.remise.valeur)}`, 160, y);
+                y += 7;
+            }
+            
+            pdf.setFont(undefined, 'bold');
+            pdf.setFontSize(12);
+            pdf.text(`Total TTC:`, 120, y);
+            pdf.text(`${formatEuro(doc.totalTTC)}`, 160, y);
+            
+            // Signature
+            if (type === 'facture' && signatureDataUrl) {
+                pdf.addImage(signatureDataUrl, 'PNG', 20, y + 10, 50, 20);
+                pdf.setFontSize(8);
+                pdf.setFont(undefined, 'normal');
+                pdf.text('Signature vendeur', 20, y + 35);
+            }
+            
+            // Téléchargement
+            pdf.save(`${doc.numero}.pdf`);
+            customAlert('📄 PDF téléchargé !');
+        }
+
+        // ========== GESTION CLIENTS ==========
+
+        function displayClientsList(filteredClients = null) {
+            const clientsToShow = filteredClients || allClients;
+            const container = document.getElementById('clients-list');
+            
+            if (!container) {
+                console.log('Container clients-list non trouvé');
+                return;
+            }
+            
+            console.log('Affichage clients:', clientsToShow.length, 'clients');
+            
+            if (clientsToShow.length === 0) {
+                if (allClients.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div><p>Aucun client enregistré</p><p style="font-size: 13px; color: #a0aec0; margin-top: 10px;">Les clients seront automatiquement ajoutés depuis vos devis et factures</p></div>';
+                } else {
+                    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><p>Aucun résultat trouvé</p></div>';
+                }
+                return;
+            }
+            
+            let html = '<table class="table"><thead><tr><th>Nom</th><th>Contact</th><th>Historique</th><th>CA Total</th><th>Actions</th></tr></thead><tbody>';
+            
+            clientsToShow.forEach(c => {
+                const devisClient = allDevis.filter(d => normalizeText(d.client.nom) === normalizeText(c.nom));
+                const facturesClient = allFactures.filter(f => normalizeText(f.client.nom) === normalizeText(c.nom));
+                const caTotal = facturesClient.reduce((sum, f) => sum + f.totalTTC, 0);
+                
+                const contactInfo = [];
+                if (c.email) contactInfo.push(`📧 ${c.email}`);
+                if (c.tel) contactInfo.push(`📱 ${c.tel}`);
+                const contactText = contactInfo.length > 0 ? contactInfo.join('<br>') : '<span style="color: #a0aec0;">Aucun contact</span>';
+                
+                const historiqueText = `${devisClient.length} devis, ${facturesClient.length} facture(s)`;
+                
+                html += `<tr>
+                    <td><strong>${c.nom}</strong></td>
+                    <td style="font-size: 12px;">${contactText}</td>
+                    <td style="font-size: 12px;">${historiqueText}</td>
+                    <td><strong style="color: #48bb78;">${formatEuro(caTotal)}</strong></td>
+                    <td>
+                        <button class="btn btn-success" onclick="creerFactureDepuisClient(${c.id})" style="padding: 6px 10px; margin: 2px; font-size: 12px;" title="Créer une facture">📄</button>
+                        <button class="btn btn-primary" onclick="viewClientDetails(${c.id})" style="padding: 6px 10px; margin: 2px; font-size: 12px;">👁️</button>
+                        <button class="btn btn-secondary" onclick="editClient(${c.id})" style="padding: 6px 10px; margin: 2px;">✏️</button>
+                        <button class="btn btn-danger" onclick="deleteClient(${c.id})" style="padding: 6px 10px; margin: 2px;">🗑️</button>
+                    </td>
+                </tr>`;
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function filterClients() {
+            const searchTerm = document.getElementById('clients-search').value.toLowerCase();
+            if (!searchTerm) {
+                displayClientsList();
+                return;
+            }
+            
+            const filtered = allClients.filter(client => 
+                client.nom.toLowerCase().includes(searchTerm) ||
+                (client.email && client.email.toLowerCase().includes(searchTerm)) ||
+                (client.tel && client.tel.toLowerCase().includes(searchTerm))
+            );
+            displayClientsList(filtered);
+        }
+
+        function openClientModal() {
+            editingClientId = null;
+            document.getElementById('client-modal-title').textContent = '➕ Ajouter un client';
+            document.getElementById('client-id').value = '';
+            document.getElementById('client-nom').value = '';
+            document.getElementById('client-email').value = '';
+            document.getElementById('client-tel').value = '';
+            document.getElementById('client-adresse').value = '';
+            document.getElementById('client-notes').value = '';
+            document.getElementById('client-modal').classList.add('active');
+        }
+
+        function closeClientModal() {
+            document.getElementById('client-modal').classList.remove('active');
+        }
+
+        function normalizeText(text) {
+            return text.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        }
+
+        function saveClient(e) {
+            e.preventDefault();
+            
+            const nom = document.getElementById('client-nom').value.trim();
+            
+            // Vérifier doublon (sauf si on édite)
+            const existant = allClients.find(c => 
+                normalizeText(c.nom) === normalizeText(nom) && c.id !== editingClientId
+            );
+            
+            if (existant) {
+                customAlert('⚠️ Ce client existe déjà !', 'warning');
+                return;
+            }
+            
+            const client = {
+                id: editingClientId || Date.now(),
+                nom: nom,
+                email: document.getElementById('client-email').value.trim(),
+                tel: document.getElementById('client-tel').value.trim(),
+                adresse: document.getElementById('client-adresse').value.trim(),
+                notes: document.getElementById('client-notes').value.trim(),
+                dateAjout: editingClientId ? allClients.find(c => c.id === editingClientId).dateAjout : new Date().toISOString()
+            };
+            
+            if (editingClientId) {
+                const idx = allClients.findIndex(c => c.id === editingClientId);
+                allClients[idx] = client;
+                customAlert('✅ Client modifié !');
+            } else {
+                allClients.push(client);
+                customAlert('✅ Client ajouté !');
+            }
+            
+            saveData();
+            displayClientsList();
+            closeClientModal();
+        }
+
+        function editClient(id) {
+            const client = allClients.find(c => c.id === id);
+            if (!client) return;
+            
+            editingClientId = id;
+            document.getElementById('client-modal-title').textContent = '✏️ Modifier le client';
+            document.getElementById('client-id').value = client.id;
+            document.getElementById('client-nom').value = client.nom;
+            document.getElementById('client-email').value = client.email || '';
+            document.getElementById('client-tel').value = client.tel || '';
+            document.getElementById('client-adresse').value = client.adresse || '';
+            document.getElementById('client-notes').value = client.notes || '';
+            document.getElementById('client-modal').classList.add('active');
+        }
+
+        function deleteClient(id) {
+            const client = allClients.find(c => c.id === id);
+            if (!client) return;
+            
+            const devisClient = allDevis.filter(d => normalizeText(d.client.nom) === normalizeText(client.nom));
+            const facturesClient = allFactures.filter(f => normalizeText(f.client.nom) === normalizeText(client.nom));
+            
+            let message = `Supprimer ${client.nom} ?`;
+            if (devisClient.length > 0 || facturesClient.length > 0) {
+                message += `\n\n⚠️ Ce client a ${devisClient.length} devis et ${facturesClient.length} facture(s).\nLes documents seront conservés.`;
+            }
+            
+            if (confirm(message)) {
+                allClients = allClients.filter(c => c.id !== id);
+                saveData();
+                displayClientsList();
+                customAlert('🗑️ Client supprimé !');
+            }
+        }
+
+        function syncClientsFromDocuments() {
+            console.log('Début synchronisation clients');
+            console.log('Devis:', allDevis.length, 'Factures:', allFactures.length);
+            
+            let nouveauxClients = 0;
+            let clientsMisAJour = 0;
+            
+            // Récupérer tous les clients uniques des devis et factures
+            const allDocs = [...allDevis, ...allFactures];
+            console.log('Total documents:', allDocs.length);
+            
+            allDocs.forEach(doc => {
+                const nomClient = doc.client.nom.trim();
+                console.log('Traitement client:', nomClient);
+                if (!nomClient) return;
+                
+                // Chercher si le client existe déjà
+                const existant = allClients.find(c => normalizeText(c.nom) === normalizeText(nomClient));
+                
+                if (existant) {
+                    // Mettre à jour les infos si vides
+                    let misAJour = false;
+                    if (!existant.email && doc.client.email) {
+                        existant.email = doc.client.email;
+                        misAJour = true;
+                    }
+                    if (!existant.tel && doc.client.tel) {
+                        existant.tel = doc.client.tel;
+                        misAJour = true;
+                    }
+                    if (misAJour) clientsMisAJour++;
+                } else {
+                    // Créer nouveau client
+                    const nouveauClient = {
+                        id: Date.now() + Math.random(),
+                        nom: nomClient,
+                        email: doc.client.email || '',
+                        tel: doc.client.tel || '',
+                        adresse: '',
+                        notes: 'Importé automatiquement',
+                        dateAjout: new Date().toISOString()
+                    };
+                    console.log('Nouveau client créé:', nouveauClient);
+                    allClients.push(nouveauClient);
+                    nouveauxClients++;
+                }
+            });
+            
+            console.log('Résultat sync:', nouveauxClients, 'nouveaux,', clientsMisAJour, 'mis à jour');
+            
+            if (nouveauxClients > 0 || clientsMisAJour > 0) {
+                saveData();
+                displayClientsList();
+                customAlert(`✅ Synchronisation terminée !\n${nouveauxClients} nouveau(x) client(s)\n${clientsMisAJour} client(s) mis à jour`);
+            } else {
+                customAlert('ℹ️ Aucun nouveau client à synchroniser', 'info');
+            }
+        }
+
+        function viewClientDetails(id) {
+            const client = allClients.find(c => c.id === id);
+            if (!client) return;
+            
+            const devisClient = allDevis.filter(d => normalizeText(d.client.nom) === normalizeText(client.nom));
+            const facturesClient = allFactures.filter(f => normalizeText(f.client.nom) === normalizeText(client.nom));
+            const caTotal = facturesClient.reduce((sum, f) => sum + f.totalTTC, 0);
+            
+            let detailsHTML = `
+                <div class="modal active" onclick="if(event.target === this) this.classList.remove('active')">
+                    <div class="modal-content" style="max-width: 700px;">
+                        <div class="modal-header">
+                            <h3>👤 ${client.nom}</h3>
+                            <button class="modal-close" onclick="this.closest('.modal').classList.remove('active')">×</button>
+                        </div>
+                        
+                        <div style="background: #f7fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                            <h4 style="margin-bottom: 10px; color: #4a5568;">Informations de contact</h4>
+                            ${client.email ? `<p style="margin: 5px 0;">📧 ${client.email}</p>` : ''}
+                            ${client.tel ? `<p style="margin: 5px 0;">📱 ${client.tel}</p>` : ''}
+                            ${client.adresse ? `<p style="margin: 5px 0;">📍 ${client.adresse}</p>` : ''}
+                            ${client.notes ? `<p style="margin: 10px 0 0 0; font-style: italic; color: #718096;">💭 ${client.notes}</p>` : ''}
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 10px;">
+                                <div style="font-size: 0.9em; opacity: 0.9;">Devis émis</div>
+                                <div style="font-size: 1.8em; font-weight: bold; margin-top: 5px;">${devisClient.length}</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; padding: 15px; border-radius: 10px;">
+                                <div style="font-size: 0.9em; opacity: 0.9;">Factures</div>
+                                <div style="font-size: 1.8em; font-weight: bold; margin-top: 5px;">${facturesClient.length}</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%); color: white; padding: 15px; border-radius: 10px;">
+                                <div style="font-size: 0.9em; opacity: 0.9;">CA Total</div>
+                                <div style="font-size: 1.5em; font-weight: bold; margin-top: 5px;">${formatEuro(caTotal)}</div>
+                            </div>
+                        </div>
+                        
+                        ${devisClient.length > 0 ? `
+                            <h4 style="color: #4a5568; margin-bottom: 10px;">📋 Devis (${devisClient.length})</h4>
+                            <table class="table" style="margin-bottom: 20px;">
+                                <thead><tr><th>N°</th><th>Date</th><th>Montant</th><th>Statut</th></tr></thead>
+                                <tbody>
+                                    ${devisClient.map(d => `
+                                        <tr>
+                                            <td>${d.numero}</td>
+                                            <td>${d.date}</td>
+                                            <td><strong>${formatEuro(d.totalTTC)}</strong></td>
+                                            <td>${d.transforme ? '✅ Transformé' : '🟡 En attente'}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        ` : ''}
+                        
+                        ${facturesClient.length > 0 ? `
+                            <h4 style="color: #4a5568; margin-bottom: 10px;">📄 Factures (${facturesClient.length})</h4>
+                            <table class="table">
+                                <thead><tr><th>N°</th><th>Date</th><th>Montant</th></tr></thead>
+                                <tbody>
+                                    ${facturesClient.map(f => `
+                                        <tr>
+                                            <td>${f.numero}</td>
+                                            <td>${f.date}</td>
+                                            <td><strong>${formatEuro(f.totalTTC)}</strong></td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        ` : ''}
+                        
+                        <div style="margin-top: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+                            <button class="btn btn-success" onclick="creerDevisDepuisClient(${client.id}); this.closest('.modal').classList.remove('active');" style="flex: 1;">📋 Créer un devis</button>
+                            <button class="btn btn-success" onclick="creerFactureDepuisClient(${client.id}); this.closest('.modal').classList.remove('active');" style="flex: 1;">📄 Créer une facture</button>
+                            <button class="btn btn-primary" onclick="editClient(${client.id}); this.closest('.modal').classList.remove('active');" style="flex: 1;">✏️ Modifier</button>
+                            <button class="btn btn-secondary" onclick="this.closest('.modal').classList.remove('active')" style="flex: 1;">Fermer</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', detailsHTML);
+        }
+
+        // Créer un devis depuis la fiche client
+        function creerDevisDepuisClient(clientId) {
+            const client = allClients.find(c => c.id === clientId);
+            if (!client) return;
+            
+            // Pré-remplir les informations du client
+            document.getElementById('devis-client-nom').value = client.nom;
+            document.getElementById('devis-client-email').value = client.email || '';
+            document.getElementById('devis-client-tel').value = client.tel || '';
+            
+            // Vider les articles
+            devisArticles = [];
+            displayDevisArticles();
+            
+            // Basculer sur l'onglet Devis
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab')[2].classList.add('active'); // Onglet Devis (position 2)
+            document.getElementById('tab-devis').classList.add('active');
+            
+            // Scroll vers le formulaire
+            setTimeout(() => {
+                document.getElementById('devis-client-nom').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+            
+            customAlert(`📋 Nouveau devis pour ${client.nom}`, 'info');
+        }
+
+        // Créer une facture depuis la fiche client
+        function creerFactureDepuisClient(clientId) {
+            const client = allClients.find(c => c.id === clientId);
+            if (!client) return;
+            
+            // Pré-remplir les informations du client
+            document.getElementById('facture-client-nom').value = client.nom;
+            document.getElementById('facture-client-email').value = client.email || '';
+            document.getElementById('facture-client-tel').value = client.tel || '';
+            
+            // Vider les articles
+            factureArticles = [];
+            displayFactureArticles();
+            
+            // Réinitialiser la remise
+            document.getElementById('facture-remise-montant').value = '';
+            
+            // Basculer sur l'onglet Factures
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab')[3].classList.add('active'); // Onglet Factures (position 3)
+            document.getElementById('tab-factures').classList.add('active');
+            
+            // Scroll vers le formulaire
+            setTimeout(() => {
+                document.getElementById('facture-client-nom').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+            
+            customAlert(`📄 Nouvelle facture pour ${client.nom}`, 'info');
+        }
+
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('active');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('login-password').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') login();
+            });
+            
+            // Register Service Worker pour PWA
+            if ('serviceWorker' in navigator) {
+                const swCode = `
+                    self.addEventListener('install', () => console.log('[SW] Installed'));
+                    self.addEventListener('activate', () => console.log('[SW] Activated'));
+                    self.addEventListener('fetch', (e) => e.respondWith(fetch(e.request)));
+                `;
+                const blob = new Blob([swCode], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+                
+                navigator.serviceWorker.register(swUrl)
+                    .then(() => console.log('[SW] Registered'))
+                    .catch(err => console.error('[SW] Error:', err));
+            }
+        });
+    </script>
+</body>
+</html>
