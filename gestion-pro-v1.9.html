@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion Pro v2.3 - Devis</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 5px;
+}
+.container { max-width: 500px; margin: 30px auto; }
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    margin-bottom: 15px;
+}
+.logo { text-align: center; font-size: 3em; margin-bottom: 10px; }
+h1 { text-align: center; color: #4a5568; margin-bottom: 5px; }
+h2 { color: #4a5568; margin-bottom: 15px; border-bottom: 3px solid #667eea; padding-bottom: 10px; }
+h3 { color: #4a5568; margin: 15px 0 10px 0; font-size: 1.1em; }
+.subtitle { text-align: center; color: #718096; font-size: 0.9em; margin-bottom: 20px; }
+.version-badge {
+    display: block; text-align: center; background: #667eea; color: white;
+    padding: 4px 12px; border-radius: 20px; font-size: 0.75em;
+    margin: 0 auto 20px auto; width: fit-content;
+}
+.form-group { margin-bottom: 15px; }
+.form-group label {
+    display: block; margin-bottom: 5px; color: #4a5568;
+    font-weight: 600; font-size: 13px;
+}
+.form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 10px; border: 2px solid #e2e8f0;
+    border-radius: 8px; font-size: 14px;
+}
+.form-group input:focus, .form-group select:focus { outline: none; border-color: #667eea; }
+.btn {
+    padding: 12px 20px; border: none; border-radius: 8px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    margin-right: 8px; margin-bottom: 8px;
+}
+.btn-primary { background: #667eea; color: white; }
+.btn-success { background: #48bb78; color: white; }
+.btn-danger { background: #f56565; color: white; }
+.btn-secondary { background: #e2e8f0; color: #4a5568; }
+.hidden { display: none !important; }
+.header {
+    background: white; border-radius: 12px; padding: 15px 20px;
+    margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;
+}
+.btn-logout {
+    padding: 8px 15px; background: #f56565; color: white;
+    border: none; border-radius: 6px; cursor: pointer;
+}
+.tabs {
+    display: flex; gap: 5px; margin-bottom: 15px;
+    background: rgba(255,255,255,0.15); padding: 8px; border-radius: 12px;
+    overflow-x: auto;
+}
+.tab {
+    flex: 1; padding: 10px; background: rgba(255,255,255,0.25);
+    color: white; border: none; border-radius: 8px; cursor: pointer;
+    font-weight: 600; font-size: 13px;
+}
+.tab.active { background: white; color: #667eea; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+.table thead { background: #667eea; color: white; }
+.table th, .table td {
+    padding: 10px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 13px;
+}
+.table tbody tr:hover { background: #f7fafc; }
+.empty-state { text-align: center; padding: 40px 20px; color: #a0aec0; }
+.empty-icon { font-size: 3em; margin-bottom: 10px; }
+.modal {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); z-index: 9999; align-items: center;
+    justify-content: center; padding: 20px; overflow-y: auto;
+}
+.modal.active { display: flex; }
+.modal-content {
+    background: white; border-radius: 12px; padding: 25px;
+    max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto;
+}
+.modal-header {
+    display: flex; justify-content: space-between; margin-bottom: 20px;
+}
+.modal-close {
+    background: none; border: none; font-size: 1.5em; cursor: pointer;
+}
+.alert { padding: 12px; border-radius: 8px; margin-bottom: 15px; }
+.alert-success { background: #c6f6d5; color: #22543d; }
+.alert-error { background: #fed7d7; color: #742a2a; }
+.link { color: #667eea; cursor: pointer; text-decoration: underline; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.totaux-box {
+    margin-top: 20px; padding: 15px; background: #f7fafc; border-radius: 8px;
+}
+.totaux-ligne {
+    display: flex; justify-content: space-between; margin-bottom: 8px;
+}
+.totaux-ligne.final {
+    font-size: 1.2em; color: #667eea; border-top: 2px solid #e2e8f0; padding-top: 8px;
+    font-weight: bold;
+}
+    </style>
+</head>
+<body>
+    <!-- AUTH SCREEN -->
+    <div id="auth-screen" class="container">
+        <div class="card">
+            <div class="logo">💼</div>
+            <h1>Gestion Pro</h1>
+            <p class="subtitle">Solution complète pour auto-entrepreneurs</p>
+            <span class="version-badge">v2.3 - Devis ☁️</span>
+            <div id="alert-container"></div>
+
+            <div id="login-form">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="login-email" placeholder="votre@email.fr">
+                </div>
+                <div class="form-group">
+                    <label>Mot de passe</label>
+                    <input type="password" id="login-password" placeholder="••••••••">
+                </div>
+                <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="remember-me" checked style="width: auto;">
+                    <label for="remember-me" style="margin: 0; font-weight: normal;">Se souvenir de moi</label>
+                </div>
+                <button class="btn btn-primary" style="width: 100%;" onclick="login()">🔐 Se connecter</button>
+                <p style="text-align: center; margin-top: 15px; font-size: 14px; color: #718096;">
+                    Pas de compte ? <a href="javascript:void(0)" class="link" onclick="showSignup()">Créer un compte</a>
+                </p>
+            </div>
+
+            <div id="signup-form" class="hidden">
+                <div class="form-group">
+                    <label>Nom entreprise</label>
+                    <input type="text" id="signup-company" placeholder="Mon Entreprise">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="signup-email" placeholder="votre@email.fr">
+                </div>
+                <div class="form-group">
+                    <label>Mot de passe (min 6 caractères)</label>
+                    <input type="password" id="signup-password" placeholder="••••••••">
+                </div>
+                <button class="btn btn-primary" style="width: 100%;" onclick="signup()">✅ Créer mon compte</button>
+                <p style="text-align: center; margin-top: 15px; font-size: 14px; color: #718096;">
+                    Déjà un compte ? <a href="javascript:void(0)" class="link" onclick="showLogin()">Se connecter</a>
+                </p>
+            </div>
+        </div>
+    </div>
+    <!-- APP SCREEN -->
+    <div id="app-screen" class="hidden">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <div class="header">
+                <div>
+                    <strong id="user-company">Mon Entreprise</strong>
+                    <div style="font-size: 0.85em; color: #718096;" id="user-email">email@test.fr</div>
+                </div>
+                <button class="btn-logout" onclick="logout()">🚪 Déconnexion</button>
+            </div>
+
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('clients')">👥 Clients</button>
+                <button class="tab" onclick="switchTab('catalogue')">📦 Catalogue</button>
+                <button class="tab" onclick="switchTab('devis')">📋 Devis</button>
+                <button class="tab" onclick="switchTab('factures')">📄 Factures</button>
+            </div>
+
+            <!-- ONGLET CLIENTS -->
+            <div id="tab-clients" class="tab-content active">
+                <div class="card">
+                    <h2>👥 Mes Clients</h2>
+                    <div style="margin-bottom: 15px;">
+                        <div class="form-group">
+                            <label>🔍 Rechercher un client</label>
+                            <input type="text" id="clients-search" placeholder="Nom, email, téléphone..." oninput="filterClients()">
+                        </div>
+                        <button class="btn btn-success" onclick="openClientModal()">➕ Ajouter un client</button>
+                    </div>
+                    <div id="clients-list"></div>
+                </div>
+            </div>
+
+            <!-- ONGLET CATALOGUE -->
+            <div id="tab-catalogue" class="tab-content">
+                <div class="card">
+                    <h2>📦 Mon Catalogue</h2>
+                    <div style="margin-bottom: 15px;">
+                        <div class="form-group">
+                            <label>🔍 Rechercher un article</label>
+                            <input type="text" id="catalogue-search" placeholder="Désignation..." oninput="filterCatalogue()">
+                        </div>
+                        <button class="btn btn-success" onclick="openArticleModal()">➕ Ajouter un article</button>
+                    </div>
+                    <div id="catalogue-list"></div>
+                </div>
+            </div>
+
+            <!-- ONGLET DEVIS -->
+            <div id="tab-devis" class="tab-content">
+                <!-- Créer un devis -->
+                <div class="card">
+                    <h2>📋 Créer un Devis</h2>
+                    
+                    <h3>Client</h3>
+                    <div class="form-group">
+                        <label>Sélectionner un client *</label>
+                        <select id="devis-client-select" onchange="selectClientForDevis()">
+                            <option value="">-- Choisir un client --</option>
+                        </select>
+                    </div>
+                    
+                    <h3>Articles</h3>
+                    <button class="btn btn-primary" onclick="openSelectArticlesModal()">➕ Ajouter des articles</button>
+                    <div id="devis-articles-container"></div>
+                    
+                    <div class="totaux-box">
+                        <div class="totaux-ligne">
+                            <span>Total HT:</span>
+                            <strong id="devis-total-ht">0,00 €</strong>
+                        </div>
+                        <div class="totaux-ligne">
+                            <span>Total TVA:</span>
+                            <strong id="devis-total-tva">0,00 €</strong>
+                        </div>
+                        <div class="totaux-ligne final">
+                            <span>Total TTC:</span>
+                            <strong id="devis-total-ttc">0,00 €</strong>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-success" onclick="saveDevis()" style="width: 100%; margin-top: 15px;">💾 Sauvegarder le devis</button>
+                </div>
+                
+                <!-- Liste des devis -->
+                <div class="card">
+                    <h2>📋 Mes Devis</h2>
+                    <div class="form-group">
+                        <label>🔍 Rechercher</label>
+                        <input type="text" id="devis-search" placeholder="Client, numéro..." oninput="filterDevis()">
+                    </div>
+                    <div id="devis-list"></div>
+                </div>
+            </div>
+
+            <!-- ONGLET FACTURES -->
+            <div id="tab-factures" class="tab-content">
+                <div class="card">
+                    <h2>📄 Mes Factures</h2>
+                    <p style="color: #a0aec0; padding: 40px; text-align: center;">
+                        Prochaine étape... 🚀
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- MODALS -->
+    
+    <!-- MODAL CLIENT -->
+    <div id="client-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="client-modal-title">➕ Ajouter un client</h3>
+                <button class="modal-close" onclick="closeClientModal()">×</button>
+            </div>
+            <form onsubmit="saveClient(event)">
+                <input type="hidden" id="client-id">
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Nom *</label>
+                        <input type="text" id="client-nom" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Prénom</label>
+                        <input type="text" id="client-prenom">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="client-email">
+                </div>
+                <div class="form-group">
+                    <label>Téléphone</label>
+                    <input type="tel" id="client-tel">
+                </div>
+                <div class="form-group">
+                    <label>Adresse</label>
+                    <input type="text" id="client-adresse">
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Code postal</label>
+                        <input type="text" id="client-cp">
+                    </div>
+                    <div class="form-group">
+                        <label>Ville</label>
+                        <input type="text" id="client-ville">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-success" style="width: 100%;">💾 Enregistrer</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL ARTICLE -->
+    <div id="article-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="article-modal-title">➕ Ajouter un article</h3>
+                <button class="modal-close" onclick="closeArticleModal()">×</button>
+            </div>
+            <form onsubmit="saveArticle(event)">
+                <input type="hidden" id="article-id">
+                <div class="form-group">
+                    <label>Désignation *</label>
+                    <input type="text" id="article-designation" placeholder="Ex: Vidange moteur" required>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Prix HT *</label>
+                        <input type="number" id="article-prix" step="0.01" placeholder="45.00" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Unité</label>
+                        <select id="article-unite">
+                            <option value="h">Heure (h)</option>
+                            <option value="u">Unité (u)</option>
+                            <option value="pcs">Pièce (pcs)</option>
+                            <option value="forfait">Forfait</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>TVA</label>
+                    <select id="article-tva">
+                        <option value="0">0%</option>
+                        <option value="5.5">5,5%</option>
+                        <option value="10">10%</option>
+                        <option value="20" selected>20%</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="article-description" rows="2" style="width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px;"></textarea>
+                </div>
+                <button type="submit" class="btn btn-success" style="width: 100%;">💾 Enregistrer</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL SÉLECTION ARTICLES -->
+    <div id="select-articles-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📦 Sélectionner des articles</h3>
+                <button class="modal-close" onclick="closeSelectArticlesModal()">×</button>
+            </div>
+            <div id="select-articles-list"></div>
+            <button class="btn btn-primary" onclick="addSelectedArticles()" style="width: 100%; margin-top: 15px;">➕ Ajouter</button>
+        </div>
+    </div>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAIsJXj3ARwezW4otvRqVplTUpaZaLjVm0",
+            authDomain: "gestion-pro-ml81.firebaseapp.com",
+            projectId: "gestion-pro-ml81",
+            storageBucket: "gestion-pro-ml81.firebasestorage.app",
+            messagingSenderId: "564044952473",
+            appId: "1:564044952473:web:e3f87687e7747f49e7d908"
+        };
+        
+        let currentUser = null;
+        let allClients = [];
+        let allArticles = [];
+        let allDevis = [];
+        let editingClientId = null;
+        let editingArticleId = null;
+        let devisArticles = [];
+        let selectedClientId = null;
+
+        firebase.initializeApp(firebaseConfig);
+        
+        function tryAutoLogin() {
+            const savedEmail = localStorage.getItem('gestion-pro-email');
+            const savedPassword = localStorage.getItem('gestion-pro-password');
+            if (savedEmail && savedPassword) {
+                firebase.auth().signInWithEmailAndPassword(savedEmail, savedPassword).catch(() => {
+                    localStorage.removeItem('gestion-pro-email');
+                    localStorage.removeItem('gestion-pro-password');
+                });
+            }
+        }
+
+        firebase.auth().onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                await loadData();
+                showApp();
+            } else {
+                showAuth();
+                tryAutoLogin();
+            }
+        });
+
+        async function login() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const remember = document.getElementById('remember-me').checked;
+            if (!email || !password) {
+                showAlert('error', '❌ Remplissez tous les champs');
+                return;
+            }
+            try {
+                await firebase.auth().signInWithEmailAndPassword(email, password);
+                if (remember) {
+                    localStorage.setItem('gestion-pro-email', email);
+                    localStorage.setItem('gestion-pro-password', password);
+                }
+                showAlert('success', '✅ Connecté !');
+            } catch (error) {
+                showAlert('error', '❌ ' + error.message);
+            }
+        }
+
+        async function signup() {
+            const company = document.getElementById('signup-company').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            if (!company || !email || !password) {
+                showAlert('error', '❌ Remplissez tous les champs');
+                return;
+            }
+            try {
+                await firebase.auth().createUserWithEmailAndPassword(email, password);
+                localStorage.setItem('company-name', company);
+                showAlert('success', '✅ Compte créé !');
+            } catch (error) {
+                showAlert('error', '❌ ' + error.message);
+            }
+        }
+
+        async function logout() {
+            if (confirm('Se déconnecter ?')) {
+                localStorage.removeItem('gestion-pro-email');
+                localStorage.removeItem('gestion-pro-password');
+                await firebase.auth().signOut();
+            }
+        }
+
+        function showAuth() {
+            document.getElementById('auth-screen').classList.remove('hidden');
+            document.getElementById('app-screen').classList.add('hidden');
+        }
+
+        function showApp() {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('app-screen').classList.remove('hidden');
+            document.getElementById('user-email').textContent = currentUser.email;
+            const company = localStorage.getItem('company-name') || 'Mon Entreprise';
+            document.getElementById('user-company').textContent = company;
+            displayClients();
+            displayCatalogue();
+            displayDevisList();
+            populateClientSelect();
+        }
+
+        function showAlert(type, message) {
+            const container = document.getElementById('alert-container');
+            container.innerHTML = '<div class="alert alert-' + type + '">' + message + '</div>';
+            setTimeout(() => container.innerHTML = '', 3000);
+        }
+
+        function showLogin() {
+            document.getElementById('login-form').classList.remove('hidden');
+            document.getElementById('signup-form').classList.add('hidden');
+        }
+
+        function showSignup() {
+            document.getElementById('login-form').classList.add('hidden');
+            document.getElementById('signup-form').classList.remove('hidden');
+        }
+
+        function switchTab(name) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('tab-' + name).classList.add('active');
+        }
+
+        async function loadData() {
+            if (!currentUser) return;
+            try {
+                const userDoc = await firebase.firestore().collection('users').doc(currentUser.uid).get();
+                if (userDoc.exists) {
+                    const data = userDoc.data();
+                    allClients = data.clients || [];
+                    allArticles = data.articles || [];
+                    allDevis = data.devis || [];
+                    displayClients();
+                    displayCatalogue();
+                    displayDevisList();
+                    populateClientSelect();
+                }
+            } catch (error) {
+                console.error('Erreur chargement:', error);
+            }
+        }
+
+        async function saveData() {
+            if (!currentUser) return;
+            try {
+                await firebase.firestore().collection('users').doc(currentUser.uid).set({
+                    clients: allClients,
+                    articles: allArticles,
+                    devis: allDevis,
+                    lastUpdate: new Date().toISOString()
+                });
+            } catch (error) {
+                console.error('Erreur sauvegarde:', error);
+                showAlert('error', '❌ Erreur de sauvegarde');
+            }
+        }
+
+        // CLIENTS
+        function displayClients(filteredClients = null) {
+            const clientsToShow = filteredClients || allClients;
+            const container = document.getElementById('clients-list');
+            if (clientsToShow.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div><p>Aucun client</p></div>';
+                return;
+            }
+            let html = '<table class="table"><thead><tr><th>Nom</th><th>Contact</th><th>Ville</th><th>Actions</th></tr></thead><tbody>';
+            clientsToShow.forEach(c => {
+                const nomComplet = c.prenom ? c.prenom + ' ' + c.nom : c.nom;
+                const contact = c.email || c.tel || '-';
+                const ville = c.ville || '-';
+                html += '<tr><td><strong>' + nomComplet + '</strong></td><td>' + contact + '</td><td>' + ville + '</td><td>';
+                html += '<button class="btn btn-primary" onclick="editClient(' + c.id + ')" style="padding: 6px 10px;">✏️</button>';
+                html += '<button class="btn btn-danger" onclick="deleteClient(' + c.id + ')" style="padding: 6px 10px;">🗑️</button>';
+                html += '</td></tr>';
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function filterClients() {
+            const searchTerm = document.getElementById('clients-search').value.toLowerCase();
+            if (!searchTerm) { displayClients(); return; }
+            const filtered = allClients.filter(client => 
+                client.nom.toLowerCase().includes(searchTerm) ||
+                (client.prenom && client.prenom.toLowerCase().includes(searchTerm)) ||
+                (client.email && client.email.toLowerCase().includes(searchTerm)) ||
+                (client.tel && client.tel.toLowerCase().includes(searchTerm)) ||
+                (client.ville && client.ville.toLowerCase().includes(searchTerm))
+            );
+            displayClients(filtered);
+        }
+
+        function openClientModal() {
+            editingClientId = null;
+            document.getElementById('client-modal-title').textContent = '➕ Ajouter un client';
+            document.getElementById('client-nom').value = '';
+            document.getElementById('client-prenom').value = '';
+            document.getElementById('client-email').value = '';
+            document.getElementById('client-tel').value = '';
+            document.getElementById('client-adresse').value = '';
+            document.getElementById('client-cp').value = '';
+            document.getElementById('client-ville').value = '';
+            document.getElementById('client-modal').classList.add('active');
+        }
+
+        function closeClientModal() {
+            document.getElementById('client-modal').classList.remove('active');
+        }
+
+        function saveClient(e) {
+            e.preventDefault();
+            const client = {
+                id: editingClientId || Date.now(),
+                nom: document.getElementById('client-nom').value,
+                prenom: document.getElementById('client-prenom').value,
+                email: document.getElementById('client-email').value,
+                tel: document.getElementById('client-tel').value,
+                adresse: document.getElementById('client-adresse').value,
+                cp: document.getElementById('client-cp').value,
+                ville: document.getElementById('client-ville').value,
+                createdAt: editingClientId ? allClients.find(c => c.id === editingClientId).createdAt : new Date().toISOString()
+            };
+            if (editingClientId) {
+                const idx = allClients.findIndex(c => c.id === editingClientId);
+                allClients[idx] = client;
+                showAlert('success', '✅ Client modifié !');
+            } else {
+                allClients.push(client);
+                showAlert('success', '✅ Client ajouté !');
+            }
+            saveData();
+            displayClients();
+            populateClientSelect();
+            closeClientModal();
+        }
+
+        function editClient(id) {
+            const client = allClients.find(c => c.id === id);
+            if (!client) return;
+            editingClientId = id;
+            document.getElementById('client-modal-title').textContent = '✏️ Modifier le client';
+            document.getElementById('client-nom').value = client.nom || '';
+            document.getElementById('client-prenom').value = client.prenom || '';
+            document.getElementById('client-email').value = client.email || '';
+            document.getElementById('client-tel').value = client.tel || '';
+            document.getElementById('client-adresse').value = client.adresse || '';
+            document.getElementById('client-cp').value = client.cp || '';
+            document.getElementById('client-ville').value = client.ville || '';
+            document.getElementById('client-modal').classList.add('active');
+        }
+
+        function deleteClient(id) {
+            if (confirm('Supprimer ce client ?')) {
+                allClients = allClients.filter(c => c.id !== id);
+                saveData();
+                displayClients();
+                populateClientSelect();
+                showAlert('success', '🗑️ Client supprimé !');
+            }
+        }
+
+        // CATALOGUE
+        function displayCatalogue(filteredArticles = null) {
+            const articlesToShow = filteredArticles || allArticles;
+            const container = document.getElementById('catalogue-list');
+            if (articlesToShow.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-icon">📦</div><p>Aucun article</p></div>';
+                return;
+            }
+            let html = '<table class="table"><thead><tr><th>Désignation</th><th>Prix HT</th><th>Unité</th><th>TVA</th><th>Actions</th></tr></thead><tbody>';
+            articlesToShow.forEach(a => {
+                html += '<tr><td><strong>' + a.designation + '</strong>';
+                if (a.description) html += '<br><small style="color: #718096;">' + a.description + '</small>';
+                html += '</td><td>' + formatEuro(a.prix) + '</td><td>' + a.unite + '</td><td>' + a.tva + '%</td><td>';
+                html += '<button class="btn btn-primary" onclick="editArticle(' + a.id + ')" style="padding: 6px 10px;">✏️</button>';
+                html += '<button class="btn btn-danger" onclick="deleteArticle(' + a.id + ')" style="padding: 6px 10px;">🗑️</button>';
+                html += '</td></tr>';
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function filterCatalogue() {
+            const searchTerm = document.getElementById('catalogue-search').value.toLowerCase();
+            if (!searchTerm) { displayCatalogue(); return; }
+            const filtered = allArticles.filter(article => 
+                article.designation.toLowerCase().includes(searchTerm) ||
+                (article.description && article.description.toLowerCase().includes(searchTerm))
+            );
+            displayCatalogue(filtered);
+        }
+
+        function openArticleModal() {
+            editingArticleId = null;
+            document.getElementById('article-modal-title').textContent = '➕ Ajouter un article';
+            document.getElementById('article-designation').value = '';
+            document.getElementById('article-prix').value = '';
+            document.getElementById('article-unite').value = 'h';
+            document.getElementById('article-tva').value = '20';
+            document.getElementById('article-description').value = '';
+            document.getElementById('article-modal').classList.add('active');
+        }
+
+        function closeArticleModal() {
+            document.getElementById('article-modal').classList.remove('active');
+        }
+
+        function saveArticle(e) {
+            e.preventDefault();
+            const article = {
+                id: editingArticleId || Date.now(),
+                designation: document.getElementById('article-designation').value,
+                prix: parseFloat(document.getElementById('article-prix').value),
+                unite: document.getElementById('article-unite').value,
+                tva: parseFloat(document.getElementById('article-tva').value),
+                description: document.getElementById('article-description').value,
+                createdAt: editingArticleId ? allArticles.find(a => a.id === editingArticleId).createdAt : new Date().toISOString()
+            };
+            if (editingArticleId) {
+                const idx = allArticles.findIndex(a => a.id === editingArticleId);
+                allArticles[idx] = article;
+                showAlert('success', '✅ Article modifié !');
+            } else {
+                allArticles.push(article);
+                showAlert('success', '✅ Article ajouté !');
+            }
+            saveData();
+            displayCatalogue();
+            closeArticleModal();
+        }
+
+        function editArticle(id) {
+            const article = allArticles.find(a => a.id === id);
+            if (!article) return;
+            editingArticleId = id;
+            document.getElementById('article-modal-title').textContent = '✏️ Modifier l\'article';
+            document.getElementById('article-designation').value = article.designation || '';
+            document.getElementById('article-prix').value = article.prix || '';
+            document.getElementById('article-unite').value = article.unite || 'h';
+            document.getElementById('article-tva').value = article.tva || '20';
+            document.getElementById('article-description').value = article.description || '';
+            document.getElementById('article-modal').classList.add('active');
+        }
+
+        function deleteArticle(id) {
+            if (confirm('Supprimer cet article ?')) {
+                allArticles = allArticles.filter(a => a.id !== id);
+                saveData();
+                displayCatalogue();
+                showAlert('success', '🗑️ Article supprimé !');
+            }
+        }
+
+        // DEVIS
+        function populateClientSelect() {
+            const select = document.getElementById('devis-client-select');
+            select.innerHTML = '<option value="">-- Choisir un client --</option>';
+            allClients.forEach(c => {
+                const nomComplet = c.prenom ? c.prenom + ' ' + c.nom : c.nom;
+                select.innerHTML += '<option value="' + c.id + '">' + nomComplet + '</option>';
+            });
+        }
+
+        function selectClientForDevis() {
+            selectedClientId = parseInt(document.getElementById('devis-client-select').value);
+        }
+
+        function openSelectArticlesModal() {
+            if (allArticles.length === 0) {
+                showAlert('error', '❌ Votre catalogue est vide !');
+                return;
+            }
+            const container = document.getElementById('select-articles-list');
+            let html = '';
+            allArticles.forEach(a => {
+                html += '<div style="padding: 10px; border-bottom: 1px solid #e2e8f0;">';
+                html += '<label style="display: flex; align-items: center; cursor: pointer;">';
+                html += '<input type="checkbox" value="' + a.id + '" style="margin-right: 10px;">';
+                html += '<div><strong>' + a.designation + '</strong><br>';
+                html += '<small style="color: #718096;">' + formatEuro(a.prix) + ' - ' + a.unite + ' - TVA ' + a.tva + '%</small>';
+                html += '</div></label></div>';
+            });
+            container.innerHTML = html;
+            document.getElementById('select-articles-modal').classList.add('active');
+        }
+
+        function closeSelectArticlesModal() {
+            document.getElementById('select-articles-modal').classList.remove('active');
+        }
+
+        function addSelectedArticles() {
+            const checkboxes = document.querySelectorAll('#select-articles-list input[type="checkbox"]:checked');
+            checkboxes.forEach(cb => {
+                const articleId = parseInt(cb.value);
+                const article = allArticles.find(a => a.id === articleId);
+                if (article && !devisArticles.find(a => a.catalogueId === articleId)) {
+                    devisArticles.push({
+                        catalogueId: articleId,
+                        designation: article.designation,
+                        quantite: 1,
+                        unite: article.unite,
+                        prixHT: article.prix,
+                        tva: article.tva
+                    });
+                }
+            });
+            displayDevisArticles();
+            closeSelectArticlesModal();
+        }
+
+        function displayDevisArticles() {
+            const container = document.getElementById('devis-articles-container');
+            if (devisArticles.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="padding: 20px;"><p style="color: #a0aec0;">Aucun article ajouté</p></div>';
+                calculateDevisTotal();
+                return;
+            }
+            let html = '<table class="table"><thead><tr><th>Article</th><th>Qté</th><th>Prix HT</th><th>TVA</th><th>Total TTC</th><th></th></tr></thead><tbody>';
+            devisArticles.forEach((a, idx) => {
+                const totalHT = a.quantite * a.prixHT;
+                const totalTVA = totalHT * (a.tva / 100);
+                const totalTTC = totalHT + totalTVA;
+                html += '<tr><td><strong>' + a.designation + '</strong></td>';
+                html += '<td><input type="number" value="' + a.quantite + '" min="1" style="width: 60px; padding: 5px;" onchange="updateDevisQuantite(' + idx + ', this.value)"></td>';
+                html += '<td>' + formatEuro(a.prixHT) + '</td><td>' + a.tva + '%</td>';
+                html += '<td><strong>' + formatEuro(totalTTC) + '</strong></td>';
+                html += '<td><button class="btn btn-danger" onclick="removeDevisArticle(' + idx + ')" style="padding: 5px 8px;">🗑️</button></td>';
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+            calculateDevisTotal();
+        }
+
+        function updateDevisQuantite(idx, value) {
+            devisArticles[idx].quantite = parseInt(value) || 1;
+            displayDevisArticles();
+        }
+
+        function removeDevisArticle(idx) {
+            devisArticles.splice(idx, 1);
+            displayDevisArticles();
+        }
+
+        function calculateDevisTotal() {
+            let totalHT = 0, totalTVA = 0;
+            devisArticles.forEach(a => {
+                const ht = a.quantite * a.prixHT;
+                totalHT += ht;
+                totalTVA += ht * (a.tva / 100);
+            });
+            document.getElementById('devis-total-ht').textContent = formatEuro(totalHT);
+            document.getElementById('devis-total-tva').textContent = formatEuro(totalTVA);
+            document.getElementById('devis-total-ttc').textContent = formatEuro(totalHT + totalTVA);
+        }
+
+        function saveDevis() {
+            if (!selectedClientId) {
+                showAlert('error', '❌ Sélectionnez un client !');
+                return;
+            }
+            if (devisArticles.length === 0) {
+                showAlert('error', '❌ Ajoutez des articles !');
+                return;
+            }
+            let totalHT = 0, totalTVA = 0;
+            devisArticles.forEach(a => {
+                const ht = a.quantite * a.prixHT;
+                totalHT += ht;
+                totalTVA += ht * (a.tva / 100);
+            });
+            const client = allClients.find(c => c.id === selectedClientId);
+            const devis = {
+                id: Date.now(),
+                numero: 'DEV-' + (allDevis.length + 1).toString().padStart(3, '0'),
+                date: new Date().toISOString().split('T')[0],
+                clientId: selectedClientId,
+                clientNom: client.prenom ? client.prenom + ' ' + client.nom : client.nom,
+                articles: [...devisArticles],
+                totalHT: totalHT,
+                totalTVA: totalTVA,
+                totalTTC: totalHT + totalTVA
+            };
+            allDevis.push(devis);
+            saveData();
+            document.getElementById('devis-client-select').value = '';
+            devisArticles = [];
+            selectedClientId = null;
+            displayDevisArticles();
+            displayDevisList();
+            showAlert('success', '✅ Devis sauvegardé !');
+        }
+
+        function displayDevisList(filteredDevis = null) {
+            const devisToShow = filteredDevis || allDevis;
+            const container = document.getElementById('devis-list');
+            if (devisToShow.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><p>Aucun devis</p></div>';
+                return;
+            }
+            let html = '<table class="table"><thead><tr><th>N°</th><th>Date</th><th>Client</th><th>Total TTC</th><th>Actions</th></tr></thead><tbody>';
+            devisToShow.forEach(d => {
+                html += '<tr><td><strong>' + d.numero + '</strong></td><td>' + d.date + '</td>';
+                html += '<td>' + d.clientNom + '</td><td><strong>' + formatEuro(d.totalTTC) + '</strong></td><td>';
+                html += '<button class="btn btn-secondary" onclick="downloadDevisPDF(' + d.id + ')" style="padding: 6px 10px; font-size: 12px;">📄 PDF</button>';
+                html += '<button class="btn btn-danger" onclick="deleteDevis(' + d.id + ')" style="padding: 6px 10px;">🗑️</button>';
+                html += '</td></tr>';
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function filterDevis() {
+            const searchTerm = document.getElementById('devis-search').value.toLowerCase();
+            if (!searchTerm) { displayDevisList(); return; }
+            const filtered = allDevis.filter(devis => 
+                devis.numero.toLowerCase().includes(searchTerm) ||
+                devis.clientNom.toLowerCase().includes(searchTerm)
+            );
+            displayDevisList(filtered);
+        }
+
+        function deleteDevis(id) {
+            if (confirm('Supprimer ce devis ?')) {
+                allDevis = allDevis.filter(d => d.id !== id);
+                saveData();
+                displayDevisList();
+                showAlert('success', '🗑️ Devis supprimé !');
+            }
+        }
+
+        function downloadDevisPDF(id) {
+            const devis = allDevis.find(d => d.id === id);
+            if (!devis) return;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const company = localStorage.getItem('company-name') || 'Mon Entreprise';
+            doc.setFontSize(16);
+            doc.text(company, 20, 20);
+            doc.setFontSize(20);
+            doc.text('DEVIS', 150, 20);
+            doc.setFontSize(12);
+            doc.text(devis.numero, 150, 28);
+            doc.setFontSize(10);
+            doc.text('Date: ' + devis.date, 150, 35);
+            doc.text('Client: ' + devis.clientNom, 20, 50);
+            let y = 70;
+            doc.text('Désignation', 20, y);
+            doc.text('Qté', 100, y);
+            doc.text('P.U. HT', 120, y);
+            doc.text('Total TTC', 160, y);
+            y += 10;
+            devis.articles.forEach(a => {
+                const totalHT = a.quantite * a.prixHT;
+                const totalTVA = totalHT * (a.tva / 100);
+                const totalTTC = totalHT + totalTVA;
+                doc.text(a.designation.substring(0, 30), 20, y);
+                doc.text(a.quantite.toString(), 100, y);
+                doc.text(a.prixHT.toFixed(2) + ' €', 120, y);
+                doc.text(totalTTC.toFixed(2) + ' €', 160, y);
+                y += 7;
+            });
+            y += 10;
+            doc.text('Total HT: ' + devis.totalHT.toFixed(2) + ' €', 120, y);
+            y += 7;
+            doc.text('Total TVA: ' + devis.totalTVA.toFixed(2) + ' €', 120, y);
+            y += 7;
+            doc.setFont(undefined, 'bold');
+            doc.text('Total TTC: ' + devis.totalTTC.toFixed(2) + ' €', 120, y);
+            doc.save(devis.numero + '.pdf');
+            showAlert('success', '📄 PDF téléchargé !');
+        }
+
+        function formatEuro(amount) {
+            return amount.toFixed(2).replace('.', ',') + ' €';
+        }
+
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>
