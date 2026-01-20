@@ -713,14 +713,17 @@
         let canvas, ctx, isDrawing = false;
         let vendeurInfos = {};
 
-        // Init Firebase
-        try { 
-            firebase.initializeApp(firebaseConfig);
-            // Activer la persistence pour rester connecté
-            firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-        } catch(e) { 
-            console.log('Firebase init:', e.message); 
-        }
+       // Init Firebase
+firebase.initializeApp(firebaseConfig);
+
+// Activer la persistence AVANT tout - C'est CRITIQUE
+firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+    .then(() => {
+        console.log('✅ Persistence activée - tu resteras connecté');
+    })
+    .catch((error) => {
+        console.error('❌ Erreur persistence:', error.code, error.message);
+    });
 
         // Charger données
         // Charger données depuis Firestore
