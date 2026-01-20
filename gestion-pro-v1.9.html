@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion Pro v2.1</title>
+    <title>Gestion Pro v2.2 - Catalogue</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -41,7 +41,7 @@ h2 { color: #4a5568; margin-bottom: 15px; border-bottom: 3px solid #667eea; padd
     width: 100%; padding: 10px; border: 2px solid #e2e8f0;
     border-radius: 8px; font-size: 14px;
 }
-.form-group input:focus { outline: none; border-color: #667eea; }
+.form-group input:focus, .form-group select:focus { outline: none; border-color: #667eea; }
 .btn {
     padding: 12px 20px; border: none; border-radius: 8px;
     font-size: 14px; font-weight: 600; cursor: pointer;
@@ -54,7 +54,7 @@ h2 { color: #4a5568; margin-bottom: 15px; border-bottom: 3px solid #667eea; padd
 .hidden { display: none !important; }
 .header {
     background: white; border-radius: 12px; padding: 15px 20px;
-    margin-bottom: 15px; display: flex; justify-content: space-between;
+    margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;
 }
 .btn-logout {
     padding: 8px 15px; background: #f56565; color: white;
@@ -111,7 +111,7 @@ h2 { color: #4a5568; margin-bottom: 15px; border-bottom: 3px solid #667eea; padd
             <div class="logo">💼</div>
             <h1>Gestion Pro</h1>
             <p class="subtitle">Solution complète pour auto-entrepreneurs</p>
-            <span class="version-badge">v2.1 - Gestion Clients ☁️</span>
+            <span class="version-badge">v2.2 - Catalogue + Clients ☁️</span>
             <div id="alert-container"></div>
 
             <div id="login-form">
@@ -175,7 +175,6 @@ h2 { color: #4a5568; margin-bottom: 15px; border-bottom: 3px solid #667eea; padd
             <div id="tab-clients" class="tab-content active">
                 <div class="card">
                     <h2>👥 Mes Clients</h2>
-                    
                     <div style="margin-bottom: 15px;">
                         <div class="form-group">
                             <label>🔍 Rechercher un client</label>
@@ -183,7 +182,6 @@ h2 { color: #4a5568; margin-bottom: 15px; border-bottom: 3px solid #667eea; padd
                         </div>
                         <button class="btn btn-success" onclick="openClientModal()">➕ Ajouter un client</button>
                     </div>
-                    
                     <div id="clients-list"></div>
                 </div>
             </div>
@@ -192,9 +190,14 @@ h2 { color: #4a5568; margin-bottom: 15px; border-bottom: 3px solid #667eea; padd
             <div id="tab-catalogue" class="tab-content">
                 <div class="card">
                     <h2>📦 Mon Catalogue</h2>
-                    <p style="color: #a0aec0; padding: 40px; text-align: center;">
-                        Fonctionnalité en cours de développement...
-                    </p>
+                    <div style="margin-bottom: 15px;">
+                        <div class="form-group">
+                            <label>🔍 Rechercher un article</label>
+                            <input type="text" id="catalogue-search" placeholder="Désignation..." oninput="filterCatalogue()">
+                        </div>
+                        <button class="btn btn-success" onclick="openArticleModal()">➕ Ajouter un article</button>
+                    </div>
+                    <div id="catalogue-list"></div>
                 </div>
             </div>
 
@@ -203,7 +206,7 @@ h2 { color: #4a5568; margin-bottom: 15px; border-bottom: 3px solid #667eea; padd
                 <div class="card">
                     <h2>📋 Mes Devis</h2>
                     <p style="color: #a0aec0; padding: 40px; text-align: center;">
-                        Fonctionnalité en cours de développement...
+                        Prochaine étape... 🚀
                     </p>
                 </div>
             </div>
@@ -213,7 +216,7 @@ h2 { color: #4a5568; margin-bottom: 15px; border-bottom: 3px solid #667eea; padd
                 <div class="card">
                     <h2>📄 Mes Factures</h2>
                     <p style="color: #a0aec0; padding: 40px; text-align: center;">
-                        Fonctionnalité en cours de développement...
+                        Prochaine étape... 🚀
                     </p>
                 </div>
             </div>
@@ -231,38 +234,84 @@ h2 { color: #4a5568; margin-bottom: 15px; border-bottom: 3px solid #667eea; padd
                 <div class="grid-2">
                     <div class="form-group">
                         <label>Nom *</label>
-                        <input type="text" id="client-nom" placeholder="Dupont" required>
+                        <input type="text" id="client-nom" required>
                     </div>
                     <div class="form-group">
                         <label>Prénom</label>
-                        <input type="text" id="client-prenom" placeholder="Jean">
+                        <input type="text" id="client-prenom">
                     </div>
                 </div>
                 <div class="form-group">
                     <label>Email</label>
-                    <input type="email" id="client-email" placeholder="jean.dupont@email.fr">
+                    <input type="email" id="client-email">
                 </div>
                 <div class="form-group">
                     <label>Téléphone</label>
-                    <input type="tel" id="client-tel" placeholder="06 12 34 56 78">
+                    <input type="tel" id="client-tel">
                 </div>
                 <div class="form-group">
                     <label>Adresse</label>
-                    <input type="text" id="client-adresse" placeholder="12 rue de la Paix">
+                    <input type="text" id="client-adresse">
                 </div>
                 <div class="grid-2">
                     <div class="form-group">
                         <label>Code postal</label>
-                        <input type="text" id="client-cp" placeholder="75000">
+                        <input type="text" id="client-cp">
                     </div>
                     <div class="form-group">
                         <label>Ville</label>
-                        <input type="text" id="client-ville" placeholder="Paris">
+                        <input type="text" id="client-ville">
                     </div>
                 </div>
                 <div class="form-group">
                     <label>Notes</label>
-                    <textarea id="client-notes" rows="3" placeholder="Informations complémentaires..." style="width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px;"></textarea>
+                    <textarea id="client-notes" rows="3" style="width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px;"></textarea>
+                </div>
+                <button type="submit" class="btn btn-success" style="width: 100%;">💾 Enregistrer</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL ARTICLE -->
+    <div id="article-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="article-modal-title">➕ Ajouter un article</h3>
+                <button class="modal-close" onclick="closeArticleModal()">×</button>
+            </div>
+            <form onsubmit="saveArticle(event)">
+                <input type="hidden" id="article-id">
+                <div class="form-group">
+                    <label>Désignation *</label>
+                    <input type="text" id="article-designation" placeholder="Ex: Vidange moteur" required>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Prix HT *</label>
+                        <input type="number" id="article-prix" step="0.01" placeholder="45.00" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Unité</label>
+                        <select id="article-unite">
+                            <option value="h">Heure (h)</option>
+                            <option value="u">Unité (u)</option>
+                            <option value="pcs">Pièce (pcs)</option>
+                            <option value="forfait">Forfait</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>TVA</label>
+                    <select id="article-tva">
+                        <option value="0">0%</option>
+                        <option value="5.5">5,5%</option>
+                        <option value="10">10%</option>
+                        <option value="20" selected>20%</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="article-description" rows="2" placeholder="Détails de l'article..." style="width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px;"></textarea>
                 </div>
                 <button type="submit" class="btn btn-success" style="width: 100%;">💾 Enregistrer</button>
             </form>
@@ -282,7 +331,9 @@ h2 { color: #4a5568; margin-bottom: 15px; border-bottom: 3px solid #667eea; padd
         // Variables globales
         let currentUser = null;
         let allClients = [];
+        let allArticles = [];
         let editingClientId = null;
+        let editingArticleId = null;
 
         // Init Firebase
         firebase.initializeApp(firebaseConfig);
@@ -301,7 +352,7 @@ h2 { color: #4a5568; margin-bottom: 15px; border-bottom: 3px solid #667eea; padd
             }
         }
 
-        // Auth state
+        // Auth
         firebase.auth().onAuthStateChanged(async (user) => {
             if (user) {
                 currentUser = user;
@@ -325,12 +376,10 @@ h2 { color: #4a5568; margin-bottom: 15px; border-bottom: 3px solid #667eea; padd
             
             try {
                 await firebase.auth().signInWithEmailAndPassword(email, password);
-                
                 if (remember) {
                     localStorage.setItem('gestion-pro-email', email);
                     localStorage.setItem('gestion-pro-password', password);
                 }
-                
                 showAlert('success', '✅ Connecté !');
             } catch (error) {
                 showAlert('error', '❌ ' + error.message);
@@ -376,6 +425,7 @@ h2 { color: #4a5568; margin-bottom: 15px; border-bottom: 3px solid #667eea; padd
             const company = localStorage.getItem('company-name') || 'Mon Entreprise';
             document.getElementById('user-company').textContent = company;
             displayClients();
+            displayCatalogue();
         }
 
         function showAlert(type, message) {
@@ -401,10 +451,7 @@ h2 { color: #4a5568; margin-bottom: 15px; border-bottom: 3px solid #667eea; padd
             document.getElementById('tab-' + name).classList.add('active');
         }
 
-        // ═══════════════════════════════════════
         // FIREBASE DATA
-        // ═══════════════════════════════════════
-        
         async function loadData() {
             if (!currentUser) return;
             
@@ -417,7 +464,9 @@ h2 { color: #4a5568; margin-bottom: 15px; border-bottom: 3px solid #667eea; padd
                 if (userDoc.exists) {
                     const data = userDoc.data();
                     allClients = data.clients || [];
+                    allArticles = data.articles || [];
                     displayClients();
+                    displayCatalogue();
                 }
             } catch (error) {
                 console.error('Erreur chargement:', error);
@@ -433,6 +482,7 @@ h2 { color: #4a5568; margin-bottom: 15px; border-bottom: 3px solid #667eea; padd
                     .doc(currentUser.uid)
                     .set({
                         clients: allClients,
+                        articles: allArticles,
                         lastUpdate: new Date().toISOString()
                     });
             } catch (error) {
@@ -450,11 +500,7 @@ h2 { color: #4a5568; margin-bottom: 15px; border-bottom: 3px solid #667eea; padd
             const container = document.getElementById('clients-list');
             
             if (clientsToShow.length === 0) {
-                if (allClients.length === 0) {
-                    container.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div><p>Aucun client</p></div>';
-                } else {
-                    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><p>Aucun résultat trouvé</p></div>';
-                }
+                container.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div><p>Aucun client</p></div>';
                 return;
             }
             
@@ -464,15 +510,11 @@ h2 { color: #4a5568; margin-bottom: 15px; border-bottom: 3px solid #667eea; padd
                 const contact = c.email || c.tel || '-';
                 const ville = c.ville || '-';
                 
-                html += '<tr>';
-                html += '<td><strong>' + nomComplet + '</strong></td>';
-                html += '<td>' + contact + '</td>';
-                html += '<td>' + ville + '</td>';
-                html += '<td>';
+                html += '<tr><td><strong>' + nomComplet + '</strong></td>';
+                html += '<td>' + contact + '</td><td>' + ville + '</td><td>';
                 html += '<button class="btn btn-primary" onclick="editClient(' + c.id + ')" style="padding: 6px 10px;">✏️</button>';
                 html += '<button class="btn btn-danger" onclick="deleteClient(' + c.id + ')" style="padding: 6px 10px;">🗑️</button>';
-                html += '</td>';
-                html += '</tr>';
+                html += '</td></tr>';
             });
             html += '</tbody></table>';
             container.innerHTML = html;
@@ -569,6 +611,122 @@ h2 { color: #4a5568; margin-bottom: 15px; border-bottom: 3px solid #667eea; padd
                 displayClients();
                 showAlert('success', '🗑️ Client supprimé !');
             }
+        }
+
+        // ═══════════════════════════════════════
+        // GESTION CATALOGUE
+        // ═══════════════════════════════════════
+        
+        function displayCatalogue(filteredArticles = null) {
+            const articlesToShow = filteredArticles || allArticles;
+            const container = document.getElementById('catalogue-list');
+            
+            if (articlesToShow.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-icon">📦</div><p>Aucun article</p></div>';
+                return;
+            }
+            
+            let html = '<table class="table"><thead><tr><th>Désignation</th><th>Prix HT</th><th>Unité</th><th>TVA</th><th>Actions</th></tr></thead><tbody>';
+            articlesToShow.forEach(a => {
+                html += '<tr><td><strong>' + a.designation + '</strong>';
+                if (a.description) html += '<br><small style="color: #718096;">' + a.description + '</small>';
+                html += '</td>';
+                html += '<td>' + formatEuro(a.prix) + '</td>';
+                html += '<td>' + a.unite + '</td>';
+                html += '<td>' + a.tva + '%</td>';
+                html += '<td>';
+                html += '<button class="btn btn-primary" onclick="editArticle(' + a.id + ')" style="padding: 6px 10px;">✏️</button>';
+                html += '<button class="btn btn-danger" onclick="deleteArticle(' + a.id + ')" style="padding: 6px 10px;">🗑️</button>';
+                html += '</td></tr>';
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function filterCatalogue() {
+            const searchTerm = document.getElementById('catalogue-search').value.toLowerCase();
+            if (!searchTerm) {
+                displayCatalogue();
+                return;
+            }
+            
+            const filtered = allArticles.filter(article => 
+                article.designation.toLowerCase().includes(searchTerm) ||
+                (article.description && article.description.toLowerCase().includes(searchTerm))
+            );
+            displayCatalogue(filtered);
+        }
+
+        function openArticleModal() {
+            editingArticleId = null;
+            document.getElementById('article-modal-title').textContent = '➕ Ajouter un article';
+            document.getElementById('article-designation').value = '';
+            document.getElementById('article-prix').value = '';
+            document.getElementById('article-unite').value = 'h';
+            document.getElementById('article-tva').value = '20';
+            document.getElementById('article-description').value = '';
+            document.getElementById('article-modal').classList.add('active');
+        }
+
+        function closeArticleModal() {
+            document.getElementById('article-modal').classList.remove('active');
+        }
+
+        function saveArticle(e) {
+            e.preventDefault();
+            
+            const article = {
+                id: editingArticleId || Date.now(),
+                designation: document.getElementById('article-designation').value,
+                prix: parseFloat(document.getElementById('article-prix').value),
+                unite: document.getElementById('article-unite').value,
+                tva: parseFloat(document.getElementById('article-tva').value),
+                description: document.getElementById('article-description').value,
+                createdAt: editingArticleId ? 
+                    allArticles.find(a => a.id === editingArticleId).createdAt : 
+                    new Date().toISOString()
+            };
+            
+            if (editingArticleId) {
+                const idx = allArticles.findIndex(a => a.id === editingArticleId);
+                allArticles[idx] = article;
+                showAlert('success', '✅ Article modifié !');
+            } else {
+                allArticles.push(article);
+                showAlert('success', '✅ Article ajouté !');
+            }
+            
+            saveData();
+            displayCatalogue();
+            closeArticleModal();
+        }
+
+        function editArticle(id) {
+            const article = allArticles.find(a => a.id === id);
+            if (!article) return;
+            
+            editingArticleId = id;
+            document.getElementById('article-modal-title').textContent = '✏️ Modifier l\'article';
+            document.getElementById('article-designation').value = article.designation || '';
+            document.getElementById('article-prix').value = article.prix || '';
+            document.getElementById('article-unite').value = article.unite || 'h';
+            document.getElementById('article-tva').value = article.tva || '20';
+            document.getElementById('article-description').value = article.description || '';
+            document.getElementById('article-modal').classList.add('active');
+        }
+
+        function deleteArticle(id) {
+            if (confirm('Supprimer cet article ?')) {
+                allArticles = allArticles.filter(a => a.id !== id);
+                saveData();
+                displayCatalogue();
+                showAlert('success', '🗑️ Article supprimé !');
+            }
+        }
+
+        // UTILS
+        function formatEuro(amount) {
+            return amount.toFixed(2).replace('.', ',') + ' €';
         }
 
         // Close modal on outside click
