@@ -943,7 +943,7 @@
                 // Masquer l'indicateur
                 document.getElementById('loading-indicator').classList.add('hidden');
                 showAlert('success', '✅ Connecté !');
-                setTimeout(() => showApp(), 300);
+                setTimeout(() => showApp(), 100);
             } catch (error) {
                 document.getElementById('loading-indicator').classList.add('hidden');
                 showAlert('error', '❌ ' + error.message);
@@ -961,7 +961,7 @@
             await firebase.auth().createUserWithEmailAndPassword(email, password);
             localStorage.setItem('company-name', company);
             showAlert('success', '✅ Compte créé !');
-            setTimeout(() => showApp(), 500);
+            setTimeout(() => showApp(), 100);
         }
 
         async function logout() {
