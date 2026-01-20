@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion Pro v2.4 - Factures</title>
+    <title>Gestion Pro v2.5 - Comptabilité</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -115,6 +115,7 @@ h3 { color: #4a5568; margin: 15px 0 10px 0; font-size: 1.1em; }
     font-weight: bold;
 }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
     <!-- AUTH SCREEN -->
@@ -123,7 +124,7 @@ h3 { color: #4a5568; margin: 15px 0 10px 0; font-size: 1.1em; }
             <div class="logo">💼</div>
             <h1>Gestion Pro</h1>
             <p class="subtitle">Solution complète pour auto-entrepreneurs</p>
-            <span class="version-badge">v2.4 - Factures ☁️</span>
+            <span class="version-badge">v2.5 - Comptabilité ☁️</span>
             <div id="alert-container"></div>
 
             <div id="login-form">
@@ -181,6 +182,7 @@ h3 { color: #4a5568; margin: 15px 0 10px 0; font-size: 1.1em; }
                 <button class="tab" onclick="switchTab('catalogue')">📦 Catalogue</button>
                 <button class="tab" onclick="switchTab('devis')">📋 Devis</button>
                 <button class="tab" onclick="switchTab('factures')">📄 Factures</button>
+                <button class="tab" onclick="switchTab('compta')">💰 Compta</button>
             </div>
 
             <!-- ONGLET CLIENTS -->
@@ -284,6 +286,39 @@ h3 { color: #4a5568; margin: 15px 0 10px 0; font-size: 1.1em; }
                             <label>Montant remise</label>
                             <input type="number" id="facture-remise-montant" step="0.01" placeholder="0" oninput="calculateFactureTotal()">
                         </div>
+            <!-- ONGLET COMPTABILITÉ -->
+            <div id="tab-compta" class="tab-content">
+                <div class="card">
+                    <h2>💰 Tableau de Bord</h2>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px;">
+                            <div style="font-size: 0.9em; opacity: 0.9;">Chiffre d'Affaires</div>
+                            <div style="font-size: 1.8em; font-weight: bold; margin-top: 5px;" id="compta-ca-total">0,00 €</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; padding: 20px; border-radius: 10px;">
+                            <div style="font-size: 0.9em; opacity: 0.9;">Factures émises</div>
+                            <div style="font-size: 1.8em; font-weight: bold; margin-top: 5px;" id="compta-nb-factures">0</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%); color: white; padding: 20px; border-radius: 10px;">
+                            <div style="font-size: 0.9em; opacity: 0.9;">Cotisations estimées</div>
+                            <div style="font-size: 1.8em; font-weight: bold; margin-top: 5px;" id="compta-cotisations">0,00 €</div>
+                            <div style="font-size: 0.75em; opacity: 0.8; margin-top: 5px;">22% du CA (auto-entrepreneur)</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%); color: white; padding: 20px; border-radius: 10px;">
+                            <div style="font-size: 0.9em; opacity: 0.9;">Reste après cotisations</div>
+                            <div style="font-size: 1.8em; font-weight: bold; margin-top: 5px;" id="compta-net">0,00 €</div>
+                        </div>
+                    </div>
+                    
+                    <h3>📊 Évolution mensuelle</h3>
+                    <canvas id="compta-chart" style="max-height: 250px; margin-top: 15px;"></canvas>
+                    
+                    <h3 style="margin-top: 30px;">📄 Factures comptabilisées</h3>
+                    <div id="compta-factures-list"></div>
+                    
+                    <button class="btn btn-primary" onclick="exportComptaCSV()" style="margin-top: 15px;">📥 Exporter en CSV</button>
+                </div>
+            </div>
                         <div class="form-group">
                             <label>Type</label>
                             <select id="facture-remise-type" onchange="calculateFactureTotal()">
@@ -550,8 +585,10 @@ h3 { color: #4a5568; margin: 15px 0 10px 0; font-size: 1.1em; }
             displayCatalogue();
             displayDevisList();
             displayFacturesList();
+            updateComptabilite();
             populateFactureClientSelect();
             initSignatureCanvas();
+            updateComptabilite();
             populateClientSelect();
         }
 
@@ -593,8 +630,10 @@ h3 { color: #4a5568; margin: 15px 0 10px 0; font-size: 1.1em; }
                     displayCatalogue();
                     displayDevisList();
             displayFacturesList();
+            updateComptabilite();
             populateFactureClientSelect();
             initSignatureCanvas();
+            updateComptabilite();
                     populateClientSelect();
                 }
             } catch (error) {
@@ -958,8 +997,10 @@ h3 { color: #4a5568; margin: 15px 0 10px 0; font-size: 1.1em; }
             displayDevisArticles();
             displayDevisList();
             displayFacturesList();
+            updateComptabilite();
             populateFactureClientSelect();
             initSignatureCanvas();
+            updateComptabilite();
             showAlert('success', '✅ Devis sauvegardé !');
         }
 
@@ -993,8 +1034,10 @@ h3 { color: #4a5568; margin: 15px 0 10px 0; font-size: 1.1em; }
             const searchTerm = document.getElementById('devis-search').value.toLowerCase();
             if (!searchTerm) { displayDevisList();
             displayFacturesList();
+            updateComptabilite();
             populateFactureClientSelect();
-            initSignatureCanvas(); return; }
+            initSignatureCanvas();
+            updateComptabilite(); return; }
             const filtered = allDevis.filter(devis => 
                 devis.numero.toLowerCase().includes(searchTerm) ||
                 devis.clientNom.toLowerCase().includes(searchTerm)
@@ -1008,8 +1051,10 @@ h3 { color: #4a5568; margin: 15px 0 10px 0; font-size: 1.1em; }
                 saveData();
                 displayDevisList();
             displayFacturesList();
+            updateComptabilite();
             populateFactureClientSelect();
             initSignatureCanvas();
+            updateComptabilite();
                 showAlert('success', '🗑️ Devis supprimé !');
             }
         }
@@ -1310,6 +1355,7 @@ h3 { color: #4a5568; margin: 15px 0 10px 0; font-size: 1.1em; }
             selectedFactureClientId = null;
             displayFactureArticles();
             displayFacturesList();
+            updateComptabilite();
             
             showAlert('success', '✅ Facture sauvegardée !');
         }
@@ -1348,6 +1394,7 @@ h3 { color: #4a5568; margin: 15px 0 10px 0; font-size: 1.1em; }
                 allFactures = allFactures.filter(f => f.id !== id);
                 saveData();
                 displayFacturesList();
+            updateComptabilite();
                 showAlert('success', '🗑️ Facture supprimée !');
             }
         }
@@ -1444,9 +1491,134 @@ h3 { color: #4a5568; margin: 15px 0 10px 0; font-size: 1.1em; }
             
             displayDevisList();
             displayFacturesList();
+            updateComptabilite();
+
+        // ═══════════════════════════════════════
+        // COMPTABILITÉ
+        // ═══════════════════════════════════════
+        
+        let comptaChart = null;
+
+        function updateComptabilite() {
+            const caTotal = allFactures.reduce((sum, f) => sum + f.totalTTC, 0);
+            const nbFactures = allFactures.length;
+            const cotisations = caTotal * 0.22;
+            const net = caTotal - cotisations;
+            
+            document.getElementById('compta-ca-total').textContent = formatEuro(caTotal);
+            document.getElementById('compta-nb-factures').textContent = nbFactures;
+            document.getElementById('compta-cotisations').textContent = formatEuro(cotisations);
+            document.getElementById('compta-net').textContent = formatEuro(net);
+            
+            updateComptaChart();
+            displayComptaFactures();
+        }
+
+        function updateComptaChart() {
+            const canvas = document.getElementById('compta-chart');
+            if (!canvas) return;
+            
+            const facturesParMois = {};
+            allFactures.forEach(f => {
+                const mois = f.date.substring(0, 7);
+                if (!facturesParMois[mois]) {
+                    facturesParMois[mois] = 0;
+                }
+                facturesParMois[mois] += f.totalTTC;
+            });
+            
+            const moisTries = Object.keys(facturesParMois).sort();
+            const labels = moisTries.map(m => {
+                const [year, month] = m.split('-');
+                const moisNoms = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+                return moisNoms[parseInt(month) - 1] + ' ' + year;
+            });
+            const data = moisTries.map(m => facturesParMois[m]);
+            
+            if (comptaChart) {
+                comptaChart.destroy();
+            }
+            
+            const ctx = canvas.getContext('2d');
+            comptaChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels.length > 0 ? labels : ['Aucune donnée'],
+                    datasets: [{
+                        label: 'Chiffre d\'Affaires (€)',
+                        data: data.length > 0 ? data : [0],
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toFixed(0) + ' €';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function displayComptaFactures() {
+            const container = document.getElementById('compta-factures-list');
+            if (allFactures.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="padding: 20px;"><p style="color: #a0aec0;">Aucune facture</p></div>';
+                return;
+            }
+            
+            let html = '<table class="table"><thead><tr><th>Date</th><th>N°</th><th>Client</th><th>Montant TTC</th></tr></thead><tbody>';
+            allFactures.slice().reverse().forEach(f => {
+                html += '<tr>';
+                html += '<td>' + f.date + '</td>';
+                html += '<td><strong>' + f.numero + '</strong></td>';
+                html += '<td>' + f.clientNom + '</td>';
+                html += '<td><strong>' + formatEuro(f.totalTTC) + '</strong></td>';
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function exportComptaCSV() {
+            if (allFactures.length === 0) {
+                showAlert('error', '⚠️ Aucune facture à exporter !');
+                return;
+            }
+            
+            let csv = 'Date;Numéro;Client;Total HT;TVA;Total TTC\n';
+            allFactures.forEach(f => {
+                csv += f.date + ';' + f.numero + ';' + f.clientNom + ';';
+                csv += f.totalHT.toFixed(2) + ';' + f.totalTVA.toFixed(2) + ';' + f.totalTTC.toFixed(2) + '\n';
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'comptabilite_' + new Date().toISOString().split('T')[0] + '.csv';
+            link.click();
+            
+            showAlert('success', '✅ Fichier CSV téléchargé !');
+        }
             populateFactureClientSelect();
             initSignatureCanvas();
+            updateComptabilite();
             displayFacturesList();
+            updateComptabilite();
             
             showAlert('success', '✅ Facture ' + facture.numero + ' créée depuis ' + devis.numero + ' !');
         }
