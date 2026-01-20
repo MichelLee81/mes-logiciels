@@ -294,7 +294,7 @@
                     <div class="user-email" id="user-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e58088848c89a5809d8488958980cb868a88">[email&#160;protected]</a></div>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                    <button class="btn-logout" onclick="showFirebaseGuide()" style="background: #48bb78;">☁️ Cloud Activé ✓</button>
+                    <button class="btn-logout" onclick="showFirebaseGuide()" style="background: #48bb78;">☁️ Connecté ✓</button>
                     <button class="btn-logout" onclick="logout()">🚪 Déconnexion</button>
                 </div>
             </div>
@@ -1202,7 +1202,7 @@ firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL)
             devisToShow.forEach(d => {
                 const statut = d.transforme ? '✅ Transformé' : '🟡 En attente';
                 const checkbox = d.transforme ? '' : `<label style="display: flex; align-items: center; gap: 5px; cursor: pointer; margin-bottom: 5px;">
-                    <input type="checkbox" onchange="transformerEnFacture(${d.id})">
+                    <input type="checkbox" onchange="transformerEnFacture(${d.✅})">
                     <span style="font-size: 12px;">Devis accepté</span>
                 </label>`;
                 
