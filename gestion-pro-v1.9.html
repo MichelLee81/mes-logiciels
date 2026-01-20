@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion Pro v2.3 - Devis</title>
+    <title>Gestion Pro v2.4 - Factures</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -123,7 +123,7 @@ h3 { color: #4a5568; margin: 15px 0 10px 0; font-size: 1.1em; }
             <div class="logo">💼</div>
             <h1>Gestion Pro</h1>
             <p class="subtitle">Solution complète pour auto-entrepreneurs</p>
-            <span class="version-badge">v2.3 - Devis ☁️</span>
+            <span class="version-badge">v2.4 - Factures ☁️</span>
             <div id="alert-container"></div>
 
             <div id="login-form">
@@ -262,11 +262,77 @@ h3 { color: #4a5568; margin: 15px 0 10px 0; font-size: 1.1em; }
 
             <!-- ONGLET FACTURES -->
             <div id="tab-factures" class="tab-content">
+                <!-- Créer une facture -->
+                <div class="card">
+                    <h2>📄 Créer une Facture</h2>
+                    
+                    <h3>Client</h3>
+                    <div class="form-group">
+                        <label>Sélectionner un client *</label>
+                        <select id="facture-client-select" onchange="selectClientForFacture()">
+                            <option value="">-- Choisir un client --</option>
+                        </select>
+                    </div>
+                    
+                    <h3>Articles</h3>
+                    <button class="btn btn-primary" onclick="openSelectArticlesModalFacture()">➕ Ajouter des articles</button>
+                    <div id="facture-articles-container"></div>
+                    
+                    <h3>Remise (optionnelle)</h3>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Montant remise</label>
+                            <input type="number" id="facture-remise-montant" step="0.01" placeholder="0" oninput="calculateFactureTotal()">
+                        </div>
+                        <div class="form-group">
+                            <label>Type</label>
+                            <select id="facture-remise-type" onchange="calculateFactureTotal()">
+                                <option value="euro">€ (euros)</option>
+                                <option value="pourcent">% (pourcentage)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="totaux-box">
+                        <div class="totaux-ligne">
+                            <span>Total HT:</span>
+                            <strong id="facture-total-ht">0,00 €</strong>
+                        </div>
+                        <div class="totaux-ligne">
+                            <span>Total TVA:</span>
+                            <strong id="facture-total-tva">0,00 €</strong>
+                        </div>
+                        <div class="totaux-ligne remise">
+                            <span>Remise:</span>
+                            <strong id="facture-remise-affichage">0,00 €</strong>
+                        </div>
+                        <div class="totaux-ligne final">
+                            <span>Total TTC:</span>
+                            <strong id="facture-total-ttc">0,00 €</strong>
+                        </div>
+                    </div>
+                    
+                    <h3>Signature vendeur</h3>
+                    <div class="signature-box">
+                        <canvas id="signature-canvas" width="400" height="150"></canvas>
+                        <div style="margin-top: 10px; display: flex; gap: 10px;">
+                            <button class="btn btn-secondary" onclick="clearSignature()" style="flex: 1;">🗑️ Effacer</button>
+                            <button class="btn btn-success" onclick="saveSignature()" style="flex: 1;">✓ Valider</button>
+                        </div>
+                        <img id="signature-preview" style="display: none; margin-top: 10px; max-width: 200px; border: 1px solid #e2e8f0; border-radius: 5px;">
+                    </div>
+                    
+                    <button class="btn btn-success" onclick="saveFacture()" style="width: 100%; margin-top: 15px;">💾 Sauvegarder la facture</button>
+                </div>
+                
+                <!-- Liste des factures -->
                 <div class="card">
                     <h2>📄 Mes Factures</h2>
-                    <p style="color: #a0aec0; padding: 40px; text-align: center;">
-                        Prochaine étape... 🚀
-                    </p>
+                    <div class="form-group">
+                        <label>🔍 Rechercher</label>
+                        <input type="text" id="factures-search" placeholder="Client, numéro..." oninput="filterFactures()">
+                    </div>
+                    <div id="factures-list"></div>
                 </div>
             </div>
         </div>
@@ -390,6 +456,11 @@ h3 { color: #4a5568; margin: 15px 0 10px 0; font-size: 1.1em; }
         let allClients = [];
         let allArticles = [];
         let allDevis = [];
+        let allFactures = [];
+        let factureArticles = [];
+        let selectedFactureClientId = null;
+        let signatureDataUrl = null;
+        let canvas, ctx, isDrawing = false;
         let editingClientId = null;
         let editingArticleId = null;
         let devisArticles = [];
@@ -478,6 +549,9 @@ h3 { color: #4a5568; margin: 15px 0 10px 0; font-size: 1.1em; }
             displayClients();
             displayCatalogue();
             displayDevisList();
+            displayFacturesList();
+            populateFactureClientSelect();
+            initSignatureCanvas();
             populateClientSelect();
         }
 
@@ -513,9 +587,14 @@ h3 { color: #4a5568; margin: 15px 0 10px 0; font-size: 1.1em; }
                     allClients = data.clients || [];
                     allArticles = data.articles || [];
                     allDevis = data.devis || [];
+                    allFactures = data.factures || [];
+                    signatureDataUrl = data.signature || null;
                     displayClients();
                     displayCatalogue();
                     displayDevisList();
+            displayFacturesList();
+            populateFactureClientSelect();
+            initSignatureCanvas();
                     populateClientSelect();
                 }
             } catch (error) {
@@ -530,6 +609,8 @@ h3 { color: #4a5568; margin: 15px 0 10px 0; font-size: 1.1em; }
                     clients: allClients,
                     articles: allArticles,
                     devis: allDevis,
+                    factures: allFactures,
+                    signature: signatureDataUrl,
                     lastUpdate: new Date().toISOString()
                 });
             } catch (error) {
@@ -772,6 +853,11 @@ h3 { color: #4a5568; margin: 15px 0 10px 0; font-size: 1.1em; }
         }
 
         function addSelectedArticles() {
+            const hasFactureCheckbox = document.querySelector("#select-articles-list input[data-type=\"facture\"]");
+            if (hasFactureCheckbox) {
+                addSelectedArticlesFacture();
+                return;
+            }
             const checkboxes = document.querySelectorAll('#select-articles-list input[type="checkbox"]:checked');
             checkboxes.forEach(cb => {
                 const articleId = parseInt(cb.value);
@@ -871,6 +957,9 @@ h3 { color: #4a5568; margin: 15px 0 10px 0; font-size: 1.1em; }
             selectedClientId = null;
             displayDevisArticles();
             displayDevisList();
+            displayFacturesList();
+            populateFactureClientSelect();
+            initSignatureCanvas();
             showAlert('success', '✅ Devis sauvegardé !');
         }
 
@@ -885,7 +974,14 @@ h3 { color: #4a5568; margin: 15px 0 10px 0; font-size: 1.1em; }
             devisToShow.forEach(d => {
                 html += '<tr><td><strong>' + d.numero + '</strong></td><td>' + d.date + '</td>';
                 html += '<td>' + d.clientNom + '</td><td><strong>' + formatEuro(d.totalTTC) + '</strong></td><td>';
-                html += '<button class="btn btn-secondary" onclick="downloadDevisPDF(' + d.id + ')" style="padding: 6px 10px; font-size: 12px;">📄 PDF</button>';
+                html += '<button class="btn btn-secondary" onclick="const statut = d.transforme ? "✅ Transformé" : "🟡 En attente";
+                html += "<td>" + statut + "</td>";
+                if (!d.transforme) {
+                    html += "<td><button class=\"btn btn-warning\" onclick=\"convertDevisToFacture(" + d.id + ")\" style=\"padding: 6px 10px; font-size: 12px;\">📄→💰</button>";
+                } else {
+                    html += "<td>";
+                }
+                html += "<button class=\"btn btn-secondary\" onclick=\"downloadDevisPDF(' + d.id + ')" style="padding: 6px 10px; font-size: 12px;">📄 PDF</button>';
                 html += '<button class="btn btn-danger" onclick="deleteDevis(' + d.id + ')" style="padding: 6px 10px;">🗑️</button>';
                 html += '</td></tr>';
             });
@@ -895,7 +991,10 @@ h3 { color: #4a5568; margin: 15px 0 10px 0; font-size: 1.1em; }
 
         function filterDevis() {
             const searchTerm = document.getElementById('devis-search').value.toLowerCase();
-            if (!searchTerm) { displayDevisList(); return; }
+            if (!searchTerm) { displayDevisList();
+            displayFacturesList();
+            populateFactureClientSelect();
+            initSignatureCanvas(); return; }
             const filtered = allDevis.filter(devis => 
                 devis.numero.toLowerCase().includes(searchTerm) ||
                 devis.clientNom.toLowerCase().includes(searchTerm)
@@ -908,11 +1007,21 @@ h3 { color: #4a5568; margin: 15px 0 10px 0; font-size: 1.1em; }
                 allDevis = allDevis.filter(d => d.id !== id);
                 saveData();
                 displayDevisList();
+            displayFacturesList();
+            populateFactureClientSelect();
+            initSignatureCanvas();
                 showAlert('success', '🗑️ Devis supprimé !');
             }
         }
 
-        function downloadDevisPDF(id) {
+        function const statut = d.transforme ? "✅ Transformé" : "🟡 En attente";
+                html += "<td>" + statut + "</td>";
+                if (!d.transforme) {
+                    html += "<td><button class=\"btn btn-warning\" onclick=\"convertDevisToFacture(" + d.id + ")\" style=\"padding: 6px 10px; font-size: 12px;\">📄→💰</button>";
+                } else {
+                    html += "<td>";
+                }
+                html += "<button class=\"btn btn-secondary\" onclick=\"downloadDevisPDF(id) {
             const devis = allDevis.find(d => d.id === id);
             if (!devis) return;
             const { jsPDF } = window.jspdf;
@@ -963,6 +1072,384 @@ h3 { color: #4a5568; margin: 15px 0 10px 0; font-size: 1.1em; }
                 e.target.classList.remove('active');
             }
         });
+
+        // ═══════════════════════════════════════
+        // GESTION FACTURES
+        // ═══════════════════════════════════════
+        
+        function selectClientForFacture() {
+            selectedFactureClientId = parseInt(document.getElementById('facture-client-select').value);
+        }
+
+        function populateFactureClientSelect() {
+            const select = document.getElementById('facture-client-select');
+            select.innerHTML = '<option value="">-- Choisir un client --</option>';
+            allClients.forEach(c => {
+                const nomComplet = c.prenom ? c.prenom + ' ' + c.nom : c.nom;
+                select.innerHTML += '<option value="' + c.id + '">' + nomComplet + '</option>';
+            });
+        }
+
+        function openSelectArticlesModalFacture() {
+            if (allArticles.length === 0) {
+                showAlert('error', '❌ Votre catalogue est vide !');
+                return;
+            }
+            const container = document.getElementById('select-articles-list');
+            let html = '';
+            allArticles.forEach(a => {
+                html += '<div style="padding: 10px; border-bottom: 1px solid #e2e8f0;">';
+                html += '<label style="display: flex; align-items: center; cursor: pointer;">';
+                html += '<input type="checkbox" value="' + a.id + '" data-type="facture" style="margin-right: 10px;">';
+                html += '<div><strong>' + a.designation + '</strong><br>';
+                html += '<small style="color: #718096;">' + formatEuro(a.prix) + ' - ' + a.unite + ' - TVA ' + a.tva + '%</small>';
+                html += '</div></label></div>';
+            });
+            container.innerHTML = html;
+            document.getElementById('select-articles-modal').classList.add('active');
+        }
+
+        function addSelectedArticlesFacture() {
+            const checkboxes = document.querySelectorAll('#select-articles-list input[type="checkbox"][data-type="facture"]:checked');
+            checkboxes.forEach(cb => {
+                const articleId = parseInt(cb.value);
+                const article = allArticles.find(a => a.id === articleId);
+                if (article && !factureArticles.find(a => a.catalogueId === articleId)) {
+                    factureArticles.push({
+                        catalogueId: articleId,
+                        designation: article.designation,
+                        quantite: 1,
+                        unite: article.unite,
+                        prixHT: article.prix,
+                        tva: article.tva
+                    });
+                }
+            });
+            displayFactureArticles();
+            closeSelectArticlesModal();
+        }
+
+        function displayFactureArticles() {
+            const container = document.getElementById('facture-articles-container');
+            if (factureArticles.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="padding: 20px;"><p style="color: #a0aec0;">Aucun article ajouté</p></div>';
+                calculateFactureTotal();
+                return;
+            }
+            let html = '<table class="table"><thead><tr><th>Article</th><th>Qté</th><th>Prix HT</th><th>TVA</th><th>Total TTC</th><th></th></tr></thead><tbody>';
+            factureArticles.forEach((a, idx) => {
+                const totalHT = a.quantite * a.prixHT;
+                const totalTVA = totalHT * (a.tva / 100);
+                const totalTTC = totalHT + totalTVA;
+                html += '<tr><td><strong>' + a.designation + '</strong></td>';
+                html += '<td><input type="number" value="' + a.quantite + '" min="1" style="width: 60px; padding: 5px;" onchange="updateFactureQuantite(' + idx + ', this.value)"></td>';
+                html += '<td>' + formatEuro(a.prixHT) + '</td><td>' + a.tva + '%</td>';
+                html += '<td><strong>' + formatEuro(totalTTC) + '</strong></td>';
+                html += '<td><button class="btn btn-danger" onclick="removeFactureArticle(' + idx + ')" style="padding: 5px 8px;">🗑️</button></td>';
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+            calculateFactureTotal();
+        }
+
+        function updateFactureQuantite(idx, value) {
+            factureArticles[idx].quantite = parseInt(value) || 1;
+            displayFactureArticles();
+        }
+
+        function removeFactureArticle(idx) {
+            factureArticles.splice(idx, 1);
+            displayFactureArticles();
+        }
+
+        function calculateFactureTotal() {
+            let totalHT = 0, totalTVA = 0;
+            factureArticles.forEach(a => {
+                const ht = a.quantite * a.prixHT;
+                totalHT += ht;
+                totalTVA += ht * (a.tva / 100);
+            });
+            
+            const remiseMontant = parseFloat(document.getElementById('facture-remise-montant').value) || 0;
+            const remiseType = document.getElementById('facture-remise-type').value;
+            let remise = 0;
+            
+            if (remiseMontant > 0) {
+                if (remiseType === 'euro') {
+                    remise = remiseMontant;
+                } else {
+                    remise = totalHT * (remiseMontant / 100);
+                }
+            }
+            
+            totalHT = Math.max(0, totalHT - remise);
+            totalTVA = totalHT * 0.2;
+            
+            document.getElementById('facture-total-ht').textContent = formatEuro(totalHT);
+            document.getElementById('facture-total-tva').textContent = formatEuro(totalTVA);
+            document.getElementById('facture-remise-affichage').textContent = '- ' + formatEuro(remise);
+            document.getElementById('facture-total-ttc').textContent = formatEuro(totalHT + totalTVA);
+        }
+
+        function initSignatureCanvas() {
+            canvas = document.getElementById('signature-canvas');
+            if (!canvas) return;
+            ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseout', stopDrawing);
+            canvas.addEventListener('touchstart', handleTouch);
+            canvas.addEventListener('touchmove', handleTouch);
+            canvas.addEventListener('touchend', stopDrawing);
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            ctx.beginPath();
+            ctx.moveTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            ctx.lineTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
+            ctx.stroke();
+        }
+
+        function handleTouch(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent(e.type === 'touchstart' ? 'mousedown' : 'mousemove', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            canvas.dispatchEvent(mouseEvent);
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        function clearSignature() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            signatureDataUrl = null;
+            document.getElementById('signature-preview').style.display = 'none';
+        }
+
+        function saveSignature() {
+            signatureDataUrl = canvas.toDataURL('image/png');
+            const preview = document.getElementById('signature-preview');
+            preview.src = signatureDataUrl;
+            preview.style.display = 'block';
+            saveData();
+            showAlert('success', '✅ Signature sauvegardée !');
+        }
+
+        function saveFacture() {
+            if (!selectedFactureClientId) {
+                showAlert('error', '❌ Sélectionnez un client !');
+                return;
+            }
+            if (factureArticles.length === 0) {
+                showAlert('error', '❌ Ajoutez des articles !');
+                return;
+            }
+            
+            let totalHT = 0, totalTVA = 0;
+            factureArticles.forEach(a => {
+                const ht = a.quantite * a.prixHT;
+                totalHT += ht;
+                totalTVA += ht * (a.tva / 100);
+            });
+            
+            const remiseMontant = parseFloat(document.getElementById('facture-remise-montant').value) || 0;
+            const remiseType = document.getElementById('facture-remise-type').value;
+            let remise = 0;
+            if (remiseMontant > 0) {
+                remise = remiseType === 'euro' ? remiseMontant : (totalHT * (remiseMontant / 100));
+            }
+            totalHT = Math.max(0, totalHT - remise);
+            
+            const client = allClients.find(c => c.id === selectedFactureClientId);
+            const facture = {
+                id: Date.now(),
+                numero: 'FAC-' + (allFactures.length + 1).toString().padStart(3, '0'),
+                date: new Date().toISOString().split('T')[0],
+                clientId: selectedFactureClientId,
+                clientNom: client.prenom ? client.prenom + ' ' + client.nom : client.nom,
+                articles: [...factureArticles],
+                remise: { montant: remiseMontant, type: remiseType, valeur: remise },
+                signature: signatureDataUrl,
+                totalHT: totalHT,
+                totalTVA: totalTVA,
+                totalTTC: totalHT + totalTVA
+            };
+            
+            allFactures.push(facture);
+            saveData();
+            
+            document.getElementById('facture-client-select').value = '';
+            document.getElementById('facture-remise-montant').value = '';
+            factureArticles = [];
+            selectedFactureClientId = null;
+            displayFactureArticles();
+            displayFacturesList();
+            
+            showAlert('success', '✅ Facture sauvegardée !');
+        }
+
+        function displayFacturesList(filteredFactures = null) {
+            const facturesToShow = filteredFactures || allFactures;
+            const container = document.getElementById('factures-list');
+            if (facturesToShow.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-icon">📄</div><p>Aucune facture</p></div>';
+                return;
+            }
+            let html = '<table class="table"><thead><tr><th>N°</th><th>Date</th><th>Client</th><th>Total TTC</th><th>Actions</th></tr></thead><tbody>';
+            facturesToShow.forEach(f => {
+                html += '<tr><td><strong>' + f.numero + '</strong></td><td>' + f.date + '</td>';
+                html += '<td>' + f.clientNom + '</td><td><strong>' + formatEuro(f.totalTTC) + '</strong></td><td>';
+                html += '<button class="btn btn-secondary" onclick="downloadFacturePDF(' + f.id + ')" style="padding: 6px 10px; font-size: 12px;">📄 PDF</button>';
+                html += '<button class="btn btn-danger" onclick="deleteFacture(' + f.id + ')" style="padding: 6px 10px;">🗑️</button>';
+                html += '</td></tr>';
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function filterFactures() {
+            const searchTerm = document.getElementById('factures-search').value.toLowerCase();
+            if (!searchTerm) { displayFacturesList(); return; }
+            const filtered = allFactures.filter(facture => 
+                facture.numero.toLowerCase().includes(searchTerm) ||
+                facture.clientNom.toLowerCase().includes(searchTerm)
+            );
+            displayFacturesList(filtered);
+        }
+
+        function deleteFacture(id) {
+            if (confirm('Supprimer cette facture ?')) {
+                allFactures = allFactures.filter(f => f.id !== id);
+                saveData();
+                displayFacturesList();
+                showAlert('success', '🗑️ Facture supprimée !');
+            }
+        }
+
+        function downloadFacturePDF(id) {
+            const facture = allFactures.find(f => f.id === id);
+            if (!facture) return;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const company = localStorage.getItem('company-name') || 'Mon Entreprise';
+            
+            doc.setFontSize(16);
+            doc.text(company, 20, 20);
+            doc.setFontSize(20);
+            doc.text('FACTURE', 150, 20);
+            doc.setFontSize(12);
+            doc.text(facture.numero, 150, 28);
+            doc.setFontSize(10);
+            doc.text('Date: ' + facture.date, 150, 35);
+            doc.text('Client: ' + facture.clientNom, 20, 50);
+            
+            let y = 70;
+            doc.text('Désignation', 20, y);
+            doc.text('Qté', 100, y);
+            doc.text('P.U. HT', 120, y);
+            doc.text('Total TTC', 160, y);
+            y += 10;
+            
+            facture.articles.forEach(a => {
+                const totalHT = a.quantite * a.prixHT;
+                const totalTVA = totalHT * (a.tva / 100);
+                const totalTTC = totalHT + totalTVA;
+                doc.text(a.designation.substring(0, 30), 20, y);
+                doc.text(a.quantite.toString(), 100, y);
+                doc.text(a.prixHT.toFixed(2) + ' €', 120, y);
+                doc.text(totalTTC.toFixed(2) + ' €', 160, y);
+                y += 7;
+            });
+            
+            y += 10;
+            doc.text('Total HT: ' + facture.totalHT.toFixed(2) + ' €', 120, y);
+            y += 7;
+            doc.text('Total TVA: ' + facture.totalTVA.toFixed(2) + ' €', 120, y);
+            if (facture.remise && facture.remise.valeur > 0) {
+                y += 7;
+                doc.setTextColor(245, 101, 101);
+                doc.text('Remise: -' + facture.remise.valeur.toFixed(2) + ' €', 120, y);
+                doc.setTextColor(0, 0, 0);
+            }
+            y += 7;
+            doc.setFont(undefined, 'bold');
+            doc.text('Total TTC: ' + facture.totalTTC.toFixed(2) + ' €', 120, y);
+            
+            if (facture.signature) {
+                y += 15;
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'normal');
+                doc.text('Signature vendeur:', 20, y);
+                doc.addImage(facture.signature, 'PNG', 20, y + 2, 50, 20);
+            }
+            
+            doc.save(facture.numero + '.pdf');
+            showAlert('success', '📄 PDF téléchargé !');
+        }
+
+        function convertDevisToFacture(devisId) {
+            const devis = allDevis.find(d => d.id === devisId);
+            if (!devis) return;
+            
+            if (!confirm('Transformer le devis ' + devis.numero + ' en facture ?')) {
+                return;
+            }
+            
+            const facture = {
+                id: Date.now(),
+                numero: 'FAC-' + (allFactures.length + 1).toString().padStart(3, '0'),
+                date: new Date().toISOString().split('T')[0],
+                clientId: devis.clientId,
+                clientNom: devis.clientNom,
+                articles: devis.articles.map(a => ({ ...a })),
+                remise: { montant: 0, type: 'euro', valeur: 0 },
+                signature: signatureDataUrl,
+                totalHT: devis.totalHT,
+                totalTVA: devis.totalTVA,
+                totalTTC: devis.totalTTC,
+                devisOrigine: devis.numero
+            };
+            
+            devis.transforme = true;
+            devis.factureNumero = facture.numero;
+            
+            allFactures.push(facture);
+            saveData();
+            
+            displayDevisList();
+            displayFacturesList();
+            populateFactureClientSelect();
+            initSignatureCanvas();
+            displayFacturesList();
+            
+            showAlert('success', '✅ Facture ' + facture.numero + ' créée depuis ' + devis.numero + ' !');
+        }
     </script>
 </body>
 </html>
