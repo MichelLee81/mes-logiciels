@@ -415,7 +415,7 @@
                     <div class="user-email" id="user-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e58088848c89a5809d8488958980cb868a88">[email&#160;protected]</a></div>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                    <button class="btn-logout" onclick="showFirebaseGuide()" style="background: #48bb78;">☁️ Bienvenue ! ✓</button>
+                    <button class="btn-logout" onclick="showFirebaseGuide()" style="background: #48bb78;">☁️ Cloud Activé ✓</button>
                     <button class="btn-logout" onclick="logout()">🚪 Déconnexion</button>
                 </div>
             </div>
@@ -2287,39 +2287,59 @@ ${company}`;
                 
                 // Attendre que le DOM soit prêt
                 setTimeout(() => {
-                    const cotisationsSelect = document.getElementById('vendeur-cotisations');
-                    if (cotisationsSelect) {
-                        document.getElementById('vendeur-nom').value = vendeurInfos.nom || '';
-                        document.getElementById('vendeur-siret').value = vendeurInfos.siret || '';
-                        document.getElementById('vendeur-ape').value = vendeurInfos.ape || '';
-                        document.getElementById('vendeur-adresse').value = vendeurInfos.adresse || '';
-                        document.getElementById('vendeur-cp').value = vendeurInfos.cp || '';
-                        document.getElementById('vendeur-ville').value = vendeurInfos.ville || '';
-                        document.getElementById('vendeur-tel').value = vendeurInfos.tel || '';
-                        document.getElementById('vendeur-email').value = vendeurInfos.email || '';
-                        cotisationsSelect.value = vendeurInfos.cotisations || '22.2';
-                        
-                        console.log('Taux de cotisations chargé:', vendeurInfos.cotisations + '%');
-                    } else {
-                        console.warn('Element vendeur-cotisations pas encore dans le DOM');
-                    }
-                }, 100);
+                    // Vérifier que les éléments existent avant de les remplir
+                    const elements = {
+                        'vendeur-nom': vendeurInfos.nom,
+                        'vendeur-siret': vendeurInfos.siret,
+                        'vendeur-ape': vendeurInfos.ape,
+                        'vendeur-adresse': vendeurInfos.adresse,
+                        'vendeur-cp': vendeurInfos.cp,
+                        'vendeur-ville': vendeurInfos.ville,
+                        'vendeur-tel': vendeurInfos.tel,
+                        'vendeur-email': vendeurInfos.email,
+                        'vendeur-cotisations': vendeurInfos.cotisations || '22.2'
+                    };
+                    
+                    Object.keys(elements).forEach(id => {
+                        const element = document.getElementById(id);
+                        if (element) {
+                            element.value = elements[id] || '';
+                        } else {
+                            console.warn(`Element ${id} n'existe pas dans le DOM`);
+                        }
+                    });
+                    
+                    console.log('✅ Informations chargées:', vendeurInfos);
+                    console.log('✅ Taux de cotisations:', vendeurInfos.cotisations + '%');
+                }, 200);
+            } else {
+                console.log('⚠️ Aucune information sauvegardée dans localStorage');
             }
         }
 
         function saveVendeurInfo(e) {
             e.preventDefault();
-            vendeurInfos = {
-                nom: document.getElementById('vendeur-nom').value,
-                siret: document.getElementById('vendeur-siret').value,
-                ape: document.getElementById('vendeur-ape').value,
-                adresse: document.getElementById('vendeur-adresse').value,
-                cp: document.getElementById('vendeur-cp').value,
-                ville: document.getElementById('vendeur-ville').value,
-                tel: document.getElementById('vendeur-tel').value,
-                email: document.getElementById('vendeur-email').value,
-                cotisations: parseFloat(document.getElementById('vendeur-cotisations').value) || 22.2
+            
+            // Fonction helper pour récupérer la valeur d'un élément s'il existe
+            const getValue = (id) => {
+                const element = document.getElementById(id);
+                return element ? element.value : '';
             };
+            
+            vendeurInfos = {
+                nom: getValue('vendeur-nom'),
+                siret: getValue('vendeur-siret'),
+                ape: getValue('vendeur-ape'),
+                adresse: getValue('vendeur-adresse'),
+                cp: getValue('vendeur-cp'),
+                ville: getValue('vendeur-ville'),
+                tel: getValue('vendeur-tel'),
+                email: getValue('vendeur-email'),
+                cotisations: parseFloat(getValue('vendeur-cotisations')) || 22.2
+            };
+            
+            console.log('💾 Sauvegarde des informations:', vendeurInfos);
+            
             localStorage.setItem('vendeur-info', JSON.stringify(vendeurInfos));
             localStorage.setItem('company-name', vendeurInfos.nom);
             document.getElementById('user-company').textContent = vendeurInfos.nom;
