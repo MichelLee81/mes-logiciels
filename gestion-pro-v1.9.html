@@ -415,7 +415,7 @@
                     <div class="user-email" id="user-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e58088848c89a5809d8488958980cb868a88">[email&#160;protected]</a></div>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                    <button class="btn-logout" onclick="showFirebaseGuide()" style="background: #48bb78;">☁️ Cloud Activé ✓</button>
+                    <button class="btn-logout" onclick="showFirebaseGuide()" style="background: #48bb78;">☁️ Bienvenue ! ✓</button>
                     <button class="btn-logout" onclick="logout()">🚪 Déconnexion</button>
                 </div>
             </div>
@@ -2279,27 +2279,37 @@ ${company}`;
         }
 
         // INFOS VENDEUR
-        let vendeurInfo = {};
-
         function loadVendeurInfo() {
             const saved = localStorage.getItem('vendeur-info');
+            console.log('Chargement vendeurInfos depuis localStorage:', saved);
             if (saved) {
-                vendeurInfo = JSON.parse(saved);
-                document.getElementById('vendeur-nom').value = vendeurInfo.nom || '';
-                document.getElementById('vendeur-siret').value = vendeurInfo.siret || '';
-                document.getElementById('vendeur-ape').value = vendeurInfo.ape || '';
-                document.getElementById('vendeur-adresse').value = vendeurInfo.adresse || '';
-                document.getElementById('vendeur-cp').value = vendeurInfo.cp || '';
-                document.getElementById('vendeur-ville').value = vendeurInfo.ville || '';
-                document.getElementById('vendeur-tel').value = vendeurInfo.tel || '';
-                document.getElementById('vendeur-email').value = vendeurInfo.email || '';
-                document.getElementById('vendeur-cotisations').value = vendeurInfo.cotisations || '22.2';
+                vendeurInfos = JSON.parse(saved);
+                
+                // Attendre que le DOM soit prêt
+                setTimeout(() => {
+                    const cotisationsSelect = document.getElementById('vendeur-cotisations');
+                    if (cotisationsSelect) {
+                        document.getElementById('vendeur-nom').value = vendeurInfos.nom || '';
+                        document.getElementById('vendeur-siret').value = vendeurInfos.siret || '';
+                        document.getElementById('vendeur-ape').value = vendeurInfos.ape || '';
+                        document.getElementById('vendeur-adresse').value = vendeurInfos.adresse || '';
+                        document.getElementById('vendeur-cp').value = vendeurInfos.cp || '';
+                        document.getElementById('vendeur-ville').value = vendeurInfos.ville || '';
+                        document.getElementById('vendeur-tel').value = vendeurInfos.tel || '';
+                        document.getElementById('vendeur-email').value = vendeurInfos.email || '';
+                        cotisationsSelect.value = vendeurInfos.cotisations || '22.2';
+                        
+                        console.log('Taux de cotisations chargé:', vendeurInfos.cotisations + '%');
+                    } else {
+                        console.warn('Element vendeur-cotisations pas encore dans le DOM');
+                    }
+                }, 100);
             }
         }
 
         function saveVendeurInfo(e) {
             e.preventDefault();
-            vendeurInfo = {
+            vendeurInfos = {
                 nom: document.getElementById('vendeur-nom').value,
                 siret: document.getElementById('vendeur-siret').value,
                 ape: document.getElementById('vendeur-ape').value,
@@ -2310,10 +2320,15 @@ ${company}`;
                 email: document.getElementById('vendeur-email').value,
                 cotisations: parseFloat(document.getElementById('vendeur-cotisations').value) || 22.2
             };
-            localStorage.setItem('vendeur-info', JSON.stringify(vendeurInfo));
-            localStorage.setItem('company-name', vendeurInfo.nom);
-            document.getElementById('user-company').textContent = vendeurInfo.nom;
+            localStorage.setItem('vendeur-info', JSON.stringify(vendeurInfos));
+            localStorage.setItem('company-name', vendeurInfos.nom);
+            document.getElementById('user-company').textContent = vendeurInfos.nom;
+            
+            console.log('Taux de cotisations sauvegardé:', vendeurInfos.cotisations + '%');
             customAlert('✅ Informations sauvegardées !');
+            
+            // Recalculer la compta avec le nouveau taux
+            updateComptabilite();
         }
 
         // GÉNÉRATION PDF
@@ -2329,16 +2344,16 @@ ${company}`;
             // En-tête vendeur
             doc.setFontSize(16);
             doc.setFont(undefined, 'bold');
-            doc.text(vendeurInfo.nom || 'Mon Entreprise', 20, y);
+            doc.text(vendeurInfos.nom || 'Mon Entreprise', 20, y);
             y += 7;
             
             doc.setFontSize(10);
             doc.setFont(undefined, 'normal');
-            if (vendeurInfo.siret) { doc.text(`SIRET: ${vendeurInfo.siret}`, 20, y); y += 5; }
-            if (vendeurInfo.adresse) { doc.text(vendeurInfo.adresse, 20, y); y += 5; }
-            if (vendeurInfo.cp && vendeurInfo.ville) { doc.text(`${vendeurInfo.cp} ${vendeurInfo.ville}`, 20, y); y += 5; }
-            if (vendeurInfo.tel) { doc.text(`Tel: ${vendeurInfo.tel}`, 20, y); y += 5; }
-            if (vendeurInfo.email) { doc.text(`Email: ${vendeurInfo.email}`, 20, y); y += 5; }
+            if (vendeurInfos.siret) { doc.text(`SIRET: ${vendeurInfos.siret}`, 20, y); y += 5; }
+            if (vendeurInfos.adresse) { doc.text(vendeurInfos.adresse, 20, y); y += 5; }
+            if (vendeurInfos.cp && vendeurInfos.ville) { doc.text(`${vendeurInfos.cp} ${vendeurInfos.ville}`, 20, y); y += 5; }
+            if (vendeurInfos.tel) { doc.text(`Tel: ${vendeurInfos.tel}`, 20, y); y += 5; }
+            if (vendeurInfos.email) { doc.text(`Email: ${vendeurInfos.email}`, 20, y); y += 5; }
             
             // Titre FACTURE
             y += 10;
@@ -2477,11 +2492,11 @@ Seul vous pouvez y accéder.
             const caTotal = allFactures.reduce((sum, f) => sum + f.totalTTC, 0);
             const nbFactures = allFactures.length;
             // Utiliser le taux de cotisations personnalisé depuis les paramètres
-            const tauxCotisations = (vendeurInfos?.cotisations || vendeurInfo?.cotisations || 22.2) / 100;
+            const tauxCotisations = (vendeurInfos?.cotisations || 22.2) / 100;
             const cotisations = caTotal * tauxCotisations;
             const net = caTotal - cotisations;
             
-            console.log('CA Total:', caTotal, 'Nb factures:', nbFactures, 'Taux:', tauxCotisations * 100 + '%');
+            console.log('CA Total:', caTotal, 'Nb factures:', nbFactures, 'Taux:', (tauxCotisations * 100) + '%', 'vendeurInfos:', vendeurInfos);
             
             // Mise à jour dashboard
             const caTotalEl = document.getElementById('compta-ca-total');
@@ -2614,39 +2629,6 @@ Seul vous pouvez y accéder.
         }
 
         // INFOS VENDEUR
-        function loadVendeurInfo() {
-            const saved = localStorage.getItem('vendeur-info');
-            if (saved) {
-                const info = JSON.parse(saved);
-                document.getElementById('vendeur-nom').value = info.nom || '';
-                document.getElementById('vendeur-siret').value = info.siret || '';
-                document.getElementById('vendeur-ape').value = info.ape || '';
-                document.getElementById('vendeur-adresse').value = info.adresse || '';
-                document.getElementById('vendeur-cp').value = info.cp || '';
-                document.getElementById('vendeur-ville').value = info.ville || '';
-                document.getElementById('vendeur-tel').value = info.tel || '';
-                document.getElementById('vendeur-email').value = info.email || '';
-            }
-        }
-
-        function saveVendeurInfo(e) {
-            e.preventDefault();
-            const info = {
-                nom: document.getElementById('vendeur-nom').value,
-                siret: document.getElementById('vendeur-siret').value,
-                ape: document.getElementById('vendeur-ape').value,
-                adresse: document.getElementById('vendeur-adresse').value,
-                cp: document.getElementById('vendeur-cp').value,
-                ville: document.getElementById('vendeur-ville').value,
-                tel: document.getElementById('vendeur-tel').value,
-                email: document.getElementById('vendeur-email').value
-            };
-            localStorage.setItem('vendeur-info', JSON.stringify(info));
-            localStorage.setItem('company-name', info.nom);
-            document.getElementById('user-company').textContent = info.nom;
-            customAlert('✅ Informations sauvegardées !');
-        }
-
         // GÉNÉRATION PDF
         async function genererPDF(type, id) {
             const doc = type === 'devis' ? allDevis.find(d => d.id === id) : allFactures.find(f => f.id === id);
