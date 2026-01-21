@@ -47,6 +47,24 @@
             padding: 4px 12px; border-radius: 20px; font-size: 0.75em;
             margin: 0 auto 20px auto; width: fit-content;
         }
+        
+        /* Sections encadrées pour meilleure lisibilité */
+        .form-section {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .form-section h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #4a5568;
+            font-size: 16px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #cbd5e0;
+        }
+        
         .form-group { margin-bottom: 15px; }
         .form-group label {
             display: block; margin-bottom: 5px; color: #4a5568;
@@ -397,7 +415,7 @@
                     <div class="user-email" id="user-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e58088848c89a5809d8488958980cb868a88">[email&#160;protected]</a></div>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                    <button class="btn-logout" onclick="showFirebaseGuide()" style="background: #48bb78;">☁️ Bienvenue! ✓</button>
+                    <button class="btn-logout" onclick="showFirebaseGuide()" style="background: #48bb78;">☁️ Cloud Activé ✓</button>
                     <button class="btn-logout" onclick="logout()">🚪 Déconnexion</button>
                 </div>
             </div>
@@ -660,12 +678,19 @@
                         
                         <div class="grid-2">
                             <div class="form-group">
-                                <label>Téléphone</label>
-                                <input type="tel" id="vendeur-tel" placeholder="06 12 34 56 78">
-                            </div>
-                            <div class="form-group">
                                 <label>Email</label>
                                 <input type="email" id="vendeur-email" placeholder="contact@entreprise.fr">
+                            </div>
+                            <div class="form-group">
+                                <label>Taux de cotisations URSSAF</label>
+                                <select id="vendeur-cotisations">
+                                    <option value="22.2">22,2% - Défaut (services BNC)</option>
+                                    <option value="12.3">12,3% - Vente de marchandises (BIC)</option>
+                                    <option value="21.2">21,2% - Prestations de services commerciales ou artisanales (BIC)</option>
+                                    <option value="24.6">24,6% - Autres prestations de services et activités libérales (BNC)</option>
+                                    <option value="23.2">23,2% - Activités libérales réglementées à la CIPAV (BNC)</option>
+                                    <option value="6">6% - Location de meubles de tourisme classés (BIC)</option>
+                                </select>
                             </div>
                         </div>
                         
@@ -1349,7 +1374,7 @@
                 html += `<tr>
                     <td><strong>${a.designation}</strong></td>
                     <td><input type="number" value="${a.quantite}" min="1" style="width: 60px; padding: 5px;" onchange="updateDevisQuantite(${idx}, this.value)"></td>
-                    <td><input type="number" value="${a.prixHT.toFixed(2)}" min="0" step="0.01" style="width: 80px; padding: 5px;" onchange="updateDevisPrix(${idx}, this.value)"></td>
+                    <td><input type="number" value="${a.prixHT.toFixed(2)}" min="0" step="0.01" style="width: 70px; padding: 5px;" onchange="updateDevisPrix(${idx}, this.value)"></td>
                     <td>${a.tva}%</td>
                     <td><strong>${formatEuro(totalTTC)}</strong></td>
                     <td><button class="btn btn-danger" onclick="removeDevisArticle(${idx})" style="padding: 5px 8px;">🗑️</button></td>
@@ -1670,7 +1695,7 @@
                 html += `<tr>
                     <td><strong>${a.designation}</strong></td>
                     <td><input type="number" value="${a.quantite}" min="1" style="width: 60px; padding: 5px;" onchange="updateFactureQuantite(${idx}, this.value)"></td>
-                    <td><input type="number" value="${a.prixHT.toFixed(2)}" min="0" step="0.01" style="width: 80px; padding: 5px;" onchange="updateFacturePrix(${idx}, this.value)"></td>
+                    <td><input type="number" value="${a.prixHT.toFixed(2)}" min="0" step="0.01" style="width: 70px; padding: 5px;" onchange="updateFacturePrix(${idx}, this.value)"></td>
                     <td>${a.tva}%</td>
                     <td><strong>${formatEuro(totalTTC)}</strong></td>
                     <td><button class="btn btn-danger" onclick="removeFactureArticle(${idx})" style="padding: 5px 8px;">🗑️</button></td>
@@ -2268,6 +2293,7 @@ ${company}`;
                 document.getElementById('vendeur-ville').value = vendeurInfo.ville || '';
                 document.getElementById('vendeur-tel').value = vendeurInfo.tel || '';
                 document.getElementById('vendeur-email').value = vendeurInfo.email || '';
+                document.getElementById('vendeur-cotisations').value = vendeurInfo.cotisations || '22.2';
             }
         }
 
@@ -2281,7 +2307,8 @@ ${company}`;
                 cp: document.getElementById('vendeur-cp').value,
                 ville: document.getElementById('vendeur-ville').value,
                 tel: document.getElementById('vendeur-tel').value,
-                email: document.getElementById('vendeur-email').value
+                email: document.getElementById('vendeur-email').value,
+                cotisations: parseFloat(document.getElementById('vendeur-cotisations').value) || 22.2
             };
             localStorage.setItem('vendeur-info', JSON.stringify(vendeurInfo));
             localStorage.setItem('company-name', vendeurInfo.nom);
@@ -2449,10 +2476,12 @@ Seul vous pouvez y accéder.
             // Calculs
             const caTotal = allFactures.reduce((sum, f) => sum + f.totalTTC, 0);
             const nbFactures = allFactures.length;
-            const cotisations = caTotal * 0.22; // 22% pour auto-entrepreneur
+            // Utiliser le taux de cotisations personnalisé depuis les paramètres
+            const tauxCotisations = (vendeurInfos?.cotisations || vendeurInfo?.cotisations || 22.2) / 100;
+            const cotisations = caTotal * tauxCotisations;
             const net = caTotal - cotisations;
             
-            console.log('CA Total:', caTotal, 'Nb factures:', nbFactures);
+            console.log('CA Total:', caTotal, 'Nb factures:', nbFactures, 'Taux:', tauxCotisations * 100 + '%');
             
             // Mise à jour dashboard
             const caTotalEl = document.getElementById('compta-ca-total');
