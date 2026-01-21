@@ -387,7 +387,7 @@
                     <div class="user-email" id="user-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e58088848c89a5809d8488958980cb868a88">[email&#160;protected]</a></div>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                    <button class="btn-logout" onclick="showFirebaseGuide()" style="background: #48bb78;">☁️ Cloud Activé ✓</button>
+                    <button class="btn-logout" onclick="showFirebaseGuide()" style="background: #48bb78;">☁️ Bienvenue! ✓</button>
                     <button class="btn-logout" onclick="logout()">🚪 Déconnexion</button>
                 </div>
             </div>
@@ -1339,7 +1339,7 @@
                 html += `<tr>
                     <td><strong>${a.designation}</strong></td>
                     <td><input type="number" value="${a.quantite}" min="1" style="width: 60px; padding: 5px;" onchange="updateDevisQuantite(${idx}, this.value)"></td>
-                    <td>${formatEuro(a.prixHT)}</td>
+                    <td><input type="number" value="${a.prixHT.toFixed(2)}" min="0" step="0.01" style="width: 80px; padding: 5px;" onchange="updateDevisPrix(${idx}, this.value)"></td>
                     <td>${a.tva}%</td>
                     <td><strong>${formatEuro(totalTTC)}</strong></td>
                     <td><button class="btn btn-danger" onclick="removeDevisArticle(${idx})" style="padding: 5px 8px;">🗑️</button></td>
@@ -1348,10 +1348,18 @@
             html += '</tbody></table>';
             container.innerHTML = html;
             calculateDevisTotal();
+            
+            // Réinitialiser les inputs numériques
+            setTimeout(() => initNumberInputs(), 100);
         }
 
         function updateDevisQuantite(idx, value) {
             devisArticles[idx].quantite = parseNumber(value) || 1;
+            displayDevisArticles();
+        }
+
+        function updateDevisPrix(idx, value) {
+            devisArticles[idx].prixHT = parseNumber(value) || 0;
             displayDevisArticles();
         }
 
@@ -1421,6 +1429,99 @@
             customAlert('✅ Devis sauvegardé !');
         }
 
+        let editingDevisId = null; // Variable globale pour savoir si on est en mode édition
+
+        function editDevis(devisId) {
+            const devis = allDevis.find(d => d.id === devisId);
+            if (!devis) return;
+            
+            // Passer en mode édition
+            editingDevisId = devisId;
+            
+            // Pré-remplir le formulaire
+            document.getElementById('devis-client-nom').value = devis.client.nom;
+            document.getElementById('devis-client-email').value = devis.client.email || '';
+            document.getElementById('devis-client-tel').value = devis.client.tel || '';
+            
+            // Charger les articles
+            devisArticles = devis.articles.map(a => ({...a})); // Copie profonde
+            displayDevisArticles();
+            
+            // Scroll vers le formulaire
+            document.getElementById('devis-client-nom').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            
+            customAlert(`✏️ Modification du devis ${devis.numero}`, 'info');
+        }
+
+        function saveDevis() {
+            const clientNom = document.getElementById('devis-client-nom').value;
+            if (!clientNom) {
+                customAlert('⚠️ Nom du client requis !');
+                return;
+            }
+            if (devisArticles.length === 0) {
+                customAlert('⚠️ Ajoutez des articles !');
+                return;
+            }
+
+            let totalHT = 0, totalTVA = 0;
+            devisArticles.forEach(a => {
+                const ht = a.quantite * a.prixHT;
+                totalHT += ht;
+                totalTVA += ht * (a.tva / 100);
+            });
+
+            if (editingDevisId) {
+                // Mode édition : mettre à jour le devis existant
+                const devis = allDevis.find(d => d.id === editingDevisId);
+                if (devis) {
+                    devis.client = {
+                        nom: clientNom,
+                        email: document.getElementById('devis-client-email').value,
+                        tel: document.getElementById('devis-client-tel').value
+                    };
+                    devis.articles = [...devisArticles];
+                    devis.totalHT = totalHT;
+                    devis.totalTVA = totalTVA;
+                    devis.totalTTC = totalHT + totalTVA;
+                    
+                    console.log('Modification devis:', devis);
+                    customAlert(`✅ Devis ${devis.numero} modifié !`);
+                }
+                editingDevisId = null;
+            } else {
+                // Mode création : créer un nouveau devis
+                const devis = {
+                    id: Date.now(),
+                    numero: 'DEV-' + (allDevis.length + 1).toString().padStart(3, '0'),
+                    date: new Date().toISOString().split('T')[0],
+                    client: {
+                        nom: clientNom,
+                        email: document.getElementById('devis-client-email').value,
+                        tel: document.getElementById('devis-client-tel').value
+                    },
+                    articles: [...devisArticles],
+                    totalHT: totalHT,
+                    totalTVA: totalTVA,
+                    totalTTC: totalHT + totalTVA
+                };
+
+                console.log('Sauvegarde devis:', devis);
+                allDevis.push(devis);
+                console.log('Total devis après ajout:', allDevis.length);
+                customAlert('✅ Devis sauvegardé !');
+            }
+            
+            saveData();
+            
+            document.getElementById('devis-client-nom').value = '';
+            document.getElementById('devis-client-email').value = '';
+            document.getElementById('devis-client-tel').value = '';
+            devisArticles = [];
+            displayDevisArticles();
+            displayDevisList();
+        }
+
         function displayDevisList(filteredDevis = null) {
             const devisToShow = filteredDevis || allDevis;
             const container = document.getElementById('devis-list');
@@ -1461,6 +1562,7 @@
                     <td>${statut}</td>
                     <td>
                         ${checkbox}
+                        ${!d.transforme ? `<button class="btn btn-secondary" onclick="editDevis(${d.id})" style="padding: 6px 10px; margin: 2px; font-size: 12px;">✏️ Modifier</button>` : ''}
                         <button class="btn btn-secondary" onclick="genererPDF('devis', ${d.id})" style="padding: 6px 10px; margin: 2px; font-size: 12px;">📄 PDF</button>
                         <button class="btn btn-primary" onclick="envoyerDevis(${d.id})" style="padding: 6px 10px; margin: 2px; font-size: 12px;">📧 Envoyer</button>
                         <button class="btn btn-danger" onclick="deleteDevis(${d.id})" style="padding: 6px 10px; margin: 2px;">🗑️</button>
@@ -1558,7 +1660,7 @@
                 html += `<tr>
                     <td><strong>${a.designation}</strong></td>
                     <td><input type="number" value="${a.quantite}" min="1" style="width: 60px; padding: 5px;" onchange="updateFactureQuantite(${idx}, this.value)"></td>
-                    <td>${formatEuro(a.prixHT)}</td>
+                    <td><input type="number" value="${a.prixHT.toFixed(2)}" min="0" step="0.01" style="width: 80px; padding: 5px;" onchange="updateFacturePrix(${idx}, this.value)"></td>
                     <td>${a.tva}%</td>
                     <td><strong>${formatEuro(totalTTC)}</strong></td>
                     <td><button class="btn btn-danger" onclick="removeFactureArticle(${idx})" style="padding: 5px 8px;">🗑️</button></td>
@@ -1567,10 +1669,18 @@
             html += '</tbody></table>';
             container.innerHTML = html;
             calculateFactureTotal();
+            
+            // Réinitialiser les inputs numériques
+            setTimeout(() => initNumberInputs(), 100);
         }
 
         function updateFactureQuantite(idx, value) {
             factureArticles[idx].quantite = parseNumber(value) || 1;
+            displayFactureArticles();
+        }
+
+        function updateFacturePrix(idx, value) {
+            factureArticles[idx].prixHT = parseNumber(value) || 0;
             displayFactureArticles();
         }
 
@@ -1692,6 +1802,32 @@
             customAlert('✅ Signature sauvegardée !');
         }
 
+        let editingFactureId = null; // Variable globale pour l'édition de facture
+
+        function editFacture(factureId) {
+            const facture = allFactures.find(f => f.id === factureId);
+            if (!facture) return;
+            
+            // Passer en mode édition
+            editingFactureId = factureId;
+            
+            // Pré-remplir le formulaire
+            document.getElementById('facture-client-nom').value = facture.client.nom;
+            document.getElementById('facture-client-email').value = facture.client.email || '';
+            document.getElementById('facture-client-tel').value = facture.client.tel || '';
+            document.getElementById('facture-remise-montant').value = facture.remise?.montant || '';
+            document.getElementById('facture-remise-type').value = facture.remise?.type || 'euro';
+            
+            // Charger les articles
+            factureArticles = facture.articles.map(a => ({...a})); // Copie profonde
+            displayFactureArticles();
+            
+            // Scroll vers le formulaire
+            document.getElementById('facture-client-nom').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            
+            customAlert(`✏️ Modification de la facture ${facture.numero}`, 'info');
+        }
+
         function saveFacture() {
             const clientNom = document.getElementById('facture-client-nom').value;
             if (!clientNom) {
@@ -1718,26 +1854,50 @@
             }
             totalHT = Math.max(0, totalHT - remise);
 
-            const facture = {
-                id: Date.now(),
-                numero: 'FAC-' + (allFactures.length + 1).toString().padStart(3, '0'),
-                date: new Date().toISOString().split('T')[0],
-                client: {
-                    nom: clientNom,
-                    email: document.getElementById('facture-client-email').value,
-                    tel: document.getElementById('facture-client-tel').value
-                },
-                articles: [...factureArticles],
-                remise: { montant: remiseMontant, type: remiseType, valeur: remise },
-                signature: signatureDataUrl,
-                totalHT: totalHT,
-                totalTVA: totalTVA,
-                totalTTC: totalHT + totalTVA
-            };
+            if (editingFactureId) {
+                // Mode édition : mettre à jour la facture existante
+                const facture = allFactures.find(f => f.id === editingFactureId);
+                if (facture) {
+                    facture.client = {
+                        nom: clientNom,
+                        email: document.getElementById('facture-client-email').value,
+                        tel: document.getElementById('facture-client-tel').value
+                    };
+                    facture.articles = [...factureArticles];
+                    facture.remise = { montant: remiseMontant, type: remiseType, valeur: remise };
+                    facture.signature = signatureDataUrl;
+                    facture.totalHT = totalHT;
+                    facture.totalTVA = totalTVA;
+                    facture.totalTTC = totalHT + totalTVA;
+                    
+                    console.log('Modification facture:', facture);
+                    customAlert(`✅ Facture ${facture.numero} modifiée !`);
+                }
+                editingFactureId = null;
+            } else {
+                // Mode création : créer une nouvelle facture
+                const facture = {
+                    id: Date.now(),
+                    numero: 'FAC-' + (allFactures.length + 1).toString().padStart(3, '0'),
+                    date: new Date().toISOString().split('T')[0],
+                    client: {
+                        nom: clientNom,
+                        email: document.getElementById('facture-client-email').value,
+                        tel: document.getElementById('facture-client-tel').value
+                    },
+                    articles: [...factureArticles],
+                    remise: { montant: remiseMontant, type: remiseType, valeur: remise },
+                    signature: signatureDataUrl,
+                    totalHT: totalHT,
+                    totalTVA: totalTVA,
+                    totalTTC: totalHT + totalTVA
+                };
 
-            console.log('Sauvegarde facture:', facture);
-            allFactures.push(facture);
-            console.log('Total factures après ajout:', allFactures.length);
+                console.log('Sauvegarde facture:', facture);
+                allFactures.push(facture);
+                console.log('Total factures après ajout:', allFactures.length);
+                customAlert('✅ Facture sauvegardée !');
+            }
             
             saveData();
             
@@ -1749,8 +1909,6 @@
             displayFactureArticles();
             displayFacturesList();
             updateComptabilite();
-            
-            customAlert('✅ Facture sauvegardée !');
         }
 
         function displayFacturesList(filteredFactures = null) {
@@ -1775,6 +1933,7 @@
                     <td>${origine}</td>
                     <td><strong>${formatEuro(f.totalTTC)}</strong></td>
                     <td>
+                        <button class="btn btn-secondary" onclick="editFacture(${f.id})" style="padding: 6px 10px; margin: 2px; font-size: 12px;">✏️ Modifier</button>
                         <button class="btn btn-secondary" onclick="genererFacturePDF(${f.id})" style="padding: 6px 10px; margin: 2px; font-size: 12px;">📄 PDF</button>
                         <button class="btn btn-primary" onclick="envoyerFacture(${f.id})" style="padding: 6px 10px; margin: 2px; font-size: 12px;">📧 Envoyer</button>
                         <button class="btn btn-danger" onclick="deleteFacture(${f.id})" style="padding: 6px 10px; margin: 2px;">🗑️</button>
