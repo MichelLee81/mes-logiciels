@@ -294,7 +294,7 @@
                     <div class="user-email" id="user-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e58088848c89a5809d8488958980cb868a88">[email&#160;protected]</a></div>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                    <button class="btn-logout" onclick="showFirebaseGuide()" style="background: #48bb78;">☁️ Bienvenue! ✓</button>
+                    <button class="btn-logout" onclick="showFirebaseGuide()" style="background: #48bb78;">☁️ Cloud Activé ✓</button>
                     <button class="btn-logout" onclick="logout()">🚪 Déconnexion</button>
                 </div>
             </div>
@@ -971,6 +971,7 @@
             displayFacturesList();
             updateComptabilite();
             initSignatureCanvas();
+            initNumberInputs(); // Initialiser la gestion des virgules
         }
 
         function switchTab(name) {
@@ -1044,9 +1045,9 @@
             const article = {
                 id: editingArticleId || Date.now(),
                 designation: document.getElementById('article-designation').value,
-                prix: parseFloat(document.getElementById('article-prix').value),
+                prix: parseNumber(document.getElementById('article-prix').value),
                 unite: document.getElementById('article-unite').value,
-                tva: parseFloat(document.getElementById('article-tva').value)
+                tva: parseNumber(document.getElementById('article-tva').value)
             };
             if (editingArticleId) {
                 const idx = catalogueArticles.findIndex(a => a.id === editingArticleId);
@@ -1133,8 +1134,8 @@
                 designation: document.getElementById('manual-designation').value,
                 quantite: parseInt(document.getElementById('manual-quantite').value),
                 unite: document.getElementById('manual-unite').value,
-                prixHT: parseFloat(document.getElementById('manual-prix').value),
-                tva: parseFloat(document.getElementById('manual-tva').value)
+                prixHT: parseNumber(document.getElementById('manual-prix').value),
+                tva: parseNumber(document.getElementById('manual-tva').value)
             };
             
             if (currentSelectMode === 'devis') {
@@ -1440,7 +1441,7 @@
             });
             
             // Remise
-            const remiseMontant = parseFloat(document.getElementById('facture-remise-montant').value) || 0;
+            const remiseMontant = parseNumber(document.getElementById('facture-remise-montant').value) || 0;
             const remiseType = document.getElementById('facture-remise-type').value;
             let remise = 0;
             
@@ -1562,7 +1563,7 @@
                 totalTVA += ht * (a.tva / 100);
             });
             
-            const remiseMontant = parseFloat(document.getElementById('facture-remise-montant').value) || 0;
+            const remiseMontant = parseNumber(document.getElementById('facture-remise-montant').value) || 0;
             const remiseType = document.getElementById('facture-remise-type').value;
             let remise = 0;
             if (remiseMontant > 0) {
@@ -1752,6 +1753,47 @@ ${company}`;
         // Utilitaires
         function formatEuro(amount) {
             return amount.toFixed(2).replace('.', ',') + ' €';
+        }
+
+        // Fonction pour gérer les virgules dans les champs numériques
+        function parseNumber(value) {
+            if (!value) return 0;
+            // Remplacer la virgule par un point et convertir en nombre
+            return parseFloat(value.toString().replace(',', '.')) || 0;
+        }
+
+        // Initialiser les gestionnaires de virgules sur tous les inputs numériques
+        function initNumberInputs() {
+            // Attendre que le DOM soit chargé
+            setTimeout(() => {
+                // Tous les inputs de type number
+                const numberInputs = document.querySelectorAll('input[type="number"]');
+                numberInputs.forEach(input => {
+                    // Changer en type text pour accepter les virgules
+                    input.setAttribute('type', 'text');
+                    input.setAttribute('inputmode', 'decimal');
+                    
+                    // Événement lors de la saisie
+                    input.addEventListener('input', function(e) {
+                        // Autoriser uniquement chiffres, virgule et point
+                        let value = e.target.value;
+                        value = value.replace(/[^0-9.,]/g, '');
+                        // Remplacer plusieurs virgules/points par une seule
+                        value = value.replace(/[.,]+/g, match => match[0]);
+                        e.target.value = value;
+                    });
+                    
+                    // Événement lors de la perte de focus (blur)
+                    input.addEventListener('blur', function(e) {
+                        let value = e.target.value.replace(',', '.');
+                        const num = parseFloat(value);
+                        if (!isNaN(num)) {
+                            // Formater avec 2 décimales et virgule
+                            e.target.value = num.toFixed(2).replace('.', ',');
+                        }
+                    });
+                });
+            }, 500);
         }
 
         // INFOS VENDEUR
@@ -2378,7 +2420,7 @@ Seul vous pouvez y accéder.
                 const caTotal = facturesClient.reduce((sum, f) => sum + f.totalTTC, 0);
                 
                 const contactInfo = [];
-                if (c.email) contactInfo.push(`📧 ${c.email}`);
+                if (c.email) contactInfo.push(`📧 <span style="word-break: break-all;">${c.email}</span>`);
                 if (c.tel) contactInfo.push(`📱 ${c.tel}`);
                 const contactText = contactInfo.length > 0 ? contactInfo.join('<br>') : '<span style="color: #a0aec0;">Aucun contact</span>';
                 
@@ -2386,10 +2428,10 @@ Seul vous pouvez y accéder.
                 
                 html += `<tr>
                     <td><strong>${c.nom}</strong></td>
-                    <td style="font-size: 12px;">${contactText}</td>
+                    <td style="font-size: 12px; max-width: 200px; word-wrap: break-word;">${contactText}</td>
                     <td style="font-size: 12px;">${historiqueText}</td>
                     <td><strong style="color: #48bb78;">${formatEuro(caTotal)}</strong></td>
-                    <td>
+                    <td style="white-space: nowrap;">
                         <button class="btn btn-success" onclick="creerFactureDepuisClient(${c.id})" style="padding: 6px 10px; margin: 2px; font-size: 12px;" title="Créer une facture">📄</button>
                         <button class="btn btn-primary" onclick="viewClientDetails(${c.id})" style="padding: 6px 10px; margin: 2px; font-size: 12px;">👁️</button>
                         <button class="btn btn-secondary" onclick="editClient(${c.id})" style="padding: 6px 10px; margin: 2px;">✏️</button>
