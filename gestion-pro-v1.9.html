@@ -69,6 +69,24 @@
         .btn-success { background: #48bb78; color: white; }
         .btn-danger { background: #f56565; color: white; }
         .btn-secondary { background: #e2e8f0; color: #4a5568; }
+        
+        /* Boutons compacts sur mobile */
+        @media (max-width: 768px) {
+            .btn { 
+                min-width: auto !important; 
+                padding: 5px 7px !important;
+                font-size: 14px !important;
+                line-height: 1 !important;
+            }
+            .desktop-only { display: none !important; }
+            .mobile-only { display: inline !important; }
+        }
+        
+        @media (min-width: 769px) {
+            .mobile-only { display: none !important; }
+            .desktop-only { display: inline !important; }
+        }
+        
         .alert {
             padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 14px;
         }
@@ -101,11 +119,42 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         .table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .table-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .table thead { background: #667eea; color: white; }
         .table th, .table td {
             padding: 10px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 13px;
         }
         .table tbody tr:hover { background: #f7fafc; }
+        
+        /* Responsive table - Tablette */
+        @media (max-width: 1024px) {
+            .table { font-size: 12px; }
+            .table th, .table td { padding: 8px 6px; }
+            .table th:nth-child(2), .table td:nth-child(2) { max-width: 140px; } /* Contact */
+            .table th:nth-child(3), .table td:nth-child(3) { max-width: 100px; } /* Historique */
+            .table th:nth-child(4), .table td:nth-child(4) { max-width: 80px; } /* CA Total */
+            .btn { font-size: 11px !important; padding: 5px 8px !important; }
+        }
+        
+        /* Responsive table - Mobile */
+        @media (max-width: 768px) {
+            .table { font-size: 10px; }
+            .table th, .table td { padding: 6px 3px; }
+            .table th:nth-child(1), .table td:nth-child(1) { max-width: 80px; } /* Nom */
+            .table th:nth-child(2), .table td:nth-child(2) { max-width: 120px; } /* Contact */
+            .table th:nth-child(3), .table td:nth-child(3) { font-size: 9px; max-width: 70px; } /* Historique */
+            .table th:nth-child(4), .table td:nth-child(4) { max-width: 60px; } /* CA Total */
+            .table th:nth-child(5), .table td:nth-child(5) { max-width: 140px; } /* Actions */
+            .btn { font-size: 10px !important; padding: 4px 6px !important; margin: 1px !important; }
+        }
+        
+        /* Wrapper pour scroll horizontal sur mobile */
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
         .empty-state { text-align: center; padding: 40px 20px; color: #a0aec0; }
         .empty-icon { font-size: 3em; margin-bottom: 10px; }
         .modal {
@@ -224,14 +273,21 @@
         
         @media (max-width: 768px) {
             .container { margin: 15px auto; }
-            .card { padding: 15px; }
+            .card { padding: 15px; overflow-x: hidden; }
             .header { flex-direction: column; gap: 10px; text-align: center; }
             .tabs { flex-wrap: wrap; }
             .tab { font-size: 12px; padding: 8px; }
             .btn { width: 100%; margin-right: 0; }
             .grid-2 { grid-template-columns: 1fr; }
-            .table { font-size: 12px; }
-            .table th, .table td { padding: 8px 5px; }
+            .table { font-size: 11px; display: table; }
+            .table th, .table td { 
+                padding: 5px 3px; 
+                font-size: 11px;
+                white-space: normal;
+                word-wrap: break-word;
+            }
+            .table th:first-child, .table td:first-child { min-width: 80px; }
+            .table tbody tr { display: table-row; }
         }
     </style>
 </head>
@@ -971,6 +1027,7 @@
             displayFacturesList();
             updateComptabilite();
             initSignatureCanvas();
+            initNumberInputs(); // Initialiser la gestion des virgules
         }
 
         function switchTab(name) {
@@ -1044,9 +1101,9 @@
             const article = {
                 id: editingArticleId || Date.now(),
                 designation: document.getElementById('article-designation').value,
-                prix: parseFloat(document.getElementById('article-prix').value),
+                prix: parseNumber(document.getElementById('article-prix').value),
                 unite: document.getElementById('article-unite').value,
-                tva: parseFloat(document.getElementById('article-tva').value)
+                tva: parseNumber(document.getElementById('article-tva').value)
             };
             if (editingArticleId) {
                 const idx = catalogueArticles.findIndex(a => a.id === editingArticleId);
@@ -1131,10 +1188,10 @@
             const article = {
                 catalogueId: null,
                 designation: document.getElementById('manual-designation').value,
-                quantite: parseInt(document.getElementById('manual-quantite').value),
+                quantite: parseNumber(document.getElementById('manual-quantite').value),
                 unite: document.getElementById('manual-unite').value,
-                prixHT: parseFloat(document.getElementById('manual-prix').value),
-                tva: parseFloat(document.getElementById('manual-tva').value)
+                prixHT: parseNumber(document.getElementById('manual-prix').value),
+                tva: parseNumber(document.getElementById('manual-tva').value)
             };
             
             if (currentSelectMode === 'devis') {
@@ -1203,7 +1260,7 @@
         }
 
         function updateDevisQuantite(idx, value) {
-            devisArticles[idx].quantite = parseInt(value) || 1;
+            devisArticles[idx].quantite = parseNumber(value) || 1;
             displayDevisArticles();
         }
 
@@ -1422,7 +1479,7 @@
         }
 
         function updateFactureQuantite(idx, value) {
-            factureArticles[idx].quantite = parseInt(value) || 1;
+            factureArticles[idx].quantite = parseNumber(value) || 1;
             displayFactureArticles();
         }
 
@@ -1440,7 +1497,7 @@
             });
             
             // Remise
-            const remiseMontant = parseFloat(document.getElementById('facture-remise-montant').value) || 0;
+            const remiseMontant = parseNumber(document.getElementById('facture-remise-montant').value) || 0;
             const remiseType = document.getElementById('facture-remise-type').value;
             let remise = 0;
             
@@ -1562,7 +1619,7 @@
                 totalTVA += ht * (a.tva / 100);
             });
             
-            const remiseMontant = parseFloat(document.getElementById('facture-remise-montant').value) || 0;
+            const remiseMontant = parseNumber(document.getElementById('facture-remise-montant').value) || 0;
             const remiseType = document.getElementById('facture-remise-type').value;
             let remise = 0;
             if (remiseMontant > 0) {
@@ -1752,6 +1809,47 @@ ${company}`;
         // Utilitaires
         function formatEuro(amount) {
             return amount.toFixed(2).replace('.', ',') + ' €';
+        }
+
+        // Fonction pour gérer les virgules dans les champs numériques
+        function parseNumber(value) {
+            if (!value) return 0;
+            // Remplacer la virgule par un point et convertir en nombre
+            return parseFloat(value.toString().replace(',', '.')) || 0;
+        }
+
+        // Initialiser les gestionnaires de virgules sur tous les inputs numériques
+        function initNumberInputs() {
+            // Attendre que le DOM soit chargé
+            setTimeout(() => {
+                // Tous les inputs de type number
+                const numberInputs = document.querySelectorAll('input[type="number"]');
+                numberInputs.forEach(input => {
+                    // Changer en type text pour accepter les virgules
+                    input.setAttribute('type', 'text');
+                    input.setAttribute('inputmode', 'decimal');
+                    
+                    // Événement lors de la saisie
+                    input.addEventListener('input', function(e) {
+                        // Autoriser uniquement chiffres, virgule et point
+                        let value = e.target.value;
+                        value = value.replace(/[^0-9.,]/g, '');
+                        // Remplacer plusieurs virgules/points par une seule
+                        value = value.replace(/[.,]+/g, match => match[0]);
+                        e.target.value = value;
+                    });
+                    
+                    // Événement lors de la perte de focus (blur)
+                    input.addEventListener('blur', function(e) {
+                        let value = e.target.value.replace(',', '.');
+                        const num = parseFloat(value);
+                        if (!isNaN(num)) {
+                            // Formater avec 2 décimales et virgule
+                            e.target.value = num.toFixed(2).replace('.', ',');
+                        }
+                    });
+                });
+            }, 500);
         }
 
         // INFOS VENDEUR
@@ -2370,35 +2468,37 @@ Seul vous pouvez y accéder.
                 return;
             }
             
-            let html = '<table class="table"><thead><tr><th>Nom</th><th>Contact</th><th>Historique</th><th>CA Total</th><th>Actions</th></tr></thead><tbody>';
+            let html = '<div class="table-container"><table class="table"><thead><tr><th>Nom</th><th>Contact</th><th class="hide-mobile-text"><span class="desktop-only">Historique</span><span class="mobile-only">Hist.</span></th><th class="hide-mobile-text"><span class="desktop-only">CA Total</span><span class="mobile-only">CA</span></th><th>Actions</th></tr></thead><tbody>';
             
             clientsToShow.forEach(c => {
                 const devisClient = allDevis.filter(d => normalizeText(d.client.nom) === normalizeText(c.nom));
                 const facturesClient = allFactures.filter(f => normalizeText(f.client.nom) === normalizeText(c.nom));
                 const caTotal = facturesClient.reduce((sum, f) => sum + f.totalTTC, 0);
                 
+                // Contact - version complète
                 const contactInfo = [];
-                if (c.email) contactInfo.push(`📧 ${c.email}`);
+                if (c.email) contactInfo.push(`<span style="word-break: break-all; display: inline-block; max-width: 100%;">📧 ${c.email}</span>`);
                 if (c.tel) contactInfo.push(`📱 ${c.tel}`);
-                const contactText = contactInfo.length > 0 ? contactInfo.join('<br>') : '<span style="color: #a0aec0;">Aucun contact</span>';
+                const contactText = contactInfo.length > 0 ? contactInfo.join('<br>') : '<span style="color: #a0aec0;">Aucun</span>';
                 
-                const historiqueText = `${devisClient.length} devis, ${facturesClient.length} facture(s)`;
+                // Historique - version abrégée pour mobile
+                const historiqueText = `${devisClient.length}D, ${facturesClient.length}F`;
                 
                 html += `<tr>
-                    <td><strong>${c.nom}</strong></td>
-                    <td style="font-size: 12px;">${contactText}</td>
-                    <td style="font-size: 12px;">${historiqueText}</td>
-                    <td><strong style="color: #48bb78;">${formatEuro(caTotal)}</strong></td>
-                    <td>
-                        <button class="btn btn-success" onclick="creerFactureDepuisClient(${c.id})" style="padding: 6px 10px; margin: 2px; font-size: 12px;" title="Créer une facture">📄</button>
-                        <button class="btn btn-primary" onclick="viewClientDetails(${c.id})" style="padding: 6px 10px; margin: 2px; font-size: 12px;">👁️</button>
-                        <button class="btn btn-secondary" onclick="editClient(${c.id})" style="padding: 6px 10px; margin: 2px;">✏️</button>
-                        <button class="btn btn-danger" onclick="deleteClient(${c.id})" style="padding: 6px 10px; margin: 2px;">🗑️</button>
+                    <td><strong style="display: block; overflow: hidden; text-overflow: ellipsis;">${c.nom}</strong></td>
+                    <td style="font-size: 11px; max-width: 180px; overflow: hidden;">${contactText}</td>
+                    <td style="font-size: 11px;">${historiqueText}</td>
+                    <td><strong style="color: #48bb78; white-space: nowrap;">${formatEuro(caTotal)}</strong></td>
+                    <td style="white-space: nowrap;">
+                        <button class="btn btn-success" onclick="creerFactureDepuisClient(${c.id})" style="padding: 6px 8px; margin: 1px; font-size: 11px;" title="Créer une facture">📄</button>
+                        <button class="btn btn-primary" onclick="viewClientDetails(${c.id})" style="padding: 6px 8px; margin: 1px; font-size: 11px;" title="Détails">👁️</button>
+                        <button class="btn btn-secondary" onclick="editClient(${c.id})" style="padding: 6px 8px; margin: 1px; font-size: 11px;" title="Modifier">✏️</button>
+                        <button class="btn btn-danger" onclick="deleteClient(${c.id})" style="padding: 6px 8px; margin: 1px; font-size: 11px;" title="Supprimer">🗑️</button>
                     </td>
                 </tr>`;
             });
             
-            html += '</tbody></table>';
+            html += '</tbody></table></div>';
             container.innerHTML = html;
         }
 
