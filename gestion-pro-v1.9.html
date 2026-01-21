@@ -71,12 +71,48 @@
         .btn-secondary { background: #e2e8f0; color: #4a5568; }
         
         /* Boutons compacts sur mobile */
+        .btn-actions-container {
+            display: flex;
+            gap: 3px;
+            flex-wrap: nowrap;
+        }
+        
+        .btn-action {
+            padding: 8px 10px;
+            font-size: 16px;
+            min-width: auto;
+            line-height: 1;
+        }
+        
+        @media (max-width: 1024px) {
+            .btn-actions-container {
+                flex-direction: column;
+                gap: 2px;
+            }
+            .btn-action {
+                padding: 6px 8px;
+                font-size: 14px;
+                width: 100%;
+            }
+        }
+        
         @media (max-width: 768px) {
             .btn { 
                 min-width: auto !important; 
                 padding: 5px 7px !important;
                 font-size: 14px !important;
                 line-height: 1 !important;
+            }
+            .btn-actions-container {
+                flex-direction: column;
+                gap: 1px;
+                width: 100%;
+            }
+            .btn-action {
+                padding: 4px 6px !important;
+                font-size: 13px !important;
+                width: 100% !important;
+                display: block;
             }
             .desktop-only { display: none !important; }
             .mobile-only { display: inline !important; }
@@ -133,6 +169,7 @@
             .table th:nth-child(2), .table td:nth-child(2) { max-width: 140px; } /* Contact */
             .table th:nth-child(3), .table td:nth-child(3) { max-width: 100px; } /* Historique */
             .table th:nth-child(4), .table td:nth-child(4) { max-width: 80px; } /* CA Total */
+            .table th:nth-child(5), .table td:nth-child(5) { min-width: 50px; max-width: 60px; } /* Actions */
             .btn { font-size: 11px !important; padding: 5px 8px !important; }
         }
         
@@ -140,11 +177,11 @@
         @media (max-width: 768px) {
             .table { font-size: 10px; }
             .table th, .table td { padding: 6px 3px; }
-            .table th:nth-child(1), .table td:nth-child(1) { max-width: 80px; } /* Nom */
-            .table th:nth-child(2), .table td:nth-child(2) { max-width: 120px; } /* Contact */
-            .table th:nth-child(3), .table td:nth-child(3) { font-size: 9px; max-width: 70px; } /* Historique */
-            .table th:nth-child(4), .table td:nth-child(4) { max-width: 60px; } /* CA Total */
-            .table th:nth-child(5), .table td:nth-child(5) { max-width: 140px; } /* Actions */
+            .table th:nth-child(1), .table td:nth-child(1) { max-width: 70px; } /* Nom */
+            .table th:nth-child(2), .table td:nth-child(2) { max-width: 100px; } /* Contact */
+            .table th:nth-child(3), .table td:nth-child(3) { font-size: 9px; max-width: 60px; } /* Historique */
+            .table th:nth-child(4), .table td:nth-child(4) { max-width: 55px; } /* CA Total */
+            .table th:nth-child(5), .table td:nth-child(5) { min-width: 40px; max-width: 45px; padding: 3px 1px; } /* Actions */
             .btn { font-size: 10px !important; padding: 4px 6px !important; margin: 1px !important; }
         }
         
@@ -1090,6 +1127,33 @@
             document.getElementById('article-unite').value = 'h';
             document.getElementById('article-tva').value = '0';
             document.getElementById('article-modal').classList.add('active');
+            
+            // Réinitialiser les inputs numériques après ouverture de la modale
+            setTimeout(() => {
+                const modalInputs = document.querySelectorAll('#article-modal input[type="text"][inputmode="decimal"], #article-modal input[type="number"]');
+                modalInputs.forEach(input => {
+                    if (!input.dataset.numberInit) {
+                        input.dataset.numberInit = 'true';
+                        input.setAttribute('type', 'text');
+                        input.setAttribute('inputmode', 'decimal');
+                        
+                        input.addEventListener('input', function(e) {
+                            let value = e.target.value;
+                            value = value.replace(/[^0-9.,]/g, '');
+                            value = value.replace(/[.,]+/g, match => match[0]);
+                            e.target.value = value;
+                        });
+                        
+                        input.addEventListener('blur', function(e) {
+                            let value = e.target.value.replace(',', '.');
+                            const num = parseFloat(value);
+                            if (!isNaN(num) && value !== '') {
+                                e.target.value = num.toFixed(2).replace('.', ',');
+                            }
+                        });
+                    }
+                });
+            }, 100);
         }
 
         function closeArticleModal() {
@@ -1176,6 +1240,33 @@
             document.getElementById('manual-prix').value = '';
             document.getElementById('manual-tva').value = '0';
             document.getElementById('manual-line-modal').classList.add('active');
+            
+            // Réinitialiser les inputs numériques après ouverture de la modale
+            setTimeout(() => {
+                const modalInputs = document.querySelectorAll('#manual-line-modal input[type="text"][inputmode="decimal"], #manual-line-modal input[type="number"]');
+                modalInputs.forEach(input => {
+                    if (!input.dataset.numberInit) {
+                        input.dataset.numberInit = 'true';
+                        input.setAttribute('type', 'text');
+                        input.setAttribute('inputmode', 'decimal');
+                        
+                        input.addEventListener('input', function(e) {
+                            let value = e.target.value;
+                            value = value.replace(/[^0-9.,]/g, '');
+                            value = value.replace(/[.,]+/g, match => match[0]);
+                            e.target.value = value;
+                        });
+                        
+                        input.addEventListener('blur', function(e) {
+                            let value = e.target.value.replace(',', '.');
+                            const num = parseFloat(value);
+                            if (!isNaN(num) && value !== '') {
+                                e.target.value = num.toFixed(2).replace('.', ',');
+                            }
+                        });
+                    }
+                });
+            }, 100);
         }
 
         function closeManualLineModal() {
@@ -1823,8 +1914,14 @@ ${company}`;
             // Attendre que le DOM soit chargé
             setTimeout(() => {
                 // Tous les inputs de type number
-                const numberInputs = document.querySelectorAll('input[type="number"]');
+                const numberInputs = document.querySelectorAll('input[type="number"], input[step], input[inputmode="decimal"]');
+                console.log('Initialisation des inputs numériques:', numberInputs.length, 'trouvés');
+                
                 numberInputs.forEach(input => {
+                    // Ne pas réinitialiser si déjà fait
+                    if (input.dataset.numberInit) return;
+                    input.dataset.numberInit = 'true';
+                    
                     // Changer en type text pour accepter les virgules
                     input.setAttribute('type', 'text');
                     input.setAttribute('inputmode', 'decimal');
@@ -1843,13 +1940,20 @@ ${company}`;
                     input.addEventListener('blur', function(e) {
                         let value = e.target.value.replace(',', '.');
                         const num = parseFloat(value);
-                        if (!isNaN(num)) {
+                        if (!isNaN(num) && value !== '') {
                             // Formater avec 2 décimales et virgule
                             e.target.value = num.toFixed(2).replace('.', ',');
                         }
                     });
+                    
+                    console.log('Input initialisé:', input.id || input.name);
                 });
             }, 500);
+            
+            // Relancer après 2 secondes pour attraper les inputs ajoutés dynamiquement
+            setTimeout(() => {
+                initNumberInputs();
+            }, 2500);
         }
 
         // INFOS VENDEUR
@@ -2489,11 +2593,13 @@ Seul vous pouvez y accéder.
                     <td style="font-size: 11px; max-width: 180px; overflow: hidden;">${contactText}</td>
                     <td style="font-size: 11px;">${historiqueText}</td>
                     <td><strong style="color: #48bb78; white-space: nowrap;">${formatEuro(caTotal)}</strong></td>
-                    <td style="white-space: nowrap;">
-                        <button class="btn btn-success" onclick="creerFactureDepuisClient(${c.id})" style="padding: 6px 8px; margin: 1px; font-size: 11px;" title="Créer une facture">📄</button>
-                        <button class="btn btn-primary" onclick="viewClientDetails(${c.id})" style="padding: 6px 8px; margin: 1px; font-size: 11px;" title="Détails">👁️</button>
-                        <button class="btn btn-secondary" onclick="editClient(${c.id})" style="padding: 6px 8px; margin: 1px; font-size: 11px;" title="Modifier">✏️</button>
-                        <button class="btn btn-danger" onclick="deleteClient(${c.id})" style="padding: 6px 8px; margin: 1px; font-size: 11px;" title="Supprimer">🗑️</button>
+                    <td>
+                        <div class="btn-actions-container">
+                            <button class="btn btn-success btn-action" onclick="creerFactureDepuisClient(${c.id})" title="Créer une facture">📄</button>
+                            <button class="btn btn-primary btn-action" onclick="viewClientDetails(${c.id})" title="Détails">👁️</button>
+                            <button class="btn btn-secondary btn-action" onclick="editClient(${c.id})" title="Modifier">✏️</button>
+                            <button class="btn btn-danger btn-action" onclick="deleteClient(${c.id})" title="Supprimer">🗑️</button>
+                        </div>
                     </td>
                 </tr>`;
             });
