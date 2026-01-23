@@ -643,6 +643,23 @@
                     <p style="color: #718096; margin-bottom: 20px;">Ces informations apparaîtront sur vos devis et factures</p>
                     
                     <form onsubmit="saveVendeurInfo(event)">
+                        <!-- Logo de l'entreprise -->
+                        <div class="form-section">
+                            <h3>🖼️ Logo de l'entreprise</h3>
+                            <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+                                <div>
+                                    <img id="logo-preview" src="" alt="Logo" style="max-width: 150px; max-height: 80px; display: none; border: 2px solid #e2e8f0; border-radius: 8px; padding: 5px; background: white;">
+                                    <div id="logo-placeholder" style="width: 150px; height: 80px; border: 2px dashed #cbd5e0; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #a0aec0; font-size: 13px;">Aucun logo</div>
+                                </div>
+                                <div style="flex: 1;">
+                                    <input type="file" id="logo-input" accept="image/*" onchange="handleLogoUpload(event)" style="display: none;">
+                                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('logo-input').click()">📤 Charger un logo</button>
+                                    <button type="button" class="btn btn-danger" onclick="removeLogo()" style="margin-left: 5px;">🗑️</button>
+                                    <p style="font-size: 12px; color: #718096; margin-top: 8px;">Format recommandé : PNG ou JPG, max 500x200px</p>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div class="form-group">
                             <label>Nom de l'entreprise *</label>
                             <input type="text" id="vendeur-nom" placeholder="Mon Entreprise" required>
@@ -677,20 +694,25 @@
                         
                         <div class="grid-2">
                             <div class="form-group">
+                                <label>Téléphone</label>
+                                <input type="tel" id="vendeur-tel" placeholder="06 12 34 56 78">
+                            </div>
+                            <div class="form-group">
                                 <label>Email</label>
                                 <input type="email" id="vendeur-email" placeholder="contact@entreprise.fr">
                             </div>
-                            <div class="form-group">
-                                <label>Taux de cotisations URSSAF</label>
-                                <select id="vendeur-cotisations">
-                                    <option value="22.2">22,2% - Défaut (services BNC)</option>
-                                    <option value="12.3">12,3% - Vente de marchandises (BIC)</option>
-                                    <option value="21.2">21,2% - Prestations de services commerciales ou artisanales (BIC)</option>
-                                    <option value="24.6">24,6% - Autres prestations de services et activités libérales (BNC)</option>
-                                    <option value="23.2">23,2% - Activités libérales réglementées à la CIPAV (BNC)</option>
-                                    <option value="6">6% - Location de meubles de tourisme classés (BIC)</option>
-                                </select>
-                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Taux de cotisations URSSAF</label>
+                            <select id="vendeur-cotisations">
+                                <option value="22.2">22,2% - Défaut (services BNC)</option>
+                                <option value="12.3">12,3% - Vente de marchandises (BIC)</option>
+                                <option value="21.2">21,2% - Prestations de services commerciales ou artisanales (BIC)</option>
+                                <option value="24.6">24,6% - Autres prestations de services et activités libérales (BNC)</option>
+                                <option value="23.2">23,2% - Activités libérales réglementées à la CIPAV (BNC)</option>
+                                <option value="6">6% - Location de meubles de tourisme classés (BIC)</option>
+                            </select>
                         </div>
                         
                         <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 15px;">💾 Sauvegarder les informations</button>
@@ -2148,104 +2170,10 @@ ${company}`;
         }
 
         // INFOS VENDEUR
-        // GÉNÉRATION PDF
+        // GÉNÉRATION PDF (fonction alternative pour factures)
         function genererFacturePDF(factureId) {
-            const facture = allFactures.find(f => f.id === factureId);
-            if (!facture) return;
-            
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            
-            // En-tête vendeur
-            doc.setFontSize(16);
-            doc.setFont(undefined, 'bold');
-            doc.text(vendeurInfo.nom || 'Mon Entreprise', 20, 20);
-            doc.setFontSize(10);
-            doc.setFont(undefined, 'normal');
-            if (vendeurInfo.siret) doc.text('SIRET: ' + vendeurInfo.siret, 20, 27);
-            if (vendeurInfo.adresse) doc.text(vendeurInfo.adresse, 20, 33);
-            if (vendeurInfo.email) doc.text(vendeurInfo.email, 20, 39);
-            if (vendeurInfo.tel) doc.text(vendeurInfo.tel, 20, 45);
-            
-            // Titre Facture
-            doc.setFontSize(20);
-            doc.setFont(undefined, 'bold');
-            doc.text('FACTURE', 140, 20);
-            doc.setFontSize(12);
-            doc.text(facture.numero, 140, 28);
-            doc.setFontSize(10);
-            doc.setFont(undefined, 'normal');
-            doc.text('Date: ' + facture.date, 140, 35);
-            
-            // Client
-            doc.setFont(undefined, 'bold');
-            doc.text('Client:', 20, 60);
-            doc.setFont(undefined, 'normal');
-            doc.text(facture.client.nom, 20, 67);
-            if (facture.client.email) doc.text(facture.client.email, 20, 73);
-            if (facture.client.tel) doc.text(facture.client.tel, 20, 79);
-            
-            // Tableau articles
-            let y = 95;
-            doc.setFillColor(102, 126, 234);
-            doc.rect(20, y, 170, 8, 'F');
-            doc.setTextColor(255, 255, 255);
-            doc.setFont(undefined, 'bold');
-            doc.text('Désignation', 22, y + 6);
-            doc.text('Qté', 120, y + 6);
-            doc.text('P.U. HT', 140, y + 6);
-            doc.text('Total TTC', 165, y + 6);
-            
-            doc.setTextColor(0, 0, 0);
-            doc.setFont(undefined, 'normal');
-            y += 12;
-            
-            facture.articles.forEach(a => {
-                const totalHT = a.quantite * a.prixHT;
-                const totalTVA = totalHT * (a.tva / 100);
-                const totalTTC = totalHT + totalTVA;
-                
-                doc.text(a.designation.substring(0, 40), 22, y);
-                doc.text(a.quantite + ' ' + a.unite, 120, y);
-                doc.text(a.prixHT.toFixed(2) + ' €', 140, y);
-                doc.text(totalTTC.toFixed(2) + ' €', 165, y);
-                y += 7;
-            });
-            
-            // Totaux
-            y += 10;
-            doc.text('Total HT:', 120, y);
-            doc.text(facture.totalHT.toFixed(2) + ' €', 165, y);
-            y += 7;
-            doc.text('TVA:', 120, y);
-            doc.text(facture.totalTVA.toFixed(2) + ' €', 165, y);
-            
-            if (facture.remise && facture.remise.valeur > 0) {
-                y += 7;
-                doc.setTextColor(245, 101, 101);
-                doc.text('Remise:', 120, y);
-                doc.text('-' + facture.remise.valeur.toFixed(2) + ' €', 165, y);
-                doc.setTextColor(0, 0, 0);
-            }
-            
-            y += 7;
-            doc.setFont(undefined, 'bold');
-            doc.setFontSize(14);
-            doc.text('Total TTC:', 120, y);
-            doc.text(facture.totalTTC.toFixed(2) + ' €', 165, y);
-            
-            // Signature
-            if (facture.signature) {
-                y += 15;
-                doc.setFontSize(10);
-                doc.setFont(undefined, 'normal');
-                doc.text('Signature vendeur:', 20, y);
-                doc.addImage(facture.signature, 'PNG', 20, y + 2, 50, 20);
-            }
-            
-            // Télécharger
-            doc.save(facture.numero + '.pdf');
-            customAlert('✅ PDF téléchargé : ' + facture.numero + '.pdf');
+            // Rediriger vers la fonction unifiée
+            genererPDF('facture', factureId);
         }
 
         // INFOS VENDEUR - Charger les infos dans le formulaire depuis vendeurInfo (déjà chargé depuis Firebase)
@@ -2276,8 +2204,108 @@ ${company}`;
                     }
                 });
                 
+                // Charger le logo s'il existe
+                if (vendeurInfo.logo) {
+                    logoDataUrl = vendeurInfo.logo;
+                    const preview = document.getElementById('logo-preview');
+                    const placeholder = document.getElementById('logo-placeholder');
+                    if (preview) {
+                        preview.src = logoDataUrl;
+                        preview.style.display = 'block';
+                    }
+                    if (placeholder) {
+                        placeholder.style.display = 'none';
+                    }
+                    console.log('  ✓ Logo chargé');
+                }
+                
                 console.log('✅ Formulaire vendeur rempli');
             }, 100);
+        }
+
+        // Gestion du logo
+        function handleLogoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // Vérifier le type de fichier
+            if (!file.type.startsWith('image/')) {
+                customAlert('⚠️ Veuillez sélectionner une image (PNG, JPG, etc.)', 'error');
+                return;
+            }
+            
+            // Vérifier la taille (max 2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                customAlert('⚠️ L\'image est trop volumineuse (max 2MB)', 'error');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // Redimensionner l'image si nécessaire
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    // Redimensionner si trop grand (max 400px de large)
+                    const maxWidth = 400;
+                    if (width > maxWidth) {
+                        height = (height * maxWidth) / width;
+                        width = maxWidth;
+                    }
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // Convertir en base64
+                    logoDataUrl = canvas.toDataURL('image/png', 0.9);
+                    vendeurInfo.logo = logoDataUrl;
+                    
+                    // Afficher l'aperçu
+                    const preview = document.getElementById('logo-preview');
+                    const placeholder = document.getElementById('logo-placeholder');
+                    if (preview) {
+                        preview.src = logoDataUrl;
+                        preview.style.display = 'block';
+                    }
+                    if (placeholder) {
+                        placeholder.style.display = 'none';
+                    }
+                    
+                    // Sauvegarder automatiquement
+                    saveData();
+                    customAlert('✅ Logo chargé !');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeLogo() {
+            logoDataUrl = null;
+            vendeurInfo.logo = null;
+            
+            const preview = document.getElementById('logo-preview');
+            const placeholder = document.getElementById('logo-placeholder');
+            const input = document.getElementById('logo-input');
+            
+            if (preview) {
+                preview.src = '';
+                preview.style.display = 'none';
+            }
+            if (placeholder) {
+                placeholder.style.display = 'flex';
+            }
+            if (input) {
+                input.value = '';
+            }
+            
+            saveData();
+            customAlert('🗑️ Logo supprimé !');
         }
 
         function saveVendeurInfo(e) {
@@ -2293,7 +2321,8 @@ ${company}`;
                 ville: document.getElementById('vendeur-ville').value.trim(),
                 email: document.getElementById('vendeur-email').value.trim(),
                 tel: document.getElementById('vendeur-tel') ? document.getElementById('vendeur-tel').value.trim() : '',
-                cotisations: parseFloat(document.getElementById('vendeur-cotisations').value) || 22.2
+                cotisations: parseFloat(document.getElementById('vendeur-cotisations').value) || 22.2,
+                logo: logoDataUrl || null
             };
             
             console.log('💾 Sauvegarde vendeurInfo:', vendeurInfo);
@@ -2306,121 +2335,8 @@ ${company}`;
 
         // GÉNÉRATION PDF
         async function telechargerFacturePDF(factureId) {
-            const facture = allFactures.find(f => f.id === factureId);
-            if (!facture) return;
-            
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            
-            let y = 20;
-            
-            // En-tête vendeur
-            doc.setFontSize(16);
-            doc.setFont(undefined, 'bold');
-            doc.text(vendeurInfo.nom || 'Mon Entreprise', 20, y);
-            y += 7;
-            
-            doc.setFontSize(10);
-            doc.setFont(undefined, 'normal');
-            if (vendeurInfo.siret) { doc.text(`SIRET: ${vendeurInfo.siret}`, 20, y); y += 5; }
-            if (vendeurInfo.adresse) { doc.text(vendeurInfo.adresse, 20, y); y += 5; }
-            if (vendeurInfo.cp && vendeurInfo.ville) { doc.text(`${vendeurInfo.cp} ${vendeurInfo.ville}`, 20, y); y += 5; }
-            if (vendeurInfo.tel) { doc.text(`Tel: ${vendeurInfo.tel}`, 20, y); y += 5; }
-            if (vendeurInfo.email) { doc.text(`Email: ${vendeurInfo.email}`, 20, y); y += 5; }
-            
-            // Titre FACTURE
-            y += 10;
-            doc.setFontSize(20);
-            doc.setFont(undefined, 'bold');
-            doc.setTextColor(102, 126, 234);
-            doc.text(`FACTURE ${facture.numero}`, 20, y);
-            doc.setTextColor(0, 0, 0);
-            y += 10;
-            
-            // Date
-            doc.setFontSize(10);
-            doc.setFont(undefined, 'normal');
-            doc.text(`Date: ${facture.date}`, 20, y);
-            y += 10;
-            
-            // Client
-            doc.setFont(undefined, 'bold');
-            doc.text('CLIENT:', 20, y);
-            y += 6;
-            doc.setFont(undefined, 'normal');
-            doc.text(facture.client.nom, 20, y);
-            y += 5;
-            if (facture.client.email) { doc.text(facture.client.email, 20, y); y += 5; }
-            if (facture.client.tel) { doc.text(facture.client.tel, 20, y); y += 5; }
-            
-            y += 10;
-            
-            // Tableau articles
-            doc.setFont(undefined, 'bold');
-            doc.setFillColor(102, 126, 234);
-            doc.setTextColor(255, 255, 255);
-            doc.rect(20, y, 170, 8, 'F');
-            doc.text('Designation', 22, y + 6);
-            doc.text('Qte', 120, y + 6);
-            doc.text('P.U. HT', 140, y + 6);
-            doc.text('Total HT', 165, y + 6);
-            y += 8;
-            
-            doc.setTextColor(0, 0, 0);
-            doc.setFont(undefined, 'normal');
-            
-            facture.articles.forEach(a => {
-                const totalLigne = a.quantite * a.prixHT;
-                doc.text(a.designation.substring(0, 40), 22, y + 5);
-                doc.text(a.quantite.toString(), 120, y + 5);
-                doc.text(a.prixHT.toFixed(2) + 'E', 140, y + 5);
-                doc.text(totalLigne.toFixed(2) + 'E', 165, y + 5);
-                y += 8;
-            });
-            
-            y += 5;
-            
-            // Totaux
-            doc.setFont(undefined, 'bold');
-            const xLabel = 120;
-            const xValue = 165;
-            
-            doc.text('Total HT:', xLabel, y);
-            doc.text(facture.totalHT.toFixed(2) + 'E', xValue, y);
-            y += 6;
-            
-            doc.text('Total TVA:', xLabel, y);
-            doc.text(facture.totalTVA.toFixed(2) + 'E', xValue, y);
-            y += 6;
-            
-            if (facture.remise && facture.remise.valeur > 0) {
-                doc.setTextColor(245, 101, 101);
-                doc.text('Remise:', xLabel, y);
-                doc.text('-' + facture.remise.valeur.toFixed(2) + 'E', xValue, y);
-                doc.setTextColor(0, 0, 0);
-                y += 6;
-            }
-            
-            doc.setFontSize(12);
-            doc.text('TOTAL TTC:', xLabel, y);
-            doc.text(facture.totalTTC.toFixed(2) + 'E', xValue, y);
-            
-            // Signature
-            if (facture.signature) {
-                y += 15;
-                doc.setFontSize(10);
-                doc.setFont(undefined, 'normal');
-                doc.text('Signature:', 20, y);
-                try {
-                    doc.addImage(facture.signature, 'PNG', 20, y + 5, 60, 22);
-                } catch(e) {
-                    console.error('Erreur signature:', e);
-                }
-            }
-            
-            // Télécharger
-            doc.save(`Facture_${facture.numero}.pdf`);
-            customAlert('📄 PDF téléchargé !');
+            // Rediriger vers la fonction unifiée
+            genererPDF('facture', factureId);
         }
 
         // COMPTABILITÉ
@@ -2613,35 +2529,55 @@ Seul vous pouvez y accéder.
             const doc = type === 'devis' ? allDevis.find(d => d.id === id) : allFactures.find(f => f.id === id);
             if (!doc) return;
             
-            const vendeur = JSON.parse(localStorage.getItem('vendeur-info') || '{}');
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF();
+            
+            let y = 20;
+            let xInfos = 20; // Position X pour les infos vendeur
+            
+            // Logo (si présent)
+            if (vendeurInfo.logo) {
+                try {
+                    pdf.addImage(vendeurInfo.logo, 'PNG', 20, 15, 40, 20);
+                    xInfos = 65; // Décaler les infos à droite du logo
+                } catch(e) {
+                    console.warn('Erreur chargement logo:', e);
+                }
+            }
             
             // En-tête vendeur
             pdf.setFontSize(16);
             pdf.setFont(undefined, 'bold');
-            pdf.text(vendeur.nom || 'Mon Entreprise', 20, 20);
+            pdf.text(vendeurInfo.nom || 'Mon Entreprise', xInfos, y);
             pdf.setFontSize(10);
             pdf.setFont(undefined, 'normal');
-            let y = 28;
-            if (vendeur.adresse) { pdf.text(vendeur.adresse, 20, y); y += 5; }
-            if (vendeur.cp && vendeur.ville) { pdf.text(`${vendeur.cp} ${vendeur.ville}`, 20, y); y += 5; }
-            if (vendeur.tel) { pdf.text(`Tél: ${vendeur.tel}`, 20, y); y += 5; }
-            if (vendeur.email) { pdf.text(`Email: ${vendeur.email}`, 20, y); y += 5; }
-            if (vendeur.siret) { pdf.text(`SIRET: ${vendeur.siret}`, 20, y); y += 5; }
+            y += 6;
+            if (vendeurInfo.adresse) { pdf.text(vendeurInfo.adresse, xInfos, y); y += 5; }
+            if (vendeurInfo.cp && vendeurInfo.ville) { pdf.text(`${vendeurInfo.cp} ${vendeurInfo.ville}`, xInfos, y); y += 5; }
+            if (vendeurInfo.tel) { pdf.text(`Tél: ${vendeurInfo.tel}`, xInfos, y); y += 5; }
+            if (vendeurInfo.email) { pdf.text(`Email: ${vendeurInfo.email}`, xInfos, y); y += 5; }
+            if (vendeurInfo.siret) { pdf.text(`SIRET: ${vendeurInfo.siret}`, xInfos, y); y += 5; }
+            if (vendeurInfo.ape) { pdf.text(`APE: ${vendeurInfo.ape}`, xInfos, y); y += 5; }
             
-            // Titre
+            // Titre (à droite)
             pdf.setFontSize(18);
             pdf.setFont(undefined, 'bold');
-            pdf.text(type === 'devis' ? 'DEVIS' : 'FACTURE', 150, 30);
+            pdf.setTextColor(102, 126, 234);
+            pdf.text(type === 'devis' ? 'DEVIS' : 'FACTURE', 150, 25);
+            pdf.setTextColor(0, 0, 0);
             pdf.setFontSize(12);
-            pdf.text(doc.numero, 150, 38);
+            pdf.text(doc.numero, 150, 33);
             pdf.setFontSize(10);
             pdf.setFont(undefined, 'normal');
-            pdf.text(`Date: ${doc.date}`, 150, 45);
+            pdf.text(`Date: ${doc.date}`, 150, 40);
+            
+            // Validité pour les devis
+            if (type === 'devis') {
+                pdf.text('Validité: 30 jours', 150, 46);
+            }
             
             // Client
-            y = 70;
+            y = Math.max(y, 55) + 10;
             pdf.setFont(undefined, 'bold');
             pdf.text('CLIENT:', 20, y);
             pdf.setFont(undefined, 'normal');
@@ -2653,55 +2589,83 @@ Seul vous pouvez y accéder.
             // Articles
             y += 10;
             pdf.setFont(undefined, 'bold');
-            pdf.text('Désignation', 20, y);
-            pdf.text('Qté', 100, y);
-            pdf.text('P.U. HT', 120, y);
-            pdf.text('Total HT', 160, y);
-            y += 2;
-            pdf.line(20, y, 190, y);
+            pdf.setFillColor(102, 126, 234);
+            pdf.setTextColor(255, 255, 255);
+            pdf.rect(20, y - 5, 170, 8, 'F');
+            pdf.text('Désignation', 22, y);
+            pdf.text('Qté', 105, y);
+            pdf.text('P.U. HT', 125, y);
+            pdf.text('TVA', 150, y);
+            pdf.text('Total HT', 170, y);
             y += 7;
             
+            pdf.setTextColor(0, 0, 0);
             pdf.setFont(undefined, 'normal');
+            
             doc.articles.forEach(a => {
                 if (y > 250) {
                     pdf.addPage();
                     y = 20;
                 }
-                pdf.text(a.designation.substring(0, 30), 20, y);
-                pdf.text(`${a.quantite}`, 100, y);
-                pdf.text(`${formatEuro(a.prixHT)}`, 120, y);
-                pdf.text(`${formatEuro(a.quantite * a.prixHT)}`, 160, y);
+                pdf.text(a.designation.substring(0, 35), 22, y);
+                pdf.text(`${a.quantite} ${a.unite}`, 105, y);
+                pdf.text(`${formatEuro(a.prixHT)}`, 125, y);
+                pdf.text(`${a.tva}%`, 150, y);
+                pdf.text(`${formatEuro(a.quantite * a.prixHT)}`, 170, y);
                 y += 7;
             });
             
             // Totaux
             y += 5;
             pdf.line(20, y, 190, y);
+            y += 10;
+            
+            const xLabel = 130;
+            const xValue = 170;
+            
+            pdf.text('Total HT:', xLabel, y);
+            pdf.text(`${formatEuro(doc.totalHT)}`, xValue, y);
             y += 7;
-            pdf.text(`Total HT:`, 120, y);
-            pdf.text(`${formatEuro(doc.totalHT)}`, 160, y);
-            y += 7;
-            pdf.text(`Total TVA:`, 120, y);
-            pdf.text(`${formatEuro(doc.totalTVA)}`, 160, y);
+            pdf.text('Total TVA:', xLabel, y);
+            pdf.text(`${formatEuro(doc.totalTVA)}`, xValue, y);
             y += 7;
             
             if (type === 'facture' && doc.remise && doc.remise.valeur > 0) {
-                pdf.text(`Remise:`, 120, y);
-                pdf.text(`-${formatEuro(doc.remise.valeur)}`, 160, y);
+                pdf.setTextColor(245, 101, 101);
+                pdf.text('Remise:', xLabel, y);
+                pdf.text(`-${formatEuro(doc.remise.valeur)}`, xValue, y);
+                pdf.setTextColor(0, 0, 0);
                 y += 7;
             }
             
             pdf.setFont(undefined, 'bold');
             pdf.setFontSize(12);
-            pdf.text(`Total TTC:`, 120, y);
-            pdf.text(`${formatEuro(doc.totalTTC)}`, 160, y);
+            pdf.text('Total TTC:', xLabel, y);
+            pdf.text(`${formatEuro(doc.totalTTC)}`, xValue, y);
             
-            // Signature
+            // Mention TVA non applicable (auto-entrepreneur)
+            y += 15;
+            pdf.setFontSize(8);
+            pdf.setFont(undefined, 'italic');
+            pdf.text('TVA non applicable, art. 293 B du CGI', 20, y);
+            
+            // Signature (pour factures)
             if (type === 'facture' && signatureDataUrl) {
-                pdf.addImage(signatureDataUrl, 'PNG', 20, y + 10, 50, 20);
-                pdf.setFontSize(8);
+                y += 10;
+                pdf.setFontSize(10);
                 pdf.setFont(undefined, 'normal');
-                pdf.text('Signature vendeur', 20, y + 35);
+                pdf.text('Signature vendeur:', 20, y);
+                pdf.addImage(signatureDataUrl, 'PNG', 20, y + 2, 50, 20);
+            }
+            
+            // Conditions pour les devis
+            if (type === 'devis') {
+                y += 15;
+                pdf.setFontSize(9);
+                pdf.setFont(undefined, 'normal');
+                pdf.text('Bon pour accord (date et signature):', 20, y);
+                y += 20;
+                pdf.line(20, y, 80, y);
             }
             
             // Téléchargement
