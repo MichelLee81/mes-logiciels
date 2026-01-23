@@ -385,29 +385,32 @@
         }
 
     
-        /* MOBILE - Empêcher chevauchement */
+        /* MOBILE - Meilleure gestion des boutons */
         @media (max-width: 768px) {
-            .table td {
-                padding: 8px 4px;
+            .table {
                 font-size: 12px;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                max-width: 100px;
             }
-            .btn-actions-container {
-                display: flex;
-                flex-direction: column;
-                gap: 4px;
+            .table td {
+                padding: 8px 3px;
+                vertical-align: middle;
             }
-            .btn-action {
-                width: 100%;
-                padding: 8px;
-                font-size: 11px;
+            .table td:last-child {
+                min-width: 100px;
+            }
+            .btn-action, .btn-payer, .btn {
+                padding: 6px 8px !important;
+                font-size: 11px !important;
+                margin: 1px !important;
+                min-height: 32px !important;
             }
             .badge-payee {
-                font-size: 9px;
+                font-size: 10px;
                 padding: 3px 6px;
+                display: inline-block;
+            }
+            /* Boutons actions en wrap au lieu de colonne */
+            .table td:last-child {
+                white-space: normal !important;
             }
         }
 
@@ -2009,11 +2012,11 @@
                     <td>${f.client.nom}</td>
                     <td>${badgePayee}</td>
                     <td><strong>${formatEuro(f.totalTTC)}</strong></td>
-                    <td>
+                    <td style="white-space: nowrap;">
                         ${btnPayer}
-                        <button class="btn btn-secondary" onclick="editFacture(${f.id})" style="padding: 6px 10px; margin: 2px; font-size: 12px;">✏️</button>
-                        <button class="btn btn-secondary" onclick="genererFacturePDF(${f.id})" style="padding: 6px 10px; margin: 2px; font-size: 12px;">📄</button>
-                        <button class="btn btn-danger" onclick="deleteFacture(${f.id})" style="padding: 6px 10px; margin: 2px;">🗑️</button>
+                        <button class="btn btn-secondary btn-action" onclick="editFacture(${f.id})">✏️</button>
+                        <button class="btn btn-secondary btn-action" onclick="genererFacturePDF(${f.id})">📄</button>
+                        <button class="btn btn-danger btn-action" onclick="deleteFacture(${f.id})">🗑️</button>
                     </td>
                 </tr>`;
             });
