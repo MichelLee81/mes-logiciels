@@ -2306,9 +2306,28 @@ Cela la comptabilisera dans votre chiffre d'affaires.`)) {
 
         // INFOS VENDEUR
         // GÉNÉRATION PDF
-        function genererFacturePDF(factureId) {
+        async function genererFacturePDF(factureId) {
             const facture = allFactures.find(f => f.id === factureId);
             if (!facture) return;
+            
+            // FORCER le rechargement de vendeurInfo depuis Firebase
+            if (!vendeurInfo || !vendeurInfo.nom) {
+                console.log('⚠️ vendeurInfo vide, rechargement depuis Firebase...');
+                try {
+                    const user = firebase.auth().currentUser;
+                    if (user) {
+                        const doc = await firebase.firestore().collection('users').doc(user.uid).get();
+                        if (doc.exists) {
+                            const data = doc.data();
+                            vendeurInfo = data.vendeurInfo || {};
+                            logoDataUrl = data.logo || null;
+                            console.log('✅ vendeurInfo rechargé:', vendeurInfo);
+                        }
+                    }
+                } catch (error) {
+                    console.error('❌ Erreur rechargement:', error);
+                }
+            }
             
             console.log('📄 Génération PDF, vendeurInfo:', vendeurInfo);
             console.log('📄 Logo disponible:', logoDataUrl ? 'OUI' : 'NON');
@@ -2461,6 +2480,26 @@ Cela la comptabilisera dans votre chiffre d'affaires.`)) {
         async function telechargerFacturePDF(factureId) {
             const facture = allFactures.find(f => f.id === factureId);
             if (!facture) return;
+            
+            // FORCER le rechargement de vendeurInfo
+            if (!vendeurInfo || !vendeurInfo.nom) {
+                console.log('⚠️ vendeurInfo vide, rechargement...');
+                try {
+                    const user = firebase.auth().currentUser;
+                    if (user) {
+                        const docSnap = await firebase.firestore().collection('users').doc(user.uid).get();
+                        if (docSnap.exists) {
+                            const data = docSnap.data();
+                            vendeurInfo = data.vendeurInfo || {};
+                            logoDataUrl = data.logo || null;
+                        }
+                    }
+                } catch (error) {
+                    console.error('❌ Erreur:', error);
+                }
+            }
+            
+            console.log('📄 vendeurInfo pour PDF:', vendeurInfo);
             
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
