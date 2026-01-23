@@ -840,7 +840,7 @@
         let editingArticleId = null;
         let editingClientId = null;
         let currentSelectMode = 'devis';
-        let vendeurInfos = {};
+        
 
         // Init Firebase
         try { 
@@ -869,7 +869,7 @@
                     allFactures = data.factures || [];
                     allClients = data.clients || [];
                     signatureDataUrl = data.signature || null;
-                    vendeurInfos = data.vendeur || {};
+                    // vendeurInfo chargé plus haut
                     vendeurInfo = data.vendeurInfo || {};
                     logoDataUrl = data.logo || null;
                     
@@ -929,7 +929,7 @@
                         factures: allFactures,
                         clients: allClients,
                         
-                        vendeur: vendeurInfos,
+                        // vendeur supprimé (utilise vendeurInfo)
                         lastUpdate: new Date().toISOString()
                     });
                 console.log('✅ Données sauvegardées avec succès dans Firebase');
@@ -2295,7 +2295,7 @@ ${company}`;
                         'vendeur-ville': vendeurInfo.ville,
                         'vendeur-tel': vendeurInfo.tel,
                         'vendeur-email': vendeurInfo.email,
-                        'vendeur-cotisations': vendeurInfos.cotisations || '22.2'
+                        'vendeur-cotisations': vendeurInfo.cotisations || '22.2'
                     };
                     
                     Object.keys(elements).forEach(id => {
@@ -2308,7 +2308,7 @@ ${company}`;
                     });
                     
                     console.log('✅ Informations chargées:', vendeurInfos);
-                    console.log('✅ Taux de cotisations:', vendeurInfos.cotisations + '%');
+                    console.log('✅ Taux de cotisations:', vendeurInfo.cotisations + '%');
                 }, 200);
             } else {
                 console.log('⚠️ Aucune information sauvegardée dans localStorage');
@@ -2512,7 +2512,7 @@ Seul vous pouvez y accéder.
             const caTotal = facturesPayees.reduce((sum, f) => sum + f.totalTTC, 0);
             const nbFactures = facturesPayees.length;
             // Utiliser le taux de cotisations personnalisé depuis les paramètres
-            const tauxCotisations = (vendeurInfos?.cotisations || 22.2) / 100;
+            const tauxCotisations = (vendeurInfo?.cotisations || 22.2) / 100;
             const cotisations = caTotal * tauxCotisations;
             const net = caTotal - cotisations;
             
