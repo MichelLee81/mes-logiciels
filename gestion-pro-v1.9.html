@@ -904,6 +904,10 @@
                     allClients = data.clients || [];
                     signatureDataUrl = data.signature || null;
                     vendeurInfos = data.vendeur || {};
+                    vendeurInfo = data.vendeurInfo || {};
+                    logoDataUrl = data.logo || null;
+                    
+                    console.log('✅ Logo chargé:', logoDataUrl ? 'OUI' : 'NON');
                     
                     // Nettoyer les données corrompues
                     const devisInitial = allDevis.length;
@@ -2376,8 +2380,10 @@ ${company}`;
             let y = 20;
             
             // Logo (si existe)
+            console.log('📄 PDF - Logo disponible:', logoDataUrl ? 'OUI' : 'NON');
             if (logoDataUrl) {
                 try {
+                    console.log('📄 Ajout du logo au PDF...');
                     doc.addImage(logoDataUrl, 'PNG', 20, y, 40, 20);
                     y += 25;
                 } catch(e) {
