@@ -257,6 +257,29 @@
         }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         
+        /* Signature Canvas */
+        .signature-box {
+            border: 2px dashed #e2e8f0; border-radius: 8px;
+            padding: 10px; background: #f7fafc; margin-top: 10px;
+            position: relative;
+        }
+        #signature-canvas {
+            border: 1px solid #cbd5e0; background: white;
+            border-radius: 5px; cursor: crosshair; display: block;
+            width: 100%; max-width: 400px; margin: 0 auto;
+        }
+        .signature-placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #cbd5e0;
+            font-size: 16px;
+            pointer-events: none;
+            z-index: 1;
+            font-style: italic;
+        }
+        
         /* Notification personnalisée */
         .custom-notification {
             position: fixed;
@@ -553,6 +576,17 @@
                             <span><strong>Total TTC:</strong></span>
                             <strong id="facture-total-ttc">0,00 €</strong>
                         </div>
+                    </div>
+                    
+                    <h3>Signature vendeur</h3>
+                    <div class="signature-box">
+                        <span class="signature-placeholder" id="signature-placeholder">✍️ Signez ici</span>
+                        <canvas id="signature-canvas" width="400" height="150"></canvas>
+                        <div style="margin-top: 10px; display: flex; gap: 10px;">
+                            <button class="btn btn-secondary" onclick="clearSignature()" style="flex: 1;">🗑️ Effacer</button>
+                            <button class="btn btn-success" onclick="saveSignature()" style="flex: 1;">✓ Valider</button>
+                        </div>
+                        <img id="signature-preview" style="display: none; margin-top: 10px; max-width: 200px; border: 1px solid #e2e8f0; border-radius: 5px;">
                     </div>
                     
                     <button class="btn btn-success" onclick="saveFacture()" style="width: 100%; margin-top: 15px;">💾 Sauvegarder la facture</button>
@@ -2175,8 +2209,7 @@ ${company}`;
             }, 2500);
         }
 
-        // INFOS VENDEUR
-        // GÉNÉRATION PDF
+        
         function genererFacturePDF(factureId) {
             const facture = allFactures.find(f => f.id === factureId);
             if (!facture) return;
@@ -2278,7 +2311,7 @@ ${company}`;
 
         // INFOS VENDEUR
         function loadVendeurInfo() {
-            const saved = localStorage.getItem('vendeur-info');
+            const saved = null;
             console.log('Chargement vendeurInfos depuis localStorage:', saved);
             if (saved) {
                 vendeurInfos = JSON.parse(saved);
@@ -2313,6 +2346,42 @@ ${company}`;
             } else {
                 console.log('⚠️ Aucune information sauvegardée dans localStorage');
             }
+        }
+
+        
+        // ═══════════════════════════════════════
+        // CHARGEMENT INFOS VENDEUR
+        // ═══════════════════════════════════════
+        
+        function loadVendeurInfo() {
+            console.log('📋 loadVendeurInfo appelé');
+            console.log('vendeurInfo:', vendeurInfo);
+            
+            if (!vendeurInfo || !vendeurInfo.nom) {
+                console.log('⚠️ Pas de vendeurInfo');
+                return;
+            }
+            
+            // Remplir tous les champs
+            const fields = {
+                'vendeur-nom': vendeurInfo.nom || '',
+                'vendeur-siret': vendeurInfo.siret || '',
+                'vendeur-ape': vendeurInfo.ape || '',
+                'vendeur-adresse': vendeurInfo.adresse || '',
+                'vendeur-cp': vendeurInfo.cp || '',
+                'vendeur-ville': vendeurInfo.ville || '',
+                'vendeur-email': vendeurInfo.email || '',
+                'vendeur-cotisations': vendeurInfo.cotisations || 22.2
+            };
+            
+            Object.keys(fields).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.value = fields[id];
+                }
+            });
+            
+            console.log('✅ Champs vendeur remplis');
         }
 
         function saveVendeurInfo(e) {
@@ -2650,13 +2719,12 @@ Seul vous pouvez y accéder.
             customAlert('✅ Fichier CSV téléchargé !');
         }
 
-        // INFOS VENDEUR
-        // GÉNÉRATION PDF
+        
         async function genererPDF(type, id) {
             const doc = type === 'devis' ? allDevis.find(d => d.id === id) : allFactures.find(f => f.id === id);
             if (!doc) return;
             
-            const vendeur = JSON.parse(localStorage.getItem('vendeur-info') || '{}');
+            const vendeur = JSON.parse(null || '{}');
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF();
             
