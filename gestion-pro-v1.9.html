@@ -857,6 +857,8 @@
         let allDevis = [];
         let allFactures = [];
         let allClients = [];
+        let vendeurInfo = {};
+        let logoDataUrl = null;
         let editingArticleId = null;
         let editingClientId = null;
         let currentSelectMode = 'devis';
@@ -2151,13 +2153,13 @@ ${company}`;
             // En-tête vendeur
             doc.setFontSize(16);
             doc.setFont(undefined, 'bold');
-            doc.text(vendeurInfos.entreprise || 'Mon Entreprise', 20, 20);
+            doc.text(vendeurInfo.nom || 'Mon Entreprise', 20, 20);
             doc.setFontSize(10);
             doc.setFont(undefined, 'normal');
-            if (vendeurInfos.siret) doc.text('SIRET: ' + vendeurInfos.siret, 20, 27);
-            if (vendeurInfos.adresse) doc.text(vendeurInfos.adresse, 20, 33);
-            if (vendeurInfos.email) doc.text(vendeurInfos.email, 20, 39);
-            if (vendeurInfos.tel) doc.text(vendeurInfos.tel, 20, 45);
+            if (vendeurInfo.siret) doc.text('SIRET: ' + vendeurInfo.siret, 20, 27);
+            if (vendeurInfo.adresse) doc.text(vendeurInfo.adresse, 20, 33);
+            if (vendeurInfo.email) doc.text(vendeurInfo.email, 20, 39);
+            if (vendeurInfo.tel) doc.text(vendeurInfo.tel, 20, 45);
             
             // Titre Facture
             doc.setFontSize(20);
@@ -2251,14 +2253,14 @@ ${company}`;
                 setTimeout(() => {
                     // Vérifier que les éléments existent avant de les remplir
                     const elements = {
-                        'vendeur-nom': vendeurInfos.nom,
-                        'vendeur-siret': vendeurInfos.siret,
-                        'vendeur-ape': vendeurInfos.ape,
-                        'vendeur-adresse': vendeurInfos.adresse,
-                        'vendeur-cp': vendeurInfos.cp,
-                        'vendeur-ville': vendeurInfos.ville,
-                        'vendeur-tel': vendeurInfos.tel,
-                        'vendeur-email': vendeurInfos.email,
+                        'vendeur-nom': vendeurInfo.nom,
+                        'vendeur-siret': vendeurInfo.siret,
+                        'vendeur-ape': vendeurInfo.ape,
+                        'vendeur-adresse': vendeurInfo.adresse,
+                        'vendeur-cp': vendeurInfo.cp,
+                        'vendeur-ville': vendeurInfo.ville,
+                        'vendeur-tel': vendeurInfo.tel,
+                        'vendeur-email': vendeurInfo.email,
                         'vendeur-cotisations': vendeurInfos.cotisations || '22.2'
                     };
                     
@@ -2282,35 +2284,21 @@ ${company}`;
         function saveVendeurInfo(e) {
             e.preventDefault();
             
-            // Fonction helper pour récupérer la valeur d'un élément s'il existe
-            const getValue = (id) => {
-                const element = document.getElementById(id);
-                return element ? element.value : '';
+            vendeurInfo = {
+                nom: document.getElementById('vendeur-nom').value.trim(),
+                siret: document.getElementById('vendeur-siret').value.trim(),
+                ape: document.getElementById('vendeur-ape').value.trim(),
+                adresse: document.getElementById('vendeur-adresse').value.trim(),
+                cp: document.getElementById('vendeur-cp').value.trim(),
+                ville: document.getElementById('vendeur-ville').value.trim(),
+                email: document.getElementById('vendeur-email').value.trim(),
+                tel: document.getElementById('vendeur-tel') ? document.getElementById('vendeur-tel').value.trim() : '',
+                cotisations: parseFloat(document.getElementById('vendeur-cotisations').value)
             };
             
-            vendeurInfos = {
-                nom: getValue('vendeur-nom'),
-                siret: getValue('vendeur-siret'),
-                ape: getValue('vendeur-ape'),
-                adresse: getValue('vendeur-adresse'),
-                cp: getValue('vendeur-cp'),
-                ville: getValue('vendeur-ville'),
-                tel: getValue('vendeur-tel'),
-                email: getValue('vendeur-email'),
-                cotisations: parseFloat(getValue('vendeur-cotisations')) || 22.2
-            };
-            
-            console.log('💾 Sauvegarde des informations:', vendeurInfos);
-            
-            localStorage.setItem('vendeur-info', JSON.stringify(vendeurInfos));
-            localStorage.setItem('company-name', vendeurInfos.nom);
-            document.getElementById('user-company').textContent = vendeurInfos.nom;
-            
-            console.log('Taux de cotisations sauvegardé:', vendeurInfos.cotisations + '%');
+            console.log('💾 Sauvegarde vendeurInfo:', vendeurInfo);
+            saveData();
             customAlert('✅ Informations sauvegardées !');
-            
-            // Recalculer la compta avec le nouveau taux
-            updateComptabilite();
         }
 
         // GÉNÉRATION PDF
@@ -2326,16 +2314,16 @@ ${company}`;
             // En-tête vendeur
             doc.setFontSize(16);
             doc.setFont(undefined, 'bold');
-            doc.text(vendeurInfos.nom || 'Mon Entreprise', 20, y);
+            doc.text(vendeurInfo.nom || 'Mon Entreprise', 20, y);
             y += 7;
             
             doc.setFontSize(10);
             doc.setFont(undefined, 'normal');
-            if (vendeurInfos.siret) { doc.text(`SIRET: ${vendeurInfos.siret}`, 20, y); y += 5; }
-            if (vendeurInfos.adresse) { doc.text(vendeurInfos.adresse, 20, y); y += 5; }
-            if (vendeurInfos.cp && vendeurInfos.ville) { doc.text(`${vendeurInfos.cp} ${vendeurInfos.ville}`, 20, y); y += 5; }
-            if (vendeurInfos.tel) { doc.text(`Tel: ${vendeurInfos.tel}`, 20, y); y += 5; }
-            if (vendeurInfos.email) { doc.text(`Email: ${vendeurInfos.email}`, 20, y); y += 5; }
+            if (vendeurInfo.siret) { doc.text(`SIRET: ${vendeurInfo.siret}`, 20, y); y += 5; }
+            if (vendeurInfo.adresse) { doc.text(vendeurInfo.adresse, 20, y); y += 5; }
+            if (vendeurInfo.cp && vendeurInfo.ville) { doc.text(`${vendeurInfo.cp} ${vendeurInfo.ville}`, 20, y); y += 5; }
+            if (vendeurInfo.tel) { doc.text(`Tel: ${vendeurInfo.tel}`, 20, y); y += 5; }
+            if (vendeurInfo.email) { doc.text(`Email: ${vendeurInfo.email}`, 20, y); y += 5; }
             
             // Titre FACTURE
             y += 10;
@@ -2578,7 +2566,7 @@ Seul vous pouvez y accéder.
             }
             
             let html = '<table class="table"><thead><tr><th>Date</th><th>N°</th><th>Client</th><th>Montant TTC</th></tr></thead><tbody>';
-            allFactures.slice().reverse().forEach(f => {
+            facturesPayees.slice().reverse().forEach(f => {
                 html += `<tr>
                     <td>${f.date}</td>
                     <td><strong>${f.numero}</strong></td>
