@@ -257,29 +257,6 @@
         }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         
-        /* Signature Canvas */
-        .signature-box {
-            border: 2px dashed #e2e8f0; border-radius: 8px;
-            padding: 10px; background: #f7fafc; margin-top: 10px;
-            position: relative;
-        }
-        #signature-canvas {
-            border: 1px solid #cbd5e0; background: white;
-            border-radius: 5px; cursor: crosshair; display: block;
-            width: 100%; max-width: 400px; margin: 0 auto;
-        }
-        .signature-placeholder {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #cbd5e0;
-            font-size: 16px;
-            pointer-events: none;
-            z-index: 1;
-            font-style: italic;
-        }
-        
         /* Notification personnalisée */
         .custom-notification {
             position: fixed;
@@ -415,7 +392,7 @@
                     <div class="user-email" id="user-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e58088848c89a5809d8488958980cb868a88">[email&#160;protected]</a></div>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                    <button class="btn-logout" onclick="showFirebaseGuide()" style="background: #48bb78;">☁️ Cloud Activé ✓</button>
+                    <button class="btn-logout" onclick="showFirebaseGuide()" style="background: #48bb78;">Bienvenue !✓</button>
                     <button class="btn-logout" onclick="logout()">🚪 Déconnexion</button>
                 </div>
             </div>
@@ -576,17 +553,6 @@
                             <span><strong>Total TTC:</strong></span>
                             <strong id="facture-total-ttc">0,00 €</strong>
                         </div>
-                    </div>
-                    
-                    <h3>Signature vendeur</h3>
-                    <div class="signature-box">
-                        <span class="signature-placeholder" id="signature-placeholder">✍️ Signez ici</span>
-                        <canvas id="signature-canvas" width="400" height="150"></canvas>
-                        <div style="margin-top: 10px; display: flex; gap: 10px;">
-                            <button class="btn btn-secondary" onclick="clearSignature()" style="flex: 1;">🗑️ Effacer</button>
-                            <button class="btn btn-success" onclick="saveSignature()" style="flex: 1;">✓ Valider</button>
-                        </div>
-                        <img id="signature-preview" style="display: none; margin-top: 10px; max-width: 200px; border: 1px solid #e2e8f0; border-radius: 5px;">
                     </div>
                     
                     <button class="btn btn-success" onclick="saveFacture()" style="width: 100%; margin-top: 15px;">💾 Sauvegarder la facture</button>
