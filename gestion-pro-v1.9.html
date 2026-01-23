@@ -81,7 +81,7 @@
             padding: 12px 20px; border: none; border-radius: 8px;
             font-size: 14px; font-weight: 600; cursor: pointer;
             transition: all 0.3s; margin-right: 8px; margin-bottom: 8px;
-            min-height: 44px; /* Taille minimale pour les tactiles */
+            min-height: 38px; /* Taille minimale pour les tactiles - réduite */
         }
         .btn-primary { background: #667eea; color: white; }
         .btn-primary:hover { background: #5a67d8; transform: translateY(-2px); }
@@ -97,7 +97,8 @@
         }
         
         .btn-action {
-            padding: 8px 10px;
+            padding: 6px 8px;
+            min-height: 36px;
             font-size: 16px;
             min-width: auto;
             line-height: 1;
@@ -381,6 +382,33 @@
         .btn-payer.payee {
             background: #a0aec0;
             cursor: not-allowed;
+        }
+
+    
+        /* MOBILE - Empêcher chevauchement */
+        @media (max-width: 768px) {
+            .table td {
+                padding: 8px 4px;
+                font-size: 12px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 100px;
+            }
+            .btn-actions-container {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+            .btn-action {
+                width: 100%;
+                padding: 8px;
+                font-size: 11px;
+            }
+            .badge-payee {
+                font-size: 9px;
+                padding: 3px 6px;
+            }
         }
 
     </style>
@@ -2392,8 +2420,8 @@ ${company}`;
             console.log('💾 Sauvegarde des informations:', vendeurInfos);
             
             localStorage.setItem('vendeur-info', JSON.stringify(vendeurInfos));
-            localStorage.setItem('company-name', vendeurInfos.nom);
-            document.getElementById('user-company').textContent = vendeurInfos.nom;
+            localStorage.setItem('company-name', vendeurInfo.nom);
+            document.getElementById('user-company').textContent = vendeurInfo.nom;
             
             console.log('Taux de cotisations sauvegardé:', vendeurInfos.cotisations + '%');
             customAlert('✅ Informations sauvegardées !');
@@ -2412,19 +2440,29 @@ ${company}`;
             
             let y = 20;
             
+            // Logo (si existe)
+            if (logoDataUrl) {
+                try {
+                    doc.addImage(logoDataUrl, 'PNG', 20, y, 40, 20);
+                    y += 25;
+                } catch(e) {
+                    console.error('Erreur ajout logo:', e);
+                }
+            }
+            
             // En-tête vendeur
             doc.setFontSize(16);
             doc.setFont(undefined, 'bold');
-            doc.text(vendeurInfos.nom || 'Mon Entreprise', 20, y);
+            doc.text(vendeurInfo.nom || 'Mon Entreprise', 20, y);
             y += 7;
             
             doc.setFontSize(10);
             doc.setFont(undefined, 'normal');
-            if (vendeurInfos.siret) { doc.text(`SIRET: ${vendeurInfos.siret}`, 20, y); y += 5; }
-            if (vendeurInfos.adresse) { doc.text(vendeurInfos.adresse, 20, y); y += 5; }
-            if (vendeurInfos.cp && vendeurInfos.ville) { doc.text(`${vendeurInfos.cp} ${vendeurInfos.ville}`, 20, y); y += 5; }
-            if (vendeurInfos.tel) { doc.text(`Tel: ${vendeurInfos.tel}`, 20, y); y += 5; }
-            if (vendeurInfos.email) { doc.text(`Email: ${vendeurInfos.email}`, 20, y); y += 5; }
+            if (vendeurInfo.siret) { doc.text(`SIRET: ${vendeurInfo.siret}`, 20, y); y += 5; }
+            if (vendeurInfo.adresse) { doc.text(vendeurInfo.adresse, 20, y); y += 5; }
+            if (vendeurInfo.cp && vendeurInfo.ville) { doc.text(`${vendeurInfo.cp} ${vendeurInfo.ville}`, 20, y); y += 5; }
+            if (vendeurInfo.tel) { doc.text(`Tel: ${vendeurInfo.tel}`, 20, y); y += 5; }
+            if (vendeurInfo.email) { doc.text(`Email: ${vendeurInfo.email}`, 20, y); y += 5; }
             
             // Titre FACTURE
             y += 10;
