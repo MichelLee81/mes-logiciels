@@ -2310,43 +2310,7 @@ ${company}`;
         }
 
         // INFOS VENDEUR
-        function loadVendeurInfo() {
-            const saved = null;
-            console.log('Chargement vendeurInfos depuis localStorage:', saved);
-            if (saved) {
-                vendeurInfos = JSON.parse(saved);
-                
-                // Attendre que le DOM soit prêt
-                setTimeout(() => {
-                    // Vérifier que les éléments existent avant de les remplir
-                    const elements = {
-                        'vendeur-nom': vendeurInfo.nom,
-                        'vendeur-siret': vendeurInfo.siret,
-                        'vendeur-ape': vendeurInfo.ape,
-                        'vendeur-adresse': vendeurInfo.adresse,
-                        'vendeur-cp': vendeurInfo.cp,
-                        'vendeur-ville': vendeurInfo.ville,
-                        'vendeur-tel': vendeurInfo.tel,
-                        'vendeur-email': vendeurInfo.email,
-                        'vendeur-cotisations': vendeurInfo.cotisations || '22.2'
-                    };
-                    
-                    Object.keys(elements).forEach(id => {
-                        const element = document.getElementById(id);
-                        if (element) {
-                            element.value = elements[id] || '';
-                        } else {
-                            console.warn(`Element ${id} n'existe pas dans le DOM`);
-                        }
-                    });
-                    
-                    console.log('✅ Informations chargées:', vendeurInfos);
-                    console.log('✅ Taux de cotisations:', vendeurInfo.cotisations + '%');
-                }, 200);
-            } else {
-                console.log('⚠️ Aucune information sauvegardée dans localStorage');
-            }
-        }
+        
 
         
         // ═══════════════════════════════════════
@@ -2585,7 +2549,7 @@ Seul vous pouvez y accéder.
             const cotisations = caTotal * tauxCotisations;
             const net = caTotal - cotisations;
             
-            console.log('CA Total:', caTotal, 'Nb factures:', nbFactures, 'Taux:', (tauxCotisations * 100) + '%', 'vendeurInfos:', vendeurInfos);
+            console.log('CA Total:', caTotal, 'Nb factures:', nbFactures, 'Taux:', (tauxCotisations * 100) + '%', 'vendeurInfo:', vendeurInfo);
             
             // Mise à jour dashboard
             const caTotalEl = document.getElementById('compta-ca-total');
