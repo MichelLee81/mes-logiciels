@@ -508,9 +508,18 @@
                 </div>
                 <div class="card">
                     <h2>📋 Mes Devis</h2>
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label>🔍 Rechercher un client</label>
-                        <input type="text" id="devis-search" placeholder="Nom du client..." oninput="filterDevis()" style="font-size: 15px;">
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                        <div class="form-group" style="flex: 1; min-width: 150px; margin-bottom: 0;">
+                            <label>🔍 Rechercher</label>
+                            <input type="text" id="devis-search" placeholder="Nom du client..." oninput="filterDevis()" style="font-size: 15px;">
+                        </div>
+                        <div class="form-group" style="min-width: 150px; margin-bottom: 0;">
+                            <label>📅 Trier par date</label>
+                            <select id="devis-sort" onchange="sortDevis()" style="font-size: 15px;">
+                                <option value="desc">Plus récent d'abord</option>
+                                <option value="asc">Plus ancien d'abord</option>
+                            </select>
+                        </div>
                     </div>
                     <div id="devis-list"></div>
                 </div>
@@ -594,9 +603,18 @@
 
                 <div class="card">
                     <h2>📄 Mes Factures</h2>
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label>🔍 Rechercher un client</label>
-                        <input type="text" id="factures-search" placeholder="Nom du client..." oninput="filterFactures()" style="font-size: 15px;">
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                        <div class="form-group" style="flex: 1; min-width: 150px; margin-bottom: 0;">
+                            <label>🔍 Rechercher</label>
+                            <input type="text" id="factures-search" placeholder="Nom du client..." oninput="filterFactures()" style="font-size: 15px;">
+                        </div>
+                        <div class="form-group" style="min-width: 150px; margin-bottom: 0;">
+                            <label>📅 Trier par date</label>
+                            <select id="factures-sort" onchange="sortFactures()" style="font-size: 15px;">
+                                <option value="desc">Plus récent d'abord</option>
+                                <option value="asc">Plus ancien d'abord</option>
+                            </select>
+                        </div>
                     </div>
                     <div id="factures-list"></div>
                 </div>
@@ -648,7 +666,7 @@
                             <h3>🖼️ Logo de l'entreprise</h3>
                             <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
                                 <div>
-                                    <img id="logo-preview" src="" alt="Logo" style="max-width: 150px; max-height: 150px; display: none; border: 2px solid #e2e8f0; border-radius: 8px; padding: 5px; background: white;">
+                                    <img id="logo-preview" src="" alt="Logo" style="max-width: 150px; max-height: 80px; display: none; border: 2px solid #e2e8f0; border-radius: 8px; padding: 5px; background: white;">
                                     <div id="logo-placeholder" style="width: 150px; height: 80px; border: 2px dashed #cbd5e0; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #a0aec0; font-size: 13px;">Aucun logo</div>
                                 </div>
                                 <div style="flex: 1;">
@@ -1554,8 +1572,18 @@
         }
 
         function displayDevisList(filteredDevis = null) {
-            const devisToShow = filteredDevis || allDevis;
+            let devisToShow = filteredDevis || [...allDevis];
             const container = document.getElementById('devis-list');
+            
+            // Si pas de filtrage externe, appliquer le tri selon le sélecteur
+            if (!filteredDevis && allDevis.length > 0) {
+                const sortOrder = document.getElementById('devis-sort')?.value || 'desc';
+                devisToShow.sort((a, b) => {
+                    const dateA = new Date(a.date);
+                    const dateB = new Date(b.date);
+                    return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+                });
+            }
             
             if (devisToShow.length === 0) {
                 if (allDevis.length === 0) {
@@ -1607,7 +1635,7 @@
         function filterDevis() {
             const searchTerm = document.getElementById('devis-search').value.toLowerCase();
             if (!searchTerm) {
-                displayDevisList();
+                sortDevis();
                 return;
             }
             
@@ -1615,7 +1643,40 @@
                 devis.client.nom.toLowerCase().includes(searchTerm) ||
                 (devis.client.email && devis.client.email.toLowerCase().includes(searchTerm))
             );
+            
+            // Appliquer aussi le tri sur les résultats filtrés
+            const sortOrder = document.getElementById('devis-sort')?.value || 'desc';
+            filtered.sort((a, b) => {
+                const dateA = new Date(a.date);
+                const dateB = new Date(b.date);
+                return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+            });
+            
             displayDevisList(filtered);
+        }
+
+        function sortDevis() {
+            const sortOrder = document.getElementById('devis-sort')?.value || 'desc';
+            const searchTerm = document.getElementById('devis-search')?.value.toLowerCase() || '';
+            
+            let devisToSort = [...allDevis];
+            
+            // Filtrer si recherche active
+            if (searchTerm) {
+                devisToSort = devisToSort.filter(devis => 
+                    devis.client.nom.toLowerCase().includes(searchTerm) ||
+                    (devis.client.email && devis.client.email.toLowerCase().includes(searchTerm))
+                );
+            }
+            
+            // Trier par date
+            devisToSort.sort((a, b) => {
+                const dateA = new Date(a.date);
+                const dateB = new Date(b.date);
+                return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+            });
+            
+            displayDevisList(devisToSort);
         }
 
         function deleteDevis(id) {
@@ -1943,8 +2004,18 @@
         }
 
         function displayFacturesList(filteredFactures = null) {
-            const facturesToShow = filteredFactures || allFactures;
+            let facturesToShow = filteredFactures || [...allFactures];
             const container = document.getElementById('factures-list');
+            
+            // Si pas de filtrage externe, appliquer le tri selon le sélecteur
+            if (!filteredFactures && allFactures.length > 0) {
+                const sortOrder = document.getElementById('factures-sort')?.value || 'desc';
+                facturesToShow.sort((a, b) => {
+                    const dateA = new Date(a.date);
+                    const dateB = new Date(b.date);
+                    return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+                });
+            }
             
             if (facturesToShow.length === 0) {
                 if (allFactures.length === 0) {
@@ -1986,7 +2057,7 @@
         function filterFactures() {
             const searchTerm = document.getElementById('factures-search').value.toLowerCase();
             if (!searchTerm) {
-                displayFacturesList();
+                sortFactures();
                 return;
             }
             
@@ -1994,7 +2065,40 @@
                 facture.client.nom.toLowerCase().includes(searchTerm) ||
                 (facture.client.email && facture.client.email.toLowerCase().includes(searchTerm))
             );
+            
+            // Appliquer aussi le tri sur les résultats filtrés
+            const sortOrder = document.getElementById('factures-sort')?.value || 'desc';
+            filtered.sort((a, b) => {
+                const dateA = new Date(a.date);
+                const dateB = new Date(b.date);
+                return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+            });
+            
             displayFacturesList(filtered);
+        }
+
+        function sortFactures() {
+            const sortOrder = document.getElementById('factures-sort')?.value || 'desc';
+            const searchTerm = document.getElementById('factures-search')?.value.toLowerCase() || '';
+            
+            let facturesToSort = [...allFactures];
+            
+            // Filtrer si recherche active
+            if (searchTerm) {
+                facturesToSort = facturesToSort.filter(facture => 
+                    facture.client.nom.toLowerCase().includes(searchTerm) ||
+                    (facture.client.email && facture.client.email.toLowerCase().includes(searchTerm))
+                );
+            }
+            
+            // Trier par date
+            facturesToSort.sort((a, b) => {
+                const dateA = new Date(a.date);
+                const dateB = new Date(b.date);
+                return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+            });
+            
+            displayFacturesList(facturesToSort);
         }
 
         
@@ -2535,11 +2639,35 @@ Seul vous pouvez y accéder.
             let y = 20;
             let xInfos = 20; // Position X pour les infos vendeur
             
-            // Logo (si présent)
+            // Logo (si présent) - avec conservation du ratio
             if (vendeurInfo.logo) {
                 try {
-                    pdf.addImage(vendeurInfo.logo, 'PNG', 20, 15, 40, 20);
-                    xInfos = 65; // Décaler les infos à droite du logo
+                    // Charger l'image pour obtenir ses dimensions
+                    const img = new Image();
+                    img.src = vendeurInfo.logo;
+                    
+                    // Calculer les dimensions en conservant le ratio
+                    const maxWidth = 35;
+                    const maxHeight = 35;
+                    let logoWidth = maxWidth;
+                    let logoHeight = maxHeight;
+                    
+                    // Si l'image est chargée, calculer le ratio
+                    if (img.width && img.height) {
+                        const ratio = img.width / img.height;
+                        if (ratio > 1) {
+                            // Image plus large que haute
+                            logoWidth = maxWidth;
+                            logoHeight = maxWidth / ratio;
+                        } else {
+                            // Image plus haute que large (ou carrée)
+                            logoHeight = maxHeight;
+                            logoWidth = maxHeight * ratio;
+                        }
+                    }
+                    
+                    pdf.addImage(vendeurInfo.logo, 'PNG', 20, 12, logoWidth, logoHeight);
+                    xInfos = 60; // Décaler les infos à droite du logo
                 } catch(e) {
                     console.warn('Erreur chargement logo:', e);
                 }
