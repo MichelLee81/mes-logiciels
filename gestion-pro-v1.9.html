@@ -415,7 +415,7 @@
                     <div class="user-email" id="user-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e58088848c89a5809d8488958980cb868a88">[email&#160;protected]</a></div>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                    <button class="btn-logout" onclick="showFirebaseGuide()" style="background: #48bb78;">☁️ Bienvenue ! </button>
+                    <button class="btn-logout" onclick="showFirebaseGuide()" style="background: #48bb78;">☁️ Cloud Activé ✓</button>
                     <button class="btn-logout" onclick="logout()">🚪 Déconnexion</button>
                 </div>
             </div>
@@ -578,7 +578,7 @@
                         </div>
                     </div>
                     
-                    <h3>Signature client</h3>
+                    <h3>Signature vendeur</h3>
                     <div class="signature-box">
                         <span class="signature-placeholder" id="signature-placeholder">✍️ Signez ici</span>
                         <canvas id="signature-canvas" width="400" height="150"></canvas>
@@ -680,8 +680,20 @@
                                 <label>Email</label>
                                 <input type="email" id="vendeur-email" placeholder="contact@entreprise.fr">
                             </div>
-                            <div class="form-group">
-                                <label>Taux de cotisations URSSAF</label>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>📷 Logo de l'entreprise</label>
+                            <input type="file" id="vendeur-logo" accept="image/*" onchange="handleLogoUpload(event)" style="padding: 8px;">
+                            <small style="color: #718096; display: block; margin-top: 5px;">Format : PNG ou JPG, max 500Ko</small>
+                            <div id="logo-preview" style="margin-top: 10px; display: none;">
+                                <img id="logo-preview-img" style="max-width: 200px; max-height: 100px; border: 2px solid #e2e8f0; border-radius: 8px; padding: 5px;">
+                                <button type="button" class="btn btn-danger" onclick="removeLogo()" style="display: block; margin-top: 10px; padding: 6px 12px;">🗑️ Supprimer</button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Taux de cotisations URSSAF</label>
                                 <select id="vendeur-cotisations">
                                     <option value="22.2">22,2% - Défaut (services BNC)</option>
                                     <option value="12.3">12,3% - Vente de marchandises (BIC)</option>
@@ -862,8 +874,6 @@
         let editingArticleId = null;
         let editingClientId = null;
         let currentSelectMode = 'devis';
-        let signatureDataUrl = null;
-        let canvas, ctx, isDrawing = false;
         let vendeurInfos = {};
 
         // Init Firebase
@@ -948,7 +958,7 @@
                         devis: allDevis,
                         factures: allFactures,
                         clients: allClients,
-                        signature: signatureDataUrl,
+                        
                         vendeur: vendeurInfos,
                         lastUpdate: new Date().toISOString()
                     });
@@ -1060,6 +1070,7 @@
             document.getElementById('user-company').textContent = company;
             loadData();
             loadVendeurInfo();
+            loadVendeurLogo();
             displayCatalogue();
             displayClientsList();
             displayDevisList();
@@ -1617,7 +1628,7 @@
                 client: { ...devis.client },
                 articles: devis.articles.map(a => ({ ...a })),
                 remise: { montant: 0, type: 'euro', valeur: 0 },
-                signature: signatureDataUrl,
+                
                 totalHT: devis.totalHT,
                 totalTVA: devis.totalTVA,
                 totalTTC: devis.totalTTC,
@@ -1890,7 +1901,7 @@
                     },
                     articles: [...factureArticles],
                     remise: { montant: remiseMontant, type: remiseType, valeur: remise },
-                    signature: signatureDataUrl,
+                    
                     totalHT: totalHT,
                     totalTVA: totalTVA,
                     totalTTC: totalHT + totalTVA
@@ -2083,6 +2094,59 @@ ${company}`;
         }
 
         // Utilitaires
+        
+        // ═══════════════════════════════════════
+        // GESTION LOGO
+        // ═══════════════════════════════════════
+        
+        function handleLogoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (file.size > 500000) {
+                customAlert('❌ Fichier trop volumineux (max 500Ko)');
+                event.target.value = '';
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                logoDataUrl = e.target.result;
+                const preview = document.getElementById('logo-preview');
+                const previewImg = document.getElementById('logo-preview-img');
+                if (preview && previewImg) {
+                    previewImg.src = logoDataUrl;
+                    preview.style.display = 'block';
+                }
+                saveData();
+                customAlert('✅ Logo chargé !');
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        function removeLogo() {
+            if (confirm('Supprimer le logo ?')) {
+                logoDataUrl = null;
+                const preview = document.getElementById('logo-preview');
+                if (preview) preview.style.display = 'none';
+                const input = document.getElementById('vendeur-logo');
+                if (input) input.value = '';
+                saveData();
+                customAlert('🗑️ Logo supprimé');
+            }
+        }
+        
+        function loadVendeurLogo() {
+            if (logoDataUrl) {
+                const preview = document.getElementById('logo-preview');
+                const previewImg = document.getElementById('logo-preview-img');
+                if (preview && previewImg) {
+                    previewImg.src = logoDataUrl;
+                    preview.style.display = 'block';
+                }
+            }
+        }
+
         function formatEuro(amount) {
             return amount.toFixed(2).replace('.', ',') + ' €';
         }
@@ -2310,6 +2374,16 @@ ${company}`;
             const doc = new jsPDF();
             
             let y = 20;
+            
+            // Logo (si existe)
+            if (logoDataUrl) {
+                try {
+                    doc.addImage(logoDataUrl, 'PNG', 20, y, 40, 20);
+                    y += 25;
+                } catch(e) {
+                    console.error('Erreur logo:', e);
+                }
+            }
             
             // En-tête vendeur
             doc.setFontSize(16);
