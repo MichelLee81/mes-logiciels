@@ -10,7 +10,7 @@
     <meta name="theme-color" content="#667eea">
     <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIkdlc3Rpb24gUHJvIiwKICAic2hvcnRfbmFtZSI6ICJHZXN0aW9uIFBybyIsCiAgImRlc2NyaXB0aW9uIjogIlNvbHV0aW9uIGNvbXBsw6h0ZSBwb3VyIGF1dG8tZW50cmVwcmVuZXVycyIsCiAgInN0YXJ0X3VybCI6ICIuLyIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiI2ZmZmZmZiIsCiAgInRoZW1lX2NvbG9yIjogIiM2NjdlZWEiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjJaeUI0Yld4dWN6MGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TUM5emRtY2lJSFpwWlhkQ2IzZzlJakFnTUNBeE1qZ2dNVEk0SWo0OGNtVmpkQ0IzYVdSMGFEMGlNVEk0SWlCb1pXbG5hSFE5SWpFeU9DSWdabWxzYkQwaUl6WTJOMlZsWVNJdlBqeDBaWGgwSUhnOUlqWTBJaUI1UFNJMk5DSWdabTl1ZEMxemFYcGxQU0kwT0NJZ1ptbHNiRDBpSTJabVptWm1aaUkrOERBd1BDOTBaWGgwUGp3dmMzWm5QZz09IiwKICAgICAgInNpemVzIjogIjEyOHgxMjgiLAogICAgICAidHlwZSI6ICJpbWFnZS9zdmcreG1sIgogICAgfSwKICAgIHsKICAgICAgInNyYyI6ICJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjJaeUI0Yld4dWN6MGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TUM5emRtY2lJSFpwWlhkQ2IzZzlJakFnTUNBeE1qZ2dNVEk0SWo0OGNtVmpkQ0IzYVdSMGFEMGlNVEk0SWlCb1pXbG5hSFE5SWpFeU9DSWdabWxzYkQwaUl6WTJOMlZsWVNJdlBqeDBaWGgwSUhnOUlqWTBJaUI1UFNJMk5DSWdabTl1ZEMxemFYcGxQU0kwT0NJZ1ptbHNiRDBpSTJabVptWm1aaUkrOERBd1BDOTBaWGgwUGp3dmMzWm5QZz09IiwKICAgICAgInNpemVzIjogIjUxMng1MTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9zdmcreG1sIgogICAgfQogIF0KfQ==">
     <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjggMTI4Ij48cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgZmlsbD0iIzY2N2VlYSIvPjx0ZXh0IHg9IjY0IiB5PSI2NCIgZm9udC1zaXplPSI0OCIgZmlsbD0iI2ZmZmZmZiI+8J+SvDwvdGV4dD48L3N2Zz4=">
-    <title>Gestion Pro v2.0 - Clients</title>
+    <title>Gestion Pro v2.0 - Paramètres persistants</title>
     
     <!-- Firebase + jsPDF + Chart.js -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -257,6 +257,29 @@
         }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         
+        /* Signature Canvas */
+        .signature-box {
+            border: 2px dashed #e2e8f0; border-radius: 8px;
+            padding: 10px; background: #f7fafc; margin-top: 10px;
+            position: relative;
+        }
+        #signature-canvas {
+            border: 1px solid #cbd5e0; background: white;
+            border-radius: 5px; cursor: crosshair; display: block;
+            width: 100%; max-width: 400px; margin: 0 auto;
+        }
+        .signature-placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #cbd5e0;
+            font-size: 16px;
+            pointer-events: none;
+            z-index: 1;
+            font-style: italic;
+        }
+        
         /* Notification personnalisée */
         .custom-notification {
             position: fixed;
@@ -392,7 +415,7 @@
                     <div class="user-email" id="user-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e58088848c89a5809d8488958980cb868a88">[email&#160;protected]</a></div>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                    <button class="btn-logout" onclick="showFirebaseGuide()" style="background: #48bb78;">Bienvenue !</button>
+                    <button class="btn-logout" onclick="showFirebaseGuide()" style="background: #48bb78;">☁️ Cloud Activé ✓</button>
                     <button class="btn-logout" onclick="logout()">🚪 Déconnexion</button>
                 </div>
             </div>
@@ -553,6 +576,17 @@
                             <span><strong>Total TTC:</strong></span>
                             <strong id="facture-total-ttc">0,00 €</strong>
                         </div>
+                    </div>
+                    
+                    <h3>Signature vendeur</h3>
+                    <div class="signature-box">
+                        <span class="signature-placeholder" id="signature-placeholder">✍️ Signez ici</span>
+                        <canvas id="signature-canvas" width="400" height="150"></canvas>
+                        <div style="margin-top: 10px; display: flex; gap: 10px;">
+                            <button class="btn btn-secondary" onclick="clearSignature()" style="flex: 1;">🗑️ Effacer</button>
+                            <button class="btn btn-success" onclick="saveSignature()" style="flex: 1;">✓ Valider</button>
+                        </div>
+                        <img id="signature-preview" style="display: none; margin-top: 10px; max-width: 200px; border: 1px solid #e2e8f0; border-radius: 5px;">
                     </div>
                     
                     <button class="btn btn-success" onclick="saveFacture()" style="width: 100%; margin-top: 15px;">💾 Sauvegarder la facture</button>
@@ -830,7 +864,6 @@
         let currentSelectMode = 'devis';
         let signatureDataUrl = null;
         let canvas, ctx, isDrawing = false;
-        let vendeurInfos = {};
 
         // Init Firebase
         try { 
@@ -859,7 +892,10 @@
                     allFactures = data.factures || [];
                     allClients = data.clients || [];
                     signatureDataUrl = data.signature || null;
-                    vendeurInfos = data.vendeur || {};
+                    vendeurInfo = data.vendeur || {};
+                    
+                    console.log('📥 Données chargées depuis Firebase');
+                    console.log('- vendeurInfo:', vendeurInfo);
                     
                     // Nettoyer les données corrompues
                     const devisInitial = allDevis.length;
@@ -881,6 +917,9 @@
                         document.getElementById('signature-preview').style.display = 'block';
                     }
                     
+                    // Charger les infos vendeur dans le formulaire
+                    loadVendeurInfoToForm();
+                    
                     // Rafraîchir les affichages
                     displayCatalogue();
                     displayDevisList();
@@ -899,11 +938,12 @@
                 return;
             }
             
-            console.log('Sauvegarde données dans Firebase...');
+            console.log('💾 Sauvegarde données dans Firebase...');
             console.log('- Catalogue:', catalogueArticles.length);
             console.log('- Devis:', allDevis.length);
             console.log('- Factures:', allFactures.length);
             console.log('- Clients:', allClients.length);
+            console.log('- Vendeur:', vendeurInfo);
             
             try {
                 await firebase.firestore()
@@ -915,7 +955,7 @@
                         factures: allFactures,
                         clients: allClients,
                         signature: signatureDataUrl,
-                        vendeur: vendeurInfos,
+                        vendeur: vendeurInfo,
                         lastUpdate: new Date().toISOString()
                     });
                 console.log('✅ Données sauvegardées avec succès dans Firebase');
@@ -1516,7 +1556,7 @@
                     '<span style="color: #ed8936;">🟡 En attente</span>';
                 
                 const checkbox = d.transforme ? '' : `
-                    <div style="background: #f7fafc; padding: 7px; border-radius: 6px; margin-bottom: 5px; border: 2px solid #e2e8f0;">
+                    <div style="background: #f7fafc; padding: 8px; border-radius: 6px; margin-bottom: 5px; border: 2px solid #e2e8f0;">
                         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; color: #48bb78;">
                             <input type="checkbox" onchange="transformerEnFacture(${d.id})" style="width: 18px; height: 18px; cursor: pointer;">
                             <span style="font-size: 13px;">✓ Devis accepté → Créer facture</span>
@@ -1688,6 +1728,89 @@
             document.getElementById('facture-total-ttc').textContent = formatEuro(totalHT + totalTVA);
         }
 
+        // SIGNATURE
+        function initSignatureCanvas() {
+            canvas = document.getElementById('signature-canvas');
+            if (!canvas) return;
+            ctx = canvas.getContext('2d');
+            
+            // Remplir le fond en blanc pour masquer tout watermark
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseout', stopDrawing);
+            canvas.addEventListener('touchstart', handleTouch);
+            canvas.addEventListener('touchmove', handleTouch);
+            canvas.addEventListener('touchend', stopDrawing);
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            // Masquer le placeholder dès qu'on commence à dessiner
+            const placeholder = document.getElementById('signature-placeholder');
+            if (placeholder) placeholder.style.display = 'none';
+            
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            ctx.beginPath();
+            ctx.moveTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            ctx.lineTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
+            ctx.stroke();
+        }
+
+        function handleTouch(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent(e.type === 'touchstart' ? 'mousedown' : 'mousemove', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            canvas.dispatchEvent(mouseEvent);
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        function clearSignature() {
+            // Effacer le canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Remplir le fond en blanc pour masquer tout watermark
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // Réafficher le placeholder
+            const placeholder = document.getElementById('signature-placeholder');
+            if (placeholder) placeholder.style.display = 'block';
+            
+            signatureDataUrl = null;
+            document.getElementById('signature-preview').style.display = 'none';
+        }
+
+        function saveSignature() {
+            signatureDataUrl = canvas.toDataURL('image/png');
+            const preview = document.getElementById('signature-preview');
+            preview.src = signatureDataUrl;
+            preview.style.display = 'block';
+            saveData();
+            customAlert('✅ Signature sauvegardée !');
+        }
+
         let editingFactureId = null; // Variable globale pour l'édition de facture
 
         function editFacture(factureId) {
@@ -1814,7 +1937,7 @@
                 const payee = f.payee || false;
                 const badgePayee = payee 
                     ? '<span style="background: #c6f6d5; color: #22543d; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">✅ PAYÉE</span>' 
-                    : '<span style="background: #fed7d7; color: #742a2a; padding: 4px 10px; border-radius: 12px; font-size: 8px; font-weight: 600;">⏳ EN ATTENTE</span>';
+                    : '<span style="background: #fed7d7; color: #742a2a; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">⏳ EN ATTENTE</span>';
                 
                 html += `<tr style="${payee ? 'background: #f0fdf4;' : ''}">
                     <td><strong>${f.numero}</strong></td>
@@ -2125,48 +2248,42 @@ ${company}`;
             customAlert('✅ PDF téléchargé : ' + facture.numero + '.pdf');
         }
 
-        // INFOS VENDEUR
-        function loadVendeurInfo() {
-            const saved = localStorage.getItem('vendeur-info');
-            console.log('Chargement vendeurInfos depuis localStorage:', saved);
-            if (saved) {
-                vendeurInfos = JSON.parse(saved);
+        // INFOS VENDEUR - Charger les infos dans le formulaire depuis vendeurInfo (déjà chargé depuis Firebase)
+        function loadVendeurInfoToForm() {
+            console.log('📋 Chargement des infos vendeur dans le formulaire:', vendeurInfo);
+            
+            // Attendre que le DOM soit prêt
+            setTimeout(() => {
+                const fields = {
+                    'vendeur-nom': vendeurInfo.nom || '',
+                    'vendeur-siret': vendeurInfo.siret || '',
+                    'vendeur-ape': vendeurInfo.ape || '',
+                    'vendeur-adresse': vendeurInfo.adresse || '',
+                    'vendeur-cp': vendeurInfo.cp || '',
+                    'vendeur-ville': vendeurInfo.ville || '',
+                    'vendeur-tel': vendeurInfo.tel || '',
+                    'vendeur-email': vendeurInfo.email || '',
+                    'vendeur-cotisations': vendeurInfo.cotisations || '22.2'
+                };
                 
-                // Attendre que le DOM soit prêt
-                setTimeout(() => {
-                    // Vérifier que les éléments existent avant de les remplir
-                    const elements = {
-                        'vendeur-nom': vendeurInfo.nom,
-                        'vendeur-siret': vendeurInfo.siret,
-                        'vendeur-ape': vendeurInfo.ape,
-                        'vendeur-adresse': vendeurInfo.adresse,
-                        'vendeur-cp': vendeurInfo.cp,
-                        'vendeur-ville': vendeurInfo.ville,
-                        'vendeur-tel': vendeurInfo.tel,
-                        'vendeur-email': vendeurInfo.email,
-                        'vendeur-cotisations': vendeurInfos.cotisations || '22.2'
-                    };
-                    
-                    Object.keys(elements).forEach(id => {
-                        const element = document.getElementById(id);
-                        if (element) {
-                            element.value = elements[id] || '';
-                        } else {
-                            console.warn(`Element ${id} n'existe pas dans le DOM`);
-                        }
-                    });
-                    
-                    console.log('✅ Informations chargées:', vendeurInfos);
-                    console.log('✅ Taux de cotisations:', vendeurInfos.cotisations + '%');
-                }, 200);
-            } else {
-                console.log('⚠️ Aucune information sauvegardée dans localStorage');
-            }
+                Object.keys(fields).forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.value = fields[id];
+                        console.log(`  ✓ ${id} = "${fields[id]}"`);
+                    } else {
+                        console.warn(`  ✗ Element ${id} introuvable`);
+                    }
+                });
+                
+                console.log('✅ Formulaire vendeur rempli');
+            }, 100);
         }
 
         function saveVendeurInfo(e) {
             e.preventDefault();
             
+            // Mettre à jour l'objet vendeurInfo avec les valeurs du formulaire
             vendeurInfo = {
                 nom: document.getElementById('vendeur-nom').value.trim(),
                 siret: document.getElementById('vendeur-siret').value.trim(),
@@ -2176,11 +2293,14 @@ ${company}`;
                 ville: document.getElementById('vendeur-ville').value.trim(),
                 email: document.getElementById('vendeur-email').value.trim(),
                 tel: document.getElementById('vendeur-tel') ? document.getElementById('vendeur-tel').value.trim() : '',
-                cotisations: parseFloat(document.getElementById('vendeur-cotisations').value)
+                cotisations: parseFloat(document.getElementById('vendeur-cotisations').value) || 22.2
             };
             
             console.log('💾 Sauvegarde vendeurInfo:', vendeurInfo);
+            
+            // Sauvegarder dans Firebase
             saveData();
+            
             customAlert('✅ Informations sauvegardées !');
         }
 
@@ -2349,11 +2469,11 @@ Seul vous pouvez y accéder.
             const caTotal = facturesPayees.reduce((sum, f) => sum + f.totalTTC, 0);
             const nbFactures = facturesPayees.length;
             // Utiliser le taux de cotisations personnalisé depuis les paramètres
-            const tauxCotisations = (vendeurInfos?.cotisations || 22.2) / 100;
+            const tauxCotisations = (vendeurInfo?.cotisations || 22.2) / 100;
             const cotisations = caTotal * tauxCotisations;
             const net = caTotal - cotisations;
             
-            console.log('CA Total:', caTotal, 'Nb factures:', nbFactures, 'Taux:', (tauxCotisations * 100) + '%', 'vendeurInfos:', vendeurInfos);
+            console.log('CA Total:', caTotal, 'Nb factures:', nbFactures, 'Taux:', (tauxCotisations * 100) + '%', 'vendeurInfo:', vendeurInfo);
             
             // Mise à jour dashboard
             const caTotalEl = document.getElementById('compta-ca-total');
