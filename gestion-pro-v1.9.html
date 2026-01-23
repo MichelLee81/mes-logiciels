@@ -354,6 +354,35 @@
             .table th:first-child, .table td:first-child { min-width: 80px; }
             .table tbody tr { display: table-row; }
         }
+    
+        .badge-payee {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-payee-oui {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        .badge-payee-non {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+        .btn-payer {
+            background: #48bb78;
+            color: white;
+            padding: 6px 10px;
+            margin: 2px;
+            font-size: 12px;
+        }
+        .btn-payer.payee {
+            background: #a0aec0;
+            cursor: not-allowed;
+        }
+
     </style>
 </head>
 <body>
@@ -415,7 +444,7 @@
                     <div class="user-email" id="user-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e58088848c89a5809d8488958980cb868a88">[email&#160;protected]</a></div>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                    <button class="btn-logout" onclick="showFirebaseGuide()" style="background: #48bb78;">☁️ Bienvenue !</button>
+                    <button class="btn-logout" onclick="showFirebaseGuide()" style="background: #48bb78;">☁️ Cloud Activé ✓</button>
                     <button class="btn-logout" onclick="logout()">🚪 Déconnexion</button>
                 </div>
             </div>
@@ -618,6 +647,7 @@
                         <div style="background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%); color: white; padding: 20px; border-radius: 10px;">
                             <div style="font-size: 0.9em; opacity: 0.9;">Cotisations estimées</div>
                             <div style="font-size: 1.8em; font-weight: bold; margin-top: 5px;" id="compta-cotisations">0,00 €</div>
+                            <div style="font-size: 0.75em; opacity: 0.8; margin-top: 5px;">22% du CA (auto-entrepreneur)</div>
                         </div>
                         <div style="background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%); color: white; padding: 20px; border-radius: 10px;">
                             <div style="font-size: 0.9em; opacity: 0.9;">Reste après cotisations</div>
@@ -674,17 +704,28 @@
                             </div>
                         </div>
                         
-                        <div class="grid-2">
-                            <div class="form-group">
-                                <label>Email</label>
-                                <input type="email" id="vendeur-email" placeholder="contact@entreprise.fr">
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="vendeur-email" placeholder="contact@entreprise.fr">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>📷 Logo de l'entreprise</label>
+                            <input type="file" id="vendeur-logo" accept="image/*" onchange="handleLogoUpload(event)" style="padding: 8px;">
+                            <small style="color: #718096; display: block; margin-top: 5px;">Format recommandé : PNG ou JPG, max 500Ko</small>
+                            <div id="logo-preview" style="margin-top: 10px; display: none;">
+                                <img id="logo-preview-img" style="max-width: 200px; max-height: 100px; border: 2px solid #e2e8f0; border-radius: 8px; padding: 5px;">
+                                <button type="button" class="btn btn-danger" onclick="removeLogo()" style="display: block; margin-top: 10px; padding: 6px 12px;">🗑️ Supprimer le logo</button>
                             </div>
-                            <div class="form-group">
-                                <label>Taux de cotisations URSSAF</label>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Taux de cotisations URSSAF</label>
                                 <select id="vendeur-cotisations">
+                                    <option value="22.2">22,2% - Défaut (services BNC)</option>
                                     <option value="12.3">12,3% - Vente de marchandises (BIC)</option>
-                                    <option value="21.2">21,2% - Prestations de services commerciales ou artisanales, location meublés ou chambres d'hôtes (BIC)</option>
-                                    <option value="24.6">25,6% - Autres prestations de services et activités libérales (BNC)</option>
+                                    <option value="21.2">21,2% - Prestations de services commerciales ou artisanales (BIC)</option>
+                                    <option value="24.6">24,6% - Autres prestations de services et activités libérales (BNC)</option>
                                     <option value="23.2">23,2% - Activités libérales réglementées à la CIPAV (BNC)</option>
                                     <option value="6">6% - Location de meubles de tourisme classés (BIC)</option>
                                 </select>
@@ -855,12 +896,14 @@
         let allDevis = [];
         let allFactures = [];
         let allClients = [];
+        let vendeurInfo = {};
+        let logoDataUrl = null;
         let editingArticleId = null;
         let editingClientId = null;
         let currentSelectMode = 'devis';
         let signatureDataUrl = null;
         let canvas, ctx, isDrawing = false;
-        let vendeurInfos = {};
+        
 
         // Init Firebase
         try { 
@@ -1888,7 +1931,8 @@
                     signature: signatureDataUrl,
                     totalHT: totalHT,
                     totalTVA: totalTVA,
-                    totalTTC: totalHT + totalTVA
+                    totalTTC: totalHT + totalTVA,
+                    payee: false
                 };
 
                 console.log('Sauvegarde facture:', facture);
@@ -1921,19 +1965,26 @@
                 }
                 return;
             }
-            let html = '<table class="table"><thead><tr><th>N°</th><th>Date</th><th>Client</th><th>Origine</th><th>Total TTC</th><th>Actions</th></tr></thead><tbody>';
+            let html = '<table class="table"><thead><tr><th>N°</th><th>Date</th><th>Client</th><th>Statut</th><th>Total TTC</th><th>Actions</th></tr></thead><tbody>';
             facturesToShow.forEach(f => {
-                const origine = f.devisOrigine ? `<small style="color: #667eea;">📋 ${f.devisOrigine}</small>` : '<small style="color: #a0aec0;">Manuelle</small>';
-                html += `<tr>
+                const payee = f.payee || false;
+                const badgePayee = payee 
+                    ? '<span class="badge-payee badge-payee-oui">✅ Payée</span>' 
+                    : '<span class="badge-payee badge-payee-non">⏳ En attente</span>';
+                const btnPayer = payee 
+                    ? '<button class="btn btn-payer payee" disabled style="padding: 6px 10px; margin: 2px; font-size: 12px;">✅ Payée</button>'
+                    : `<button class="btn btn-payer" onclick="marquerPayee(${f.id})" style="padding: 6px 10px; margin: 2px; font-size: 12px;">💰 Marquer payée</button>`;
+                
+                html += `<tr style="${payee ? 'background: #f0fdf4;' : ''}">
                     <td><strong>${f.numero}</strong></td>
                     <td>${f.date}</td>
                     <td>${f.client.nom}</td>
-                    <td>${origine}</td>
+                    <td>${badgePayee}</td>
                     <td><strong>${formatEuro(f.totalTTC)}</strong></td>
                     <td>
-                        <button class="btn btn-secondary" onclick="editFacture(${f.id})" style="padding: 6px 10px; margin: 2px; font-size: 12px;">✏️ Modifier</button>
-                        <button class="btn btn-secondary" onclick="genererFacturePDF(${f.id})" style="padding: 6px 10px; margin: 2px; font-size: 12px;">📄 PDF</button>
-                        <button class="btn btn-primary" onclick="envoyerFacture(${f.id})" style="padding: 6px 10px; margin: 2px; font-size: 12px;">📧 Envoyer</button>
+                        ${btnPayer}
+                        <button class="btn btn-secondary" onclick="editFacture(${f.id})" style="padding: 6px 10px; margin: 2px; font-size: 12px;">✏️</button>
+                        <button class="btn btn-secondary" onclick="genererFacturePDF(${f.id})" style="padding: 6px 10px; margin: 2px; font-size: 12px;">📄</button>
                         <button class="btn btn-danger" onclick="deleteFacture(${f.id})" style="padding: 6px 10px; margin: 2px;">🗑️</button>
                     </td>
                 </tr>`;
@@ -2055,6 +2106,94 @@ ${company}`;
         }
 
         // Utilitaires
+        
+        // ═══════════════════════════════════════
+        // GESTION LOGO ET INFOS VENDEUR
+        // ═══════════════════════════════════════
+        
+        function handleLogoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (file.size > 500000) {
+                customAlert('❌ Fichier trop volumineux (max 500Ko)');
+                event.target.value = '';
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                logoDataUrl = e.target.result;
+                const preview = document.getElementById('logo-preview');
+                const previewImg = document.getElementById('logo-preview-img');
+                previewImg.src = logoDataUrl;
+                preview.style.display = 'block';
+                saveData();
+                customAlert('✅ Logo chargé !');
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        function removeLogo() {
+            if (confirm('Supprimer le logo ?')) {
+                logoDataUrl = null;
+                document.getElementById('logo-preview').style.display = 'none';
+                document.getElementById('vendeur-logo').value = '';
+                saveData();
+                customAlert('🗑️ Logo supprimé');
+            }
+        }
+        
+        function saveVendeurInfo(e) {
+            e.preventDefault();
+            vendeurInfo = {
+                nom: document.getElementById('vendeur-nom').value,
+                siret: document.getElementById('vendeur-siret').value,
+                ape: document.getElementById('vendeur-ape').value,
+                adresse: document.getElementById('vendeur-adresse').value,
+                cp: document.getElementById('vendeur-cp').value,
+                ville: document.getElementById('vendeur-ville').value,
+                email: document.getElementById('vendeur-email').value,
+                cotisations: parseFloat(document.getElementById('vendeur-cotisations').value)
+            };
+            saveData();
+            customAlert('✅ Informations sauvegardées !');
+        }
+        
+        function loadVendeurInfo() {
+            if (vendeurInfo && vendeurInfo.nom) {
+                document.getElementById('vendeur-nom').value = vendeurInfo.nom || '';
+                document.getElementById('vendeur-siret').value = vendeurInfo.siret || '';
+                document.getElementById('vendeur-ape').value = vendeurInfo.ape || '';
+                document.getElementById('vendeur-adresse').value = vendeurInfo.adresse || '';
+                document.getElementById('vendeur-cp').value = vendeurInfo.cp || '';
+                document.getElementById('vendeur-ville').value = vendeurInfo.ville || '';
+                document.getElementById('vendeur-email').value = vendeurInfo.email || '';
+                document.getElementById('vendeur-cotisations').value = vendeurInfo.cotisations || 22.2;
+            }
+            if (logoDataUrl) {
+                const preview = document.getElementById('logo-preview');
+                const previewImg = document.getElementById('logo-preview-img');
+                previewImg.src = logoDataUrl;
+                preview.style.display = 'block';
+            }
+        }
+        
+        function marquerPayee(factureId) {
+            const facture = allFactures.find(f => f.id === factureId);
+            if (!facture) return;
+            
+            if (confirm(`Marquer la facture ${facture.numero} comme payée ?\n\nCela la comptabilisera dans votre chiffre d'affaires.`)) {
+                facture.payee = true;
+                facture.datePaiement = new Date().toISOString().split('T')[0];
+                saveData();
+                displayFacturesList();
+                updateComptabilite();
+                customAlert('✅ Facture marquée comme payée !');
+            }
+        }
+
+
         function formatEuro(amount) {
             return amount.toFixed(2).replace('.', ',') + ' €';
         }
@@ -2122,16 +2261,29 @@ ${company}`;
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             
+            // Logo (si existe)
+            let yStart = 20;
+            if (logoDataUrl) {
+                try {
+                    doc.addImage(logoDataUrl, 'PNG', 20, yStart, 40, 20);
+                    yStart += 25;
+                } catch(e) {
+                    console.error('Erreur ajout logo:', e);
+                }
+            }
+            
             // En-tête vendeur
             doc.setFontSize(16);
             doc.setFont(undefined, 'bold');
-            doc.text(vendeurInfos.entreprise || 'Mon Entreprise', 20, 20);
+            doc.text(vendeurInfo.nom || 'Mon Entreprise', 20, yStart);
             doc.setFontSize(10);
             doc.setFont(undefined, 'normal');
-            if (vendeurInfos.siret) doc.text('SIRET: ' + vendeurInfos.siret, 20, 27);
-            if (vendeurInfos.adresse) doc.text(vendeurInfos.adresse, 20, 33);
-            if (vendeurInfos.email) doc.text(vendeurInfos.email, 20, 39);
-            if (vendeurInfos.tel) doc.text(vendeurInfos.tel, 20, 45);
+            let yInfo = yStart + 7;
+            if (vendeurInfo.siret) { doc.text('SIRET: ' + vendeurInfo.siret, 20, yInfo); yInfo += 6; }
+            if (vendeurInfo.ape) { doc.text('APE: ' + vendeurInfo.ape, 20, yInfo); yInfo += 6; }
+            if (vendeurInfo.adresse) { doc.text(vendeurInfo.adresse, 20, yInfo); yInfo += 6; }
+            if (vendeurInfo.cp && vendeurInfo.ville) { doc.text(vendeurInfo.cp + ' ' + vendeurInfo.ville, 20, yInfo); yInfo += 6; }
+            if (vendeurInfo.email) { doc.text(vendeurInfo.email, 20, yInfo); yInfo += 6; }
             
             // Titre Facture
             doc.setFontSize(20);
@@ -2214,44 +2366,7 @@ ${company}`;
             customAlert('✅ PDF téléchargé : ' + facture.numero + '.pdf');
         }
 
-        // INFOS VENDEUR
-        function loadVendeurInfo() {
-            const saved = localStorage.getItem('vendeur-info');
-            console.log('Chargement vendeurInfos depuis localStorage:', saved);
-            if (saved) {
-                vendeurInfos = JSON.parse(saved);
-                
-                // Attendre que le DOM soit prêt
-                setTimeout(() => {
-                    // Vérifier que les éléments existent avant de les remplir
-                    const elements = {
-                        'vendeur-nom': vendeurInfos.nom,
-                        'vendeur-siret': vendeurInfos.siret,
-                        'vendeur-ape': vendeurInfos.ape,
-                        'vendeur-adresse': vendeurInfos.adresse,
-                        'vendeur-cp': vendeurInfos.cp,
-                        'vendeur-ville': vendeurInfos.ville,
-                        'vendeur-tel': vendeurInfos.tel,
-                        'vendeur-email': vendeurInfos.email,
-                        'vendeur-cotisations': vendeurInfos.cotisations || '22.2'
-                    };
-                    
-                    Object.keys(elements).forEach(id => {
-                        const element = document.getElementById(id);
-                        if (element) {
-                            element.value = elements[id] || '';
-                        } else {
-                            console.warn(`Element ${id} n'existe pas dans le DOM`);
-                        }
-                    });
-                    
-                    console.log('✅ Informations chargées:', vendeurInfos);
-                    console.log('✅ Taux de cotisations:', vendeurInfos.cotisations + '%');
-                }, 200);
-            } else {
-                console.log('⚠️ Aucune information sauvegardée dans localStorage');
-            }
-        }
+        
 
         function saveVendeurInfo(e) {
             e.preventDefault();
@@ -2552,7 +2667,7 @@ Seul vous pouvez y accéder.
             }
             
             let html = '<table class="table"><thead><tr><th>Date</th><th>N°</th><th>Client</th><th>Montant TTC</th></tr></thead><tbody>';
-            allFactures.slice().reverse().forEach(f => {
+            facturesPayees.slice().reverse().forEach(f => {
                 html += `<tr>
                     <td>${f.date}</td>
                     <td><strong>${f.numero}</strong></td>
