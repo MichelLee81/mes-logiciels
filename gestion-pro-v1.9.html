@@ -764,6 +764,7 @@
                         </div>
                         
                         <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 15px;">💾 Sauvegarder les informations</button>
+                        <button type="button" class="btn btn-secondary" onclick="testVendeurInfo()" style="width: 100%; margin-top: 10px;">🔍 Tester les infos (debug)</button>
                     </form>
                 </div>
             </div>
@@ -2177,18 +2178,31 @@ ${company}`;
         
         function saveVendeurInfo(e) {
             e.preventDefault();
+            
             vendeurInfo = {
-                nom: document.getElementById('vendeur-nom').value,
-                siret: document.getElementById('vendeur-siret').value,
-                ape: document.getElementById('vendeur-ape').value,
-                adresse: document.getElementById('vendeur-adresse').value,
-                cp: document.getElementById('vendeur-cp').value,
-                ville: document.getElementById('vendeur-ville').value,
-                email: document.getElementById('vendeur-email').value,
+                nom: document.getElementById('vendeur-nom').value.trim(),
+                siret: document.getElementById('vendeur-siret').value.trim(),
+                ape: document.getElementById('vendeur-ape').value.trim(),
+                adresse: document.getElementById('vendeur-adresse').value.trim(),
+                cp: document.getElementById('vendeur-cp').value.trim(),
+                ville: document.getElementById('vendeur-ville').value.trim(),
+                email: document.getElementById('vendeur-email').value.trim(),
                 cotisations: parseFloat(document.getElementById('vendeur-cotisations').value)
             };
+            
+            console.log('💾 Sauvegarde vendeurInfo:', vendeurInfo);
+            
+            if (!vendeurInfo.nom) {
+                customAlert('⚠️ Le nom de l'entreprise est obligatoire !');
+                return;
+            }
+            
+            // Sauvegarder immédiatement dans Firebase
             saveData();
+            
+            // Confirmation
             customAlert('✅ Informations sauvegardées !');
+            console.log('✅ vendeurInfo sauvegardé');
         }
         
         function loadVendeurInfo() {
@@ -2245,6 +2259,19 @@ Cela la comptabilisera dans votre chiffre d'affaires.`)) {
             }
         }
 
+
+        
+        function testVendeurInfo() {
+            console.log('=== TEST VENDEUR INFO ===');
+            console.log('vendeurInfo actuel:', vendeurInfo);
+            console.log('Logo présent:', logoDataUrl ? 'OUI (' + logoDataUrl.substring(0, 50) + '...)' : 'NON');
+            
+            if (!vendeurInfo || !vendeurInfo.nom) {
+                customAlert('⚠️ vendeurInfo est vide !\n\nRemplissez les champs et cliquez sur Sauvegarder.', 'error');
+            } else {
+                customAlert('✅ vendeurInfo OK !\n\nNom: ' + vendeurInfo.nom + '\nSIRET: ' + vendeurInfo.siret, 'success');
+            }
+        }
 
         function formatEuro(amount) {
             return amount.toFixed(2).replace('.', ',') + ' €';
