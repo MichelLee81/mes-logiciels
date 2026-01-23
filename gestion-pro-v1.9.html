@@ -415,7 +415,7 @@
                     <div class="user-email" id="user-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e58088848c89a5809d8488958980cb868a88">[email&#160;protected]</a></div>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                    <button class="btn-logout" onclick="showFirebaseGuide()" style="background: #48bb78;">☁️ Cloud Activé ✓</button>
+                    <button class="btn-logout" onclick="showFirebaseGuide()" style="background: #48bb78;">☁️ Bienvenue ! </button>
                     <button class="btn-logout" onclick="logout()">🚪 Déconnexion</button>
                 </div>
             </div>
@@ -578,7 +578,7 @@
                         </div>
                     </div>
                     
-                    <h3>Signature vendeur</h3>
+                    <h3>Signature client</h3>
                     <div class="signature-box">
                         <span class="signature-placeholder" id="signature-placeholder">✍️ Signez ici</span>
                         <canvas id="signature-canvas" width="400" height="150"></canvas>
@@ -2456,11 +2456,15 @@ Seul vous pouvez y accéder.
         }
 
         function updateComptabilite() {
-            console.log('Mise à jour comptabilité, factures:', allFactures.length);
+            console.log('Mise à jour comptabilité, toutes factures:', allFactures.length);
             
-            // Calculs
-            const caTotal = allFactures.reduce((sum, f) => sum + f.totalTTC, 0);
-            const nbFactures = allFactures.length;
+            // FILTRER pour ne garder QUE les factures PAYÉES
+            const facturesPayees = allFactures.filter(f => f.payee === true);
+            console.log('Factures PAYÉES uniquement:', facturesPayees.length);
+            
+            // Calculs sur les factures PAYÉES seulement
+            const caTotal = facturesPayees.reduce((sum, f) => sum + f.totalTTC, 0);
+            const nbFactures = facturesPayees.length;
             // Utiliser le taux de cotisations personnalisé depuis les paramètres
             const tauxCotisations = (vendeurInfos?.cotisations || 22.2) / 100;
             const cotisations = caTotal * tauxCotisations;
@@ -2492,7 +2496,8 @@ Seul vous pouvez y accéder.
             
             // Regrouper par mois
             const facturesParMois = {};
-            allFactures.forEach(f => {
+            const facturesPayees = allFactures.filter(f => f.payee === true);
+            facturesPayees.forEach(f => {
                 const mois = f.date.substring(0, 7); // YYYY-MM
                 if (!facturesParMois[mois]) {
                     facturesParMois[mois] = 0;
@@ -2579,13 +2584,14 @@ Seul vous pouvez y accéder.
         }
 
         function exportComptaCSV() {
-            if (allFactures.length === 0) {
+            const facturesPayees = allFactures.filter(f => f.payee === true);
+            if (facturesPayees.length === 0) {
                 customAlert('⚠️ Aucune facture à exporter !');
                 return;
             }
             
             let csv = 'Date;Numéro;Client;Total HT;TVA;Total TTC\n';
-            allFactures.forEach(f => {
+            facturesPayees.forEach(f => {
                 csv += `${f.date};${f.numero};${f.client.nom};${f.totalHT.toFixed(2)};${f.totalTVA.toFixed(2)};${f.totalTTC.toFixed(2)}\n`;
             });
             
