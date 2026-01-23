@@ -2192,21 +2192,40 @@ ${company}`;
         }
         
         function loadVendeurInfo() {
+            console.log('📋 loadVendeurInfo appelé, vendeurInfo:', vendeurInfo);
+            
             if (vendeurInfo && vendeurInfo.nom) {
-                document.getElementById('vendeur-nom').value = vendeurInfo.nom || '';
-                document.getElementById('vendeur-siret').value = vendeurInfo.siret || '';
-                document.getElementById('vendeur-ape').value = vendeurInfo.ape || '';
-                document.getElementById('vendeur-adresse').value = vendeurInfo.adresse || '';
-                document.getElementById('vendeur-cp').value = vendeurInfo.cp || '';
-                document.getElementById('vendeur-ville').value = vendeurInfo.ville || '';
-                document.getElementById('vendeur-email').value = vendeurInfo.email || '';
-                document.getElementById('vendeur-cotisations').value = vendeurInfo.cotisations || 22.2;
+                const fields = {
+                    'vendeur-nom': vendeurInfo.nom,
+                    'vendeur-siret': vendeurInfo.siret,
+                    'vendeur-ape': vendeurInfo.ape,
+                    'vendeur-adresse': vendeurInfo.adresse,
+                    'vendeur-cp': vendeurInfo.cp,
+                    'vendeur-ville': vendeurInfo.ville,
+                    'vendeur-email': vendeurInfo.email,
+                    'vendeur-cotisations': vendeurInfo.cotisations || 22.2
+                };
+                
+                Object.keys(fields).forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.value = fields[id] || '';
+                    }
+                });
+                
+                console.log('✅ Champs vendeur remplis');
+            } else {
+                console.log('⚠️ Pas de vendeurInfo ou nom vide');
             }
+            
             if (logoDataUrl) {
                 const preview = document.getElementById('logo-preview');
                 const previewImg = document.getElementById('logo-preview-img');
-                previewImg.src = logoDataUrl;
-                preview.style.display = 'block';
+                if (preview && previewImg) {
+                    previewImg.src = logoDataUrl;
+                    preview.style.display = 'block';
+                    console.log('✅ Logo affiché');
+                }
             }
         }
         
@@ -2214,7 +2233,9 @@ ${company}`;
             const facture = allFactures.find(f => f.id === factureId);
             if (!facture) return;
             
-            if (confirm(`Marquer la facture ${facture.numero} comme payée ?\n\nCela la comptabilisera dans votre chiffre d'affaires.`)) {
+            if (window.confirm(`Marquer la facture ${facture.numero} comme payée ?
+
+Cela la comptabilisera dans votre chiffre d'affaires.`)) {
                 facture.payee = true;
                 facture.datePaiement = new Date().toISOString().split('T')[0];
                 saveData();
@@ -2288,6 +2309,9 @@ ${company}`;
         function genererFacturePDF(factureId) {
             const facture = allFactures.find(f => f.id === factureId);
             if (!facture) return;
+            
+            console.log('📄 Génération PDF, vendeurInfo:', vendeurInfo);
+            console.log('📄 Logo disponible:', logoDataUrl ? 'OUI' : 'NON');
             
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
