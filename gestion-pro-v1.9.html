@@ -578,17 +578,6 @@
                         </div>
                     </div>
                     
-                    <h3>Signature vendeur</h3>
-                    <div class="signature-box">
-                        <span class="signature-placeholder" id="signature-placeholder">✍️ Signez ici</span>
-                        <canvas id="signature-canvas" width="400" height="150"></canvas>
-                        <div style="margin-top: 10px; display: flex; gap: 10px;">
-                            <button class="btn btn-secondary" onclick="clearSignature()" style="flex: 1;">🗑️ Effacer</button>
-                            <button class="btn btn-success" onclick="saveSignature()" style="flex: 1;">✓ Valider</button>
-                        </div>
-                        <img id="signature-preview" style="display: none; margin-top: 10px; max-width: 200px; border: 1px solid #e2e8f0; border-radius: 5px;">
-                    </div>
-                    
                     <button class="btn btn-success" onclick="saveFacture()" style="width: 100%; margin-top: 15px;">💾 Sauvegarder la facture</button>
                 </div>
 
@@ -680,6 +669,19 @@
                                 <label>Email</label>
                                 <input type="email" id="vendeur-email" placeholder="contact@entreprise.fr">
                             </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>📷 Logo de l'entreprise</label>
+                            <input type="file" id="vendeur-logo" accept="image/*" onchange="handleLogoUpload(event)" style="padding: 8px;">
+                            <small style="color: #718096; display: block; margin-top: 5px;">Format : PNG ou JPG, max 500Ko</small>
+                            <div id="logo-preview" style="margin-top: 10px; display: none;">
+                                <img id="logo-preview-img" style="max-width: 200px; max-height: 100px; border: 2px solid #e2e8f0; border-radius: 8px; padding: 5px;">
+                                <button type="button" class="btn btn-danger" onclick="removeLogo()" style="display: block; margin-top: 10px; padding: 6px 12px;">🗑️ Supprimer</button>
+                            </div>
+                        </div>
+                        
+                        <div class="grid-2">
                             <div class="form-group">
                                 <label>Taux de cotisations URSSAF</label>
                                 <select id="vendeur-cotisations">
@@ -862,9 +864,9 @@
         let editingArticleId = null;
         let editingClientId = null;
         let currentSelectMode = 'devis';
-        let signatureDataUrl = null;
-        let canvas, ctx, isDrawing = false;
-        let vendeurInfos = {};
+        
+        
+        let vendeurInfo = {};
 
         // Init Firebase
         try { 
@@ -892,8 +894,11 @@
                     allDevis = data.devis || [];
                     allFactures = data.factures || [];
                     allClients = data.clients || [];
-                    signatureDataUrl = data.signature || null;
-                    vendeurInfos = data.vendeur || {};
+                    vendeurInfo = data.vendeurInfo || {};
+                    logoDataUrl = data.logo || null;
+                    
+                    console.log('✅ vendeurInfo chargé:', vendeurInfo);
+                    console.log('✅ Logo chargé:', logoDataUrl ? 'OUI' : 'NON');
                     
                     // Nettoyer les données corrompues
                     const devisInitial = allDevis.length;
@@ -948,8 +953,8 @@
                         devis: allDevis,
                         factures: allFactures,
                         clients: allClients,
-                        signature: signatureDataUrl,
-                        vendeur: vendeurInfos,
+                        
+                        vendeur: vendeurInfo,
                         lastUpdate: new Date().toISOString()
                     });
                 console.log('✅ Données sauvegardées avec succès dans Firebase');
@@ -1060,12 +1065,13 @@
             document.getElementById('user-company').textContent = company;
             loadData();
             loadVendeurInfo();
+            loadVendeurLogo();
             displayCatalogue();
             displayClientsList();
             displayDevisList();
             displayFacturesList();
             updateComptabilite();
-            initSignatureCanvas();
+            
             initNumberInputs(); // Initialiser la gestion des virgules
         }
 
@@ -1617,7 +1623,7 @@
                 client: { ...devis.client },
                 articles: devis.articles.map(a => ({ ...a })),
                 remise: { montant: 0, type: 'euro', valeur: 0 },
-                signature: signatureDataUrl,
+                
                 totalHT: devis.totalHT,
                 totalTVA: devis.totalTVA,
                 totalTTC: devis.totalTTC,
@@ -1723,89 +1729,11 @@
         }
 
         // SIGNATURE
-        function initSignatureCanvas() {
-            canvas = document.getElementById('signature-canvas');
-            if (!canvas) return;
-            ctx = canvas.getContext('2d');
-            
-            // Remplir le fond en blanc pour masquer tout watermark
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 2;
-            ctx.lineCap = 'round';
-
-            canvas.addEventListener('mousedown', startDrawing);
-            canvas.addEventListener('mousemove', draw);
-            canvas.addEventListener('mouseup', stopDrawing);
-            canvas.addEventListener('mouseout', stopDrawing);
-            canvas.addEventListener('touchstart', handleTouch);
-            canvas.addEventListener('touchmove', handleTouch);
-            canvas.addEventListener('touchend', stopDrawing);
-        }
-
-        function startDrawing(e) {
-            isDrawing = true;
-            // Masquer le placeholder dès qu'on commence à dessiner
-            const placeholder = document.getElementById('signature-placeholder');
-            if (placeholder) placeholder.style.display = 'none';
-            
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            ctx.beginPath();
-            ctx.moveTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
-        }
-
-        function draw(e) {
-            if (!isDrawing) return;
-            e.preventDefault();
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            ctx.lineTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
-            ctx.stroke();
-        }
-
-        function handleTouch(e) {
-            e.preventDefault();
-            const touch = e.touches[0];
-            const mouseEvent = new MouseEvent(e.type === 'touchstart' ? 'mousedown' : 'mousemove', {
-                clientX: touch.clientX,
-                clientY: touch.clientY
-            });
+                                );
             canvas.dispatchEvent(mouseEvent);
         }
 
-        function stopDrawing() {
-            isDrawing = false;
-        }
-
-        function clearSignature() {
-            // Effacer le canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            // Remplir le fond en blanc pour masquer tout watermark
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            // Réafficher le placeholder
-            const placeholder = document.getElementById('signature-placeholder');
-            if (placeholder) placeholder.style.display = 'block';
-            
-            signatureDataUrl = null;
-            document.getElementById('signature-preview').style.display = 'none';
-        }
-
-        function saveSignature() {
-            signatureDataUrl = canvas.toDataURL('image/png');
-            const preview = document.getElementById('signature-preview');
-            preview.src = signatureDataUrl;
-            preview.style.display = 'block';
-            saveData();
-            customAlert('✅ Signature sauvegardée !');
-        }
-
-        let editingFactureId = null; // Variable globale pour l'édition de facture
+                                let editingFactureId = null; // Variable globale pour l'édition de facture
 
         function editFacture(factureId) {
             const facture = allFactures.find(f => f.id === factureId);
@@ -1890,10 +1818,11 @@
                     },
                     articles: [...factureArticles],
                     remise: { montant: remiseMontant, type: remiseType, valeur: remise },
-                    signature: signatureDataUrl,
+                    
                     totalHT: totalHT,
                     totalTVA: totalTVA,
-                    totalTTC: totalHT + totalTVA
+                    totalTTC: totalHT + totalTVA,
+                    payee: false
                 };
 
                 console.log('Sauvegarde facture:', facture);
@@ -1975,6 +1904,21 @@
             if (!facture) return;
             
             if (window.confirm('Marquer la facture ' + facture.numero + ' comme payée ?\n\nCela la comptabilisera dans votre chiffre d\'affaires.')) {
+                facture.payee = true;
+                facture.datePaiement = new Date().toISOString().split('T')[0];
+                saveData();
+                displayFacturesList();
+                updateComptabilite();
+                customAlert('✅ Facture marquée comme payée !');
+            }
+        }
+
+        
+        function marquerPayee(factureId) {
+            const facture = allFactures.find(f => f.id === factureId);
+            if (!facture) return;
+            
+            if (confirm('Marquer la facture ' + facture.numero + ' comme payée ?\n\nCela la comptabilisera dans votre chiffre d\'affaires.')) {
                 facture.payee = true;
                 facture.datePaiement = new Date().toISOString().split('T')[0];
                 saveData();
@@ -2083,6 +2027,59 @@ ${company}`;
         }
 
         // Utilitaires
+        
+        // ═══════════════════════════════════════
+        // GESTION LOGO
+        // ═══════════════════════════════════════
+        
+        function handleLogoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (file.size > 500000) {
+                customAlert('❌ Fichier trop volumineux (max 500Ko)');
+                event.target.value = '';
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                logoDataUrl = e.target.result;
+                const preview = document.getElementById('logo-preview');
+                const previewImg = document.getElementById('logo-preview-img');
+                if (preview && previewImg) {
+                    previewImg.src = logoDataUrl;
+                    preview.style.display = 'block';
+                }
+                saveData();
+                customAlert('✅ Logo chargé !');
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        function removeLogo() {
+            if (confirm('Supprimer le logo ?')) {
+                logoDataUrl = null;
+                const preview = document.getElementById('logo-preview');
+                if (preview) preview.style.display = 'none';
+                const input = document.getElementById('vendeur-logo');
+                if (input) input.value = '';
+                saveData();
+                customAlert('🗑️ Logo supprimé');
+            }
+        }
+        
+        function loadVendeurLogo() {
+            if (logoDataUrl) {
+                const preview = document.getElementById('logo-preview');
+                const previewImg = document.getElementById('logo-preview-img');
+                if (preview && previewImg) {
+                    previewImg.src = logoDataUrl;
+                    preview.style.display = 'block';
+                }
+            }
+        }
+
         function formatEuro(amount) {
             return amount.toFixed(2).replace('.', ',') + ' €';
         }
@@ -2149,6 +2146,18 @@ ${company}`;
             
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
+            
+            let y = 20;
+            
+            // Logo (si existe)
+            if (logoDataUrl) {
+                try {
+                    doc.addImage(logoDataUrl, 'PNG', 20, y, 40, 20);
+                    y += 25;
+                } catch(e) {
+                    console.error('Erreur logo:', e);
+                }
+            }
             
             // En-tête vendeur
             doc.setFontSize(16);
@@ -2229,13 +2238,7 @@ ${company}`;
             doc.text(facture.totalTTC.toFixed(2) + ' €', 165, y);
             
             // Signature
-            if (facture.signature) {
-                y += 15;
-                doc.setFontSize(10);
-                doc.setFont(undefined, 'normal');
-                doc.text('Signature vendeur:', 20, y);
-                doc.addImage(facture.signature, 'PNG', 20, y + 2, 50, 20);
-            }
+            
             
             // Télécharger
             doc.save(facture.numero + '.pdf');
@@ -2245,9 +2248,9 @@ ${company}`;
         // INFOS VENDEUR
         function loadVendeurInfo() {
             const saved = localStorage.getItem('vendeur-info');
-            console.log('Chargement vendeurInfos depuis localStorage:', saved);
+            console.log('Chargement vendeurInfo depuis localStorage:', saved);
             if (saved) {
-                vendeurInfos = JSON.parse(saved);
+                vendeurInfo = JSON.parse(saved);
                 
                 // Attendre que le DOM soit prêt
                 setTimeout(() => {
@@ -2261,7 +2264,7 @@ ${company}`;
                         'vendeur-ville': vendeurInfo.ville,
                         'vendeur-tel': vendeurInfo.tel,
                         'vendeur-email': vendeurInfo.email,
-                        'vendeur-cotisations': vendeurInfos.cotisations || '22.2'
+                        'vendeur-cotisations': vendeurInfo.cotisations || '22.2'
                     };
                     
                     Object.keys(elements).forEach(id => {
@@ -2273,8 +2276,8 @@ ${company}`;
                         }
                     });
                     
-                    console.log('✅ Informations chargées:', vendeurInfos);
-                    console.log('✅ Taux de cotisations:', vendeurInfos.cotisations + '%');
+                    console.log('✅ Informations chargées:', vendeurInfo);
+                    console.log('✅ Taux de cotisations:', vendeurInfo.cotisations + '%');
                 }, 200);
             } else {
                 console.log('⚠️ Aucune information sauvegardée dans localStorage');
@@ -2403,14 +2406,7 @@ ${company}`;
             doc.text(facture.totalTTC.toFixed(2) + 'E', xValue, y);
             
             // Signature
-            if (facture.signature) {
-                y += 15;
-                doc.setFontSize(10);
-                doc.setFont(undefined, 'normal');
-                doc.text('Signature:', 20, y);
-                try {
-                    doc.addImage(facture.signature, 'PNG', 20, y + 5, 60, 22);
-                } catch(e) {
+             catch(e) {
                     console.error('Erreur signature:', e);
                 }
             }
@@ -2466,11 +2462,11 @@ Seul vous pouvez y accéder.
             const caTotal = facturesPayees.reduce((sum, f) => sum + f.totalTTC, 0);
             const nbFactures = facturesPayees.length;
             // Utiliser le taux de cotisations personnalisé depuis les paramètres
-            const tauxCotisations = (vendeurInfos?.cotisations || 22.2) / 100;
+            const tauxCotisations = (vendeurInfo?.cotisations || 22.2) / 100;
             const cotisations = caTotal * tauxCotisations;
             const net = caTotal - cotisations;
             
-            console.log('CA Total:', caTotal, 'Nb factures:', nbFactures, 'Taux:', (tauxCotisations * 100) + '%', 'vendeurInfos:', vendeurInfos);
+            console.log('CA Total:', caTotal, 'Nb factures:', nbFactures, 'Taux:', (tauxCotisations * 100) + '%', 'vendeurInfo:', vendeurInfo);
             
             // Mise à jour dashboard
             const caTotalEl = document.getElementById('compta-ca-total');
@@ -2563,9 +2559,10 @@ Seul vous pouvez y accéder.
                 return;
             }
             
-            console.log('Affichage compta factures:', allFactures.length);
+            const facturesPayees = allFactures.filter(f => f.payee === true);
+            console.log('Affichage compta factures payées:', facturesPayees.length);
             
-            if (allFactures.length === 0) {
+            if (facturesPayees.length === 0) {
                 container.innerHTML = '<div class="empty-state" style="padding: 20px;"><p style="color: #a0aec0;">Aucune facture</p></div>';
                 return;
             }
@@ -2613,6 +2610,18 @@ Seul vous pouvez y accéder.
             const vendeur = JSON.parse(localStorage.getItem('vendeur-info') || '{}');
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF();
+            
+            let y = 20;
+            
+            // Logo (si existe)
+            if (logoDataUrl) {
+                try {
+                    pdf.addImage(logoDataUrl, 'PNG', 20, y, 40, 20);
+                    y += 25;
+                } catch(e) {
+                    console.error('Erreur logo:', e);
+                }
+            }
             
             // En-tête vendeur
             pdf.setFontSize(16);
@@ -2694,12 +2703,7 @@ Seul vous pouvez y accéder.
             pdf.text(`${formatEuro(doc.totalTTC)}`, 160, y);
             
             // Signature
-            if (type === 'facture' && signatureDataUrl) {
-                pdf.addImage(signatureDataUrl, 'PNG', 20, y + 10, 50, 20);
-                pdf.setFontSize(8);
-                pdf.setFont(undefined, 'normal');
-                pdf.text('Signature vendeur', 20, y + 35);
-            }
+            
             
             // Téléchargement
             pdf.save(`${doc.numero}.pdf`);
