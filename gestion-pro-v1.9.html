@@ -92,58 +92,93 @@
         /* Boutons compacts sur mobile */
         .btn-actions-container {
             display: flex;
-            gap: 3px;
-            flex-wrap: nowrap;
+            gap: 4px;
+            flex-wrap: wrap;
+            justify-content: flex-start;
         }
         
         .btn-action {
-            padding: 8px 10px;
-            font-size: 16px;
-            min-width: auto;
+            padding: 8px 12px;
+            font-size: 14px;
+            min-width: 44px;
+            min-height: 44px;
             line-height: 1;
-            min-height: 48px; /* Hauteur tactile optimale */
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            margin: 0 !important;
+        }
+        
+        /* Boutons icône seulement (carré) */
+        .btn-icon {
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            font-size: 18px;
         }
         
         @media (max-width: 1024px) {
             .btn {
-                min-height: 52px !important; /* Plus grand sur tablette */
-                padding: 14px 20px !important;
-                font-size: 15px !important;
+                min-height: 44px !important;
+                padding: 10px 14px !important;
+                font-size: 14px !important;
             }
             .btn-actions-container {
-                flex-direction: column;
-                gap: 2px;
+                display: grid;
+                grid-template-columns: repeat(3, 44px);
+                gap: 4px;
+                justify-content: end;
             }
-            .btn-action {
-                padding: 12px 10px;
-                font-size: 15px;
-                width: 100%;
-                min-height: 52px;
+            .btn-action, .btn-icon {
+                width: 44px !important;
+                height: 44px !important;
+                padding: 0 !important;
+                font-size: 16px !important;
+                min-width: 44px !important;
+            }
+            /* Cacher le texte des boutons, garder que l'icône */
+            .btn-action .btn-text {
+                display: none;
             }
         }
         
         @media (max-width: 768px) {
             .btn { 
                 min-width: auto !important; 
-                padding: 12px 10px !important;
-                font-size: 14px !important;
+                padding: 10px 12px !important;
+                font-size: 13px !important;
                 line-height: 1.2 !important;
-                min-height: 48px !important; /* 48px = taille recommandée pour tactile */
+                min-height: 40px !important;
             }
             .btn-actions-container {
-                flex-direction: column;
-                gap: 1px;
-                width: 100%;
+                grid-template-columns: repeat(3, 40px);
+                gap: 3px;
             }
-            .btn-action {
-                padding: 10px 8px !important;
-                font-size: 14px !important;
-                width: 100% !important;
-                display: block;
-                min-height: 48px !important; /* Hauteur tactile */
+            .btn-action, .btn-icon {
+                width: 40px !important;
+                height: 40px !important;
+                font-size: 15px !important;
+                min-width: 40px !important;
+                min-height: 40px !important;
             }
             .desktop-only { display: none !important; }
             .mobile-only { display: inline !important; }
+            
+            /* Réduire la colonne contact */
+            .col-contact {
+                max-width: 120px !important;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                font-size: 11px !important;
+            }
+            .col-contact span {
+                display: block;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
         }
         
         @media (min-width: 769px) {
@@ -256,6 +291,29 @@
             border-radius: 4px;
         }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        
+        /* Signature Canvas */
+        .signature-box {
+            border: 2px dashed #e2e8f0; border-radius: 8px;
+            padding: 10px; background: #f7fafc; margin-top: 10px;
+            position: relative;
+        }
+        #signature-canvas {
+            border: 1px solid #cbd5e0; background: white;
+            border-radius: 5px; cursor: crosshair; display: block;
+            width: 100%; max-width: 400px; margin: 0 auto;
+        }
+        .signature-placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #cbd5e0;
+            font-size: 16px;
+            pointer-events: none;
+            z-index: 1;
+            font-style: italic;
+        }
         
         /* Notification personnalisée */
         .custom-notification {
@@ -392,7 +450,7 @@
                     <div class="user-email" id="user-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e58088848c89a5809d8488958980cb868a88">[email&#160;protected]</a></div>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                    <button class="btn-logout" onclick="showFirebaseGuide()" style="background: #48bb78;">Bienvenue !</button>
+                    <button class="btn-logout" onclick="showFirebaseGuide()" style="background: #48bb78;">☁️ Cloud Activé ✓</button>
                     <button class="btn-logout" onclick="logout()">🚪 Déconnexion</button>
                 </div>
             </div>
@@ -575,7 +633,18 @@
                         </div>
                     </div>
                     
-                   <button class="btn btn-success" onclick="saveFacture()" style="width: 100%; margin-top: 15px;">💾 Sauvegarder la facture</button>
+                    <h3>Signature vendeur</h3>
+                    <div class="signature-box">
+                        <span class="signature-placeholder" id="signature-placeholder">✍️ Signez ici</span>
+                        <canvas id="signature-canvas" width="400" height="150"></canvas>
+                        <div style="margin-top: 10px; display: flex; gap: 10px;">
+                            <button class="btn btn-secondary" onclick="clearSignature()" style="flex: 1;">🗑️ Effacer</button>
+                            <button class="btn btn-success" onclick="saveSignature()" style="flex: 1;">✓ Valider</button>
+                        </div>
+                        <img id="signature-preview" style="display: none; margin-top: 10px; max-width: 200px; border: 1px solid #e2e8f0; border-radius: 5px;">
+                    </div>
+                    
+                    <button class="btn btn-success" onclick="saveFacture()" style="width: 100%; margin-top: 15px;">💾 Sauvegarder la facture</button>
                 </div>
 
                 <div class="card">
@@ -1672,14 +1741,14 @@
                 }
                 
                 const statut = d.transforme ? 
-                    `<span style="color: #48bb78; font-weight: bold;">✅ Transformé en ${d.factureNumero || 'FAC-???'}</span>` : 
-                    '<span style="color: #ed8936;">🟡 En attente</span>';
+                    `<span style="color: #48bb78; font-weight: bold; font-size: 12px;">✅ ${d.factureNumero || 'FAC-???'}</span>` : 
+                    '<span style="color: #ed8936; font-size: 12px;">🟡 En attente</span>';
                 
                 const checkbox = d.transforme ? '' : `
-                    <div style="background: #f7fafc; padding: 8px; border-radius: 6px; margin-bottom: 5px; border: 2px solid #e2e8f0;">
-                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; color: #48bb78;">
-                            <input type="checkbox" onchange="transformerEnFacture(${d.id})" style="width: 18px; height: 18px; cursor: pointer;">
-                            <span style="font-size: 13px;">✓ Devis accepté → Créer facture</span>
+                    <div style="background: #f7fafc; padding: 6px; border-radius: 6px; margin-bottom: 5px; border: 2px solid #e2e8f0;">
+                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 600; color: #48bb78;">
+                            <input type="checkbox" onchange="transformerEnFacture(${d.id})" style="width: 16px; height: 16px; cursor: pointer;">
+                            <span style="font-size: 11px;">✓ Accepté → Facture</span>
                         </label>
                     </div>`;
                 
@@ -1691,10 +1760,12 @@
                     <td>${statut}</td>
                     <td>
                         ${checkbox}
-                        ${!d.transforme ? `<button class="btn btn-secondary" onclick="editDevis(${d.id})" style="padding: 6px 10px; margin: 2px; font-size: 12px;">✏️ Modifier</button>` : ''}
-                        <button class="btn btn-secondary" onclick="genererPDF('devis', ${d.id})" style="padding: 6px 10px; margin: 2px; font-size: 12px;">📄 PDF</button>
-                        <button class="btn btn-primary" onclick="envoyerDevis(${d.id})" style="padding: 6px 10px; margin: 2px; font-size: 12px;">📧 Envoyer</button>
-                        <button class="btn btn-danger" onclick="deleteDevis(${d.id})" style="padding: 6px 10px; margin: 2px;">🗑️</button>
+                        <div class="btn-actions-container">
+                            ${!d.transforme ? `<button class="btn btn-icon btn-secondary" onclick="editDevis(${d.id})" title="Modifier">✏️</button>` : ''}
+                            <button class="btn btn-icon btn-secondary" onclick="genererPDF('devis', ${d.id})" title="PDF">📄</button>
+                            <button class="btn btn-icon btn-primary" onclick="envoyerDevis(${d.id})" title="Envoyer">📧</button>
+                            <button class="btn btn-icon btn-danger" onclick="deleteDevis(${d.id})" title="Supprimer">🗑️</button>
+                        </div>
                     </td>
                 </tr>`;
             });
@@ -2113,8 +2184,8 @@
             facturesToShow.forEach(f => {
                 const payee = f.payee || false;
                 const badgePayee = payee 
-                    ? '<span style="background: #c6f6d5; color: #22543d; padding: 4px 10px; border-radius: 12px; font-size: 9px; font-weight: 400;">✅ PAYÉE</span>' 
-                    : '<span style="background: #fed7d7; color: #742a2a; padding: 4px 10px; border-radius: 12px; font-size: 8px; font-weight: 400;">⏳ EN ATTENTE</span>';
+                    ? '<span style="background: #c6f6d5; color: #22543d; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">✅ PAYÉE</span>' 
+                    : '<span style="background: #fed7d7; color: #742a2a; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">⏳ EN ATTENTE</span>';
                 
                 html += `<tr style="${payee ? 'background: #f0fdf4;' : ''}">
                     <td><strong>${f.numero}</strong></td>
@@ -2123,14 +2194,16 @@
                     <td>${badgePayee}</td>
                     <td><strong>${formatEuro(f.totalTTC)}</strong></td>
                     <td>
-                        ${payee 
-                            ? '<button class="btn" style="background: #a0aec0; color: white; padding: 6px 10px; margin: 2px; font-size: 12px; cursor: not-allowed;" disabled>✅ Payée</button>'
-                            : `<button class="btn" style="background: #48bb78; color: white; padding: 6px 10px; margin: 2px; font-size: 12px;" onclick="marquerPayee(${f.id})">💰 Marquer payée</button>`
-                        }
-                        <button class="btn btn-secondary" onclick="editFacture(${f.id})" style="padding: 6px 10px; margin: 2px; font-size: 12px;">✏️</button>
-                        <button class="btn btn-secondary" onclick="genererFacturePDF(${f.id})" style="padding: 6px 10px; margin: 2px; font-size: 12px;">📄 PDF</button>
-                        <button class="btn btn-primary" onclick="envoyerFacture(${f.id})" style="padding: 6px 10px; margin: 2px; font-size: 12px;">📧 Envoyer</button>
-                        <button class="btn btn-danger" onclick="deleteFacture(${f.id})" style="padding: 6px 10px; margin: 2px;">🗑️</button>
+                        <div class="btn-actions-container">
+                            ${payee 
+                                ? '<button class="btn btn-icon" style="background: #a0aec0; color: white; cursor: not-allowed;" disabled title="Payée">✅</button>'
+                                : `<button class="btn btn-icon" style="background: #48bb78; color: white;" onclick="marquerPayee(${f.id})" title="Marquer payée">💰</button>`
+                            }
+                            <button class="btn btn-icon btn-secondary" onclick="editFacture(${f.id})" title="Modifier">✏️</button>
+                            <button class="btn btn-icon btn-secondary" onclick="genererFacturePDF(${f.id})" title="PDF">📄</button>
+                            <button class="btn btn-icon btn-primary" onclick="envoyerFacture(${f.id})" title="Envoyer">📧</button>
+                            <button class="btn btn-icon btn-danger" onclick="deleteFacture(${f.id})" title="Supprimer">🗑️</button>
+                        </div>
                     </td>
                 </tr>`;
             });
@@ -2994,33 +3067,40 @@ Seul vous pouvez y accéder.
                 return;
             }
             
-            let html = '<div class="table-container"><table class="table"><thead><tr><th>Nom</th><th>Contact</th><th class="hide-mobile-text"><span class="desktop-only">Historique</span><span class="mobile-only">Hist.</span></th><th class="hide-mobile-text"><span class="desktop-only">CA Total</span><span class="mobile-only">CA</span></th><th>Actions</th></tr></thead><tbody>';
+            let html = '<div class="table-container"><table class="table"><thead><tr><th>Nom</th><th class="col-contact">Contact</th><th>Hist.</th><th>CA</th><th>Actions</th></tr></thead><tbody>';
             
             clientsToShow.forEach(c => {
                 const devisClient = allDevis.filter(d => normalizeText(d.client.nom) === normalizeText(c.nom));
                 const facturesClient = allFactures.filter(f => normalizeText(f.client.nom) === normalizeText(c.nom));
                 const caTotal = facturesClient.reduce((sum, f) => sum + f.totalTTC, 0);
                 
-                // Contact - version complète
-                const contactInfo = [];
-                if (c.email) contactInfo.push(`<span style="word-break: break-all; display: inline-block; max-width: 100%;">📧 ${c.email}</span>`);
-                if (c.tel) contactInfo.push(`📱 ${c.tel}`);
-                const contactText = contactInfo.length > 0 ? contactInfo.join('<br>') : '<span style="color: #a0aec0;">Aucun</span>';
+                // Contact - version compacte avec troncature
+                let contactText = '<span style="color: #a0aec0;">-</span>';
+                if (c.email || c.tel) {
+                    const parts = [];
+                    if (c.email) {
+                        // Tronquer l'email si trop long
+                        const emailShort = c.email.length > 20 ? c.email.substring(0, 18) + '...' : c.email;
+                        parts.push(`<span title="${c.email}">📧 ${emailShort}</span>`);
+                    }
+                    if (c.tel) parts.push(`📱 ${c.tel}`);
+                    contactText = parts.join('<br>');
+                }
                 
-                // Historique - version abrégée pour mobile
-                const historiqueText = `${devisClient.length}D, ${facturesClient.length}F`;
+                // Historique compact
+                const historiqueText = `${devisClient.length}D/${facturesClient.length}F`;
                 
                 html += `<tr>
-                    <td><strong style="display: block; overflow: hidden; text-overflow: ellipsis;">${c.nom}</strong></td>
-                    <td style="font-size: 11px; max-width: 180px; overflow: hidden;">${contactText}</td>
-                    <td style="font-size: 11px;">${historiqueText}</td>
-                    <td><strong style="color: #48bb78; white-space: nowrap;">${formatEuro(caTotal)}</strong></td>
+                    <td><strong style="display: block; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${c.nom}">${c.nom}</strong></td>
+                    <td class="col-contact" style="font-size: 11px; max-width: 130px;">${contactText}</td>
+                    <td style="font-size: 11px; white-space: nowrap;">${historiqueText}</td>
+                    <td><strong style="color: #48bb78; white-space: nowrap; font-size: 12px;">${formatEuro(caTotal)}</strong></td>
                     <td>
                         <div class="btn-actions-container">
-                            <button class="btn btn-success btn-action" onclick="creerFactureDepuisClient(${c.id})" title="Créer une facture">📄</button>
-                            <button class="btn btn-primary btn-action" onclick="viewClientDetails(${c.id})" title="Détails">👁️</button>
-                            <button class="btn btn-secondary btn-action" onclick="editClient(${c.id})" title="Modifier">✏️</button>
-                            <button class="btn btn-danger btn-action" onclick="deleteClient(${c.id})" title="Supprimer">🗑️</button>
+                            <button class="btn btn-icon btn-success" onclick="creerFactureDepuisClient(${c.id})" title="Créer une facture">📄</button>
+                            <button class="btn btn-icon btn-primary" onclick="viewClientDetails(${c.id})" title="Détails">👁️</button>
+                            <button class="btn btn-icon btn-secondary" onclick="editClient(${c.id})" title="Modifier">✏️</button>
+                            <button class="btn btn-icon btn-danger" onclick="deleteClient(${c.id})" title="Supprimer">🗑️</button>
                         </div>
                     </td>
                 </tr>`;
