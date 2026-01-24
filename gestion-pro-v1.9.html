@@ -456,9 +456,20 @@
                         <button class="btn btn-secondary" onclick="syncClientsFromDocuments()">🔄 Synchroniser depuis devis/factures</button>
                     </div>
                     
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label>🔍 Rechercher un client</label>
-                        <input type="text" id="clients-search" placeholder="Nom, email, téléphone..." oninput="filterClients()" style="font-size: 15px;">
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                        <div class="form-group" style="flex: 1; min-width: 150px; margin-bottom: 0;">
+                            <label>🔍 Rechercher</label>
+                            <input type="text" id="clients-search" placeholder="Nom, email, téléphone..." oninput="filterClients()" style="font-size: 15px;">
+                        </div>
+                        <div class="form-group" style="min-width: 180px; margin-bottom: 0;">
+                            <label>📊 Trier par</label>
+                            <select id="clients-sort" onchange="sortClients()" style="font-size: 15px;">
+                                <option value="alpha-asc">A → Z (alphabétique)</option>
+                                <option value="alpha-desc">Z → A (alphabétique)</option>
+                                <option value="date-desc">Plus récent d'abord</option>
+                                <option value="date-asc">Plus ancien d'abord</option>
+                            </select>
+                        </div>
                     </div>
                     
                     <div id="clients-list"></div>
@@ -735,6 +746,31 @@
                         
                         <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 15px;">💾 Sauvegarder les informations</button>
                     </form>
+                </div>
+                
+                <!-- Section Assistance -->
+                <div class="card" style="margin-top: 20px;">
+                    <h2>💬 Assistance & Suggestions</h2>
+                    <p style="color: #718096; margin-bottom: 15px;">Une question, une suggestion d'amélioration ou un bug à signaler ? Contactez-nous !</p>
+                    
+                    <div class="form-group">
+                        <label>Type de message</label>
+                        <select id="assistance-type">
+                            <option value="suggestion">💡 Suggestion d'amélioration</option>
+                            <option value="question">❓ Question</option>
+                            <option value="bug">🐛 Signaler un bug</option>
+                            <option value="autre">📝 Autre</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Votre message *</label>
+                        <textarea id="assistance-message" rows="4" placeholder="Décrivez votre question, suggestion ou problème..." style="width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; resize: vertical;"></textarea>
+                    </div>
+                    
+                    <button type="button" class="btn btn-primary" onclick="envoyerAssistance()" style="width: 100%;">
+                        📧 Envoyer à l'assistance
+                    </button>
                 </div>
             </div>
         </div>
@@ -2323,6 +2359,9 @@ ${company}`;
                     console.log('  ✓ Logo chargé');
                 }
                 
+                // Charger la préférence de tri des clients
+                loadClientsSortPreference();
+                
                 console.log('✅ Formulaire vendeur rempli');
             }, 100);
         }
@@ -2415,6 +2454,9 @@ ${company}`;
         function saveVendeurInfo(e) {
             e.preventDefault();
             
+            // Récupérer la préférence de tri des clients existante
+            const clientsSortPref = vendeurInfo.clientsSortPreference || localStorage.getItem('clients-sort-preference') || 'alpha-asc';
+            
             // Mettre à jour l'objet vendeurInfo avec les valeurs du formulaire
             vendeurInfo = {
                 nom: document.getElementById('vendeur-nom').value.trim(),
@@ -2426,7 +2468,8 @@ ${company}`;
                 email: document.getElementById('vendeur-email').value.trim(),
                 tel: document.getElementById('vendeur-tel') ? document.getElementById('vendeur-tel').value.trim() : '',
                 cotisations: parseFloat(document.getElementById('vendeur-cotisations').value) || 22.2,
-                logo: logoDataUrl || null
+                logo: logoDataUrl || null,
+                clientsSortPreference: clientsSortPref
             };
             
             console.log('💾 Sauvegarde vendeurInfo:', vendeurInfo);
@@ -2435,6 +2478,66 @@ ${company}`;
             saveData();
             
             customAlert('✅ Informations sauvegardées !');
+        }
+
+        // ASSISTANCE
+        function envoyerAssistance() {
+            const type = document.getElementById('assistance-type').value;
+            const message = document.getElementById('assistance-message').value.trim();
+            
+            if (!message) {
+                customAlert('⚠️ Veuillez écrire votre message', 'error');
+                return;
+            }
+            
+            // Préparer les labels pour le type
+            const typeLabels = {
+                'suggestion': '💡 Suggestion d\'amélioration',
+                'question': '❓ Question',
+                'bug': '🐛 Signalement de bug',
+                'autre': '📝 Autre'
+            };
+            
+            // Informations utilisateur pour le contexte
+            const userEmail = vendeurInfo.email || 'Non renseigné';
+            const userName = vendeurInfo.nom || 'Utilisateur';
+            
+            // Construire le corps du mail
+            const subject = `[Gestion Pro] ${typeLabels[type]} - ${userName}`;
+            const body = `Type: ${typeLabels[type]}
+
+De: ${userName}
+Email de réponse: ${userEmail}
+
+Message:
+${message}
+
+---
+Envoyé depuis Gestion Pro v2.0`;
+
+            // Ouvrir le client mail
+            const mailto = `mailto:capteurdigital@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            
+            // Essayer d'abord le partage natif (mobile)
+            if (navigator.share) {
+                navigator.share({
+                    title: subject,
+                    text: body
+                }).then(() => {
+                    document.getElementById('assistance-message').value = '';
+                    customAlert('✅ Message prêt à être envoyé !');
+                }).catch(() => {
+                    // Fallback vers mailto
+                    window.location.href = mailto;
+                    document.getElementById('assistance-message').value = '';
+                    customAlert('📧 Votre client mail va s\'ouvrir...');
+                });
+            } else {
+                // Desktop : ouvrir mailto
+                window.location.href = mailto;
+                document.getElementById('assistance-message').value = '';
+                customAlert('📧 Votre client mail va s\'ouvrir...');
+            }
         }
 
         // GÉNÉRATION PDF
@@ -2804,12 +2907,17 @@ Seul vous pouvez y accéder.
         // ========== GESTION CLIENTS ==========
 
         function displayClientsList(filteredClients = null) {
-            const clientsToShow = filteredClients || allClients;
+            let clientsToShow = filteredClients || [...allClients];
             const container = document.getElementById('clients-list');
             
             if (!container) {
                 console.log('Container clients-list non trouvé');
                 return;
+            }
+            
+            // Si pas de filtrage externe, appliquer le tri selon le sélecteur
+            if (!filteredClients && allClients.length > 0) {
+                clientsToShow = applySortToClients(clientsToShow);
             }
             
             console.log('Affichage clients:', clientsToShow.length, 'clients');
@@ -2862,16 +2970,83 @@ Seul vous pouvez y accéder.
         function filterClients() {
             const searchTerm = document.getElementById('clients-search').value.toLowerCase();
             if (!searchTerm) {
-                displayClientsList();
+                sortClients();
                 return;
             }
             
-            const filtered = allClients.filter(client => 
+            let filtered = allClients.filter(client => 
                 client.nom.toLowerCase().includes(searchTerm) ||
                 (client.email && client.email.toLowerCase().includes(searchTerm)) ||
                 (client.tel && client.tel.toLowerCase().includes(searchTerm))
             );
+            
+            // Appliquer le tri sur les résultats filtrés
+            filtered = applySortToClients(filtered);
             displayClientsList(filtered);
+        }
+
+        function sortClients() {
+            const sortOrder = document.getElementById('clients-sort')?.value || 'alpha-asc';
+            
+            // Sauvegarder le choix de tri dans localStorage ET Firebase
+            localStorage.setItem('clients-sort-preference', sortOrder);
+            if (vendeurInfo) {
+                vendeurInfo.clientsSortPreference = sortOrder;
+                saveData();
+            }
+            
+            const searchTerm = document.getElementById('clients-search')?.value.toLowerCase() || '';
+            
+            let clientsToSort = [...allClients];
+            
+            // Filtrer si recherche active
+            if (searchTerm) {
+                clientsToSort = clientsToSort.filter(client => 
+                    client.nom.toLowerCase().includes(searchTerm) ||
+                    (client.email && client.email.toLowerCase().includes(searchTerm)) ||
+                    (client.tel && client.tel.toLowerCase().includes(searchTerm))
+                );
+            }
+            
+            // Appliquer le tri
+            clientsToSort = applySortToClients(clientsToSort);
+            displayClientsList(clientsToSort);
+        }
+
+        function applySortToClients(clients) {
+            const sortOrder = document.getElementById('clients-sort')?.value || 'alpha-asc';
+            
+            return clients.sort((a, b) => {
+                switch (sortOrder) {
+                    case 'alpha-asc':
+                        return a.nom.localeCompare(b.nom, 'fr', { sensitivity: 'base' });
+                    case 'alpha-desc':
+                        return b.nom.localeCompare(a.nom, 'fr', { sensitivity: 'base' });
+                    case 'date-desc':
+                        return (b.id || 0) - (a.id || 0); // id = timestamp de création
+                    case 'date-asc':
+                        return (a.id || 0) - (b.id || 0);
+                    default:
+                        return a.nom.localeCompare(b.nom, 'fr', { sensitivity: 'base' });
+                }
+            });
+        }
+
+        function loadClientsSortPreference() {
+            // Priorité : Firebase > localStorage > défaut
+            const firebasePref = vendeurInfo?.clientsSortPreference;
+            const localPref = localStorage.getItem('clients-sort-preference');
+            const preference = firebasePref || localPref || 'alpha-asc';
+            
+            const select = document.getElementById('clients-sort');
+            if (select) {
+                select.value = preference;
+            }
+            
+            // Synchroniser localStorage avec Firebase si différent
+            if (firebasePref && firebasePref !== localPref) {
+                localStorage.setItem('clients-sort-preference', firebasePref);
+            }
         }
 
         function openClientModal() {
