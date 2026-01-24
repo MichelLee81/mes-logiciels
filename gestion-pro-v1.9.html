@@ -1086,6 +1086,61 @@
             }, 3000);
         }
 
+        // Boîte de confirmation personnalisée (remplace window.confirm)
+        function customConfirm(title, message, confirmText = 'Confirmer', cancelText = 'Annuler') {
+            return new Promise((resolve) => {
+                // Créer le modal
+                const modal = document.createElement('div');
+                modal.className = 'modal active';
+                modal.style.zIndex = '10000';
+                modal.innerHTML = `
+                    <div class="modal-content" style="max-width: 400px; text-align: center;">
+                        <div style="font-size: 3em; margin-bottom: 15px;">❓</div>
+                        <h3 style="color: #4a5568; margin-bottom: 15px; font-size: 1.3em;">${title}</h3>
+                        <p style="color: #718096; margin-bottom: 25px; line-height: 1.5;">${message}</p>
+                        <div style="display: flex; gap: 10px; justify-content: center;">
+                            <button class="btn btn-secondary" id="confirm-cancel" style="min-width: 100px;">${cancelText}</button>
+                            <button class="btn btn-primary" id="confirm-ok" style="min-width: 100px;">${confirmText}</button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                
+                // Focus sur le bouton confirmer
+                setTimeout(() => document.getElementById('confirm-ok').focus(), 100);
+                
+                // Gestionnaires d'événements
+                document.getElementById('confirm-ok').onclick = () => {
+                    modal.remove();
+                    resolve(true);
+                };
+                
+                document.getElementById('confirm-cancel').onclick = () => {
+                    modal.remove();
+                    resolve(false);
+                };
+                
+                // Fermer avec Escape
+                const handleEscape = (e) => {
+                    if (e.key === 'Escape') {
+                        modal.remove();
+                        document.removeEventListener('keydown', handleEscape);
+                        resolve(false);
+                    }
+                };
+                document.addEventListener('keydown', handleEscape);
+                
+                // Clic en dehors ferme le modal
+                modal.onclick = (e) => {
+                    if (e.target === modal) {
+                        modal.remove();
+                        resolve(false);
+                    }
+                };
+            });
+        }
+
         function showLogin() {
             document.getElementById('login-form').classList.remove('hidden');
             document.getElementById('signup-form').classList.add('hidden');
@@ -1123,7 +1178,13 @@
         }
 
         async function logout() {
-            if (confirm('Se déconnecter ?')) {
+            const confirmed = await customConfirm(
+                'Déconnexion',
+                'Voulez-vous vraiment vous déconnecter ?',
+                'Se déconnecter',
+                'Annuler'
+            );
+            if (confirmed) {
                 await firebase.auth().signOut();
                 showAuth();
             }
@@ -1276,12 +1337,19 @@
             document.getElementById('article-modal').classList.add('active');
         }
 
-        function deleteArticle(id) {
-            if (confirm('Supprimer cet article ?')) {
+        async function deleteArticle(id) {
+            const article = catalogueArticles.find(a => a.id === id);
+            const confirmed = await customConfirm(
+                'Supprimer l\'article',
+                `Voulez-vous vraiment supprimer "${article?.designation || 'cet article'}" du catalogue ?`,
+                '🗑️ Supprimer',
+                'Annuler'
+            );
+            if (confirmed) {
                 catalogueArticles = catalogueArticles.filter(a => a.id !== id);
                 saveData();
                 displayCatalogue();
-                customAlert('🗑️ Supprimé !');
+                customAlert('🗑️ Article supprimé !');
             }
         }
 
@@ -1715,21 +1783,35 @@
             displayDevisList(devisToSort);
         }
 
-        function deleteDevis(id) {
-            if (confirm('Supprimer ce devis ?')) {
+        async function deleteDevis(id) {
+            const devis = allDevis.find(d => d.id === id);
+            const confirmed = await customConfirm(
+                'Supprimer le devis',
+                `Voulez-vous vraiment supprimer le devis ${devis?.numero || ''} ?`,
+                '🗑️ Supprimer',
+                'Annuler'
+            );
+            if (confirmed) {
                 allDevis = allDevis.filter(d => d.id !== id);
                 saveData();
                 displayDevisList();
-                customAlert('🗑️ Supprimé !');
+                customAlert('🗑️ Devis supprimé !');
             }
         }
 
         // TRANSFORMATION DEVIS → FACTURE
-        function transformerEnFacture(devisId) {
+        async function transformerEnFacture(devisId) {
             const devis = allDevis.find(d => d.id === devisId);
             if (!devis) return;
             
-            if (!confirm(`Transformer le devis ${devis.numero} en facture ?`)) {
+            const confirmed = await customConfirm(
+                'Transformer en facture',
+                `Voulez-vous transformer le devis ${devis.numero} en facture ?<br><br>Le devis sera marqué comme "accepté".`,
+                '✅ Créer la facture',
+                'Annuler'
+            );
+            
+            if (!confirmed) {
                 displayDevisList(); // Reset checkbox
                 return;
             }
@@ -2138,11 +2220,18 @@
         }
 
         
-        function marquerPayee(factureId) {
+        async function marquerPayee(factureId) {
             const facture = allFactures.find(f => f.id === factureId);
             if (!facture) return;
             
-            if (window.confirm('Marquer la facture ' + facture.numero + ' comme payée ?\n\nCela la comptabilisera dans votre chiffre d\'affaires.')) {
+            const confirmed = await customConfirm(
+                'Marquer comme payée',
+                `Confirmer le paiement de la facture <strong>${facture.numero}</strong> ?<br><br>Montant : <strong>${formatEuro(facture.totalTTC)}</strong><br><br>Elle sera comptabilisée dans votre chiffre d'affaires.`,
+                '💰 Confirmer le paiement',
+                'Annuler'
+            );
+            
+            if (confirmed) {
                 facture.payee = true;
                 facture.datePaiement = new Date().toISOString().split('T')[0];
                 saveData();
@@ -2152,13 +2241,21 @@
             }
         }
 
-        function deleteFacture(id) {
-            if (confirm('Supprimer cette facture ?')) {
+        async function deleteFacture(id) {
+            const facture = allFactures.find(f => f.id === id);
+            const confirmed = await customConfirm(
+                'Supprimer la facture',
+                `Voulez-vous vraiment supprimer la facture ${facture?.numero || ''} ?<br><br>⚠️ Cette action est irréversible.`,
+                '🗑️ Supprimer',
+                'Annuler'
+            );
+            
+            if (confirmed) {
                 allFactures = allFactures.filter(f => f.id !== id);
                 saveData();
                 displayFacturesList();
                 updateComptabilite();
-                customAlert('🗑️ Supprimé !');
+                customAlert('🗑️ Facture supprimée !');
             }
         }
 
@@ -3123,19 +3220,26 @@ Seul vous pouvez y accéder.
             document.getElementById('client-modal').classList.add('active');
         }
 
-        function deleteClient(id) {
+        async function deleteClient(id) {
             const client = allClients.find(c => c.id === id);
             if (!client) return;
             
             const devisClient = allDevis.filter(d => normalizeText(d.client.nom) === normalizeText(client.nom));
             const facturesClient = allFactures.filter(f => normalizeText(f.client.nom) === normalizeText(client.nom));
             
-            let message = `Supprimer ${client.nom} ?`;
+            let message = `Voulez-vous vraiment supprimer <strong>${client.nom}</strong> ?`;
             if (devisClient.length > 0 || facturesClient.length > 0) {
-                message += `\n\n⚠️ Ce client a ${devisClient.length} devis et ${facturesClient.length} facture(s).\nLes documents seront conservés.`;
+                message += `<br><br>⚠️ Ce client a <strong>${devisClient.length} devis</strong> et <strong>${facturesClient.length} facture(s)</strong>.<br>Les documents seront conservés.`;
             }
             
-            if (confirm(message)) {
+            const confirmed = await customConfirm(
+                'Supprimer le client',
+                message,
+                '🗑️ Supprimer',
+                'Annuler'
+            );
+            
+            if (confirmed) {
                 allClients = allClients.filter(c => c.id !== id);
                 saveData();
                 displayClientsList();
