@@ -971,6 +971,8 @@
                     
                     console.log('📥 Données chargées depuis Firebase');
                     console.log('- vendeurInfo:', vendeurInfo);
+                    console.log('- Factures chargées:', allFactures.length);
+                    console.log('- Factures payées:', allFactures.filter(f => f.payee === true).length);
                     
                     // Nettoyer les données corrompues
                     const devisInitial = allDevis.length;
@@ -995,6 +997,9 @@
                     displayDevisList();
                     displayFacturesList();
                     displayClientsList();
+                    
+                    // IMPORTANT: Mettre à jour la comptabilité APRÈS le chargement des données
+                    updateComptabilite();
                 }
             } catch (error) {
                 console.error('Erreur chargement:', error);
