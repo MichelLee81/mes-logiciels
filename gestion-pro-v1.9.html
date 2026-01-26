@@ -734,6 +734,14 @@
                         </div>
                         
                         <div class="form-group">
+                            <label>Date d'échéance (jours)</label>
+                            <input type="number" id="vendeur-echeance" placeholder="30" min="0" max="365" step="1">
+                            <small style="color: #718096; display: block; margin-top: 5px;">
+                                Nombre de jours après la date de facturation. Ex: 30 jours → "Date d'échéance : 25/02/2026"
+                            </small>
+                        </div>
+                        
+                        <div class="form-group">
                             <label>Taux de cotisations URSSAF</label>
                             <select id="vendeur-cotisations">
                                 <option value="22.2">22,2% - Défaut (services BNC)</option>
@@ -2658,6 +2666,7 @@ ${company}`;
                     'vendeur-ville': vendeurInfo.ville || '',
                     'vendeur-tel': vendeurInfo.tel || '',
                     'vendeur-email': vendeurInfo.email || '',
+                    'vendeur-echeance': vendeurInfo.echeance || '30',
                     'vendeur-cotisations': vendeurInfo.cotisations || '22.2'
                 };
                 
@@ -2794,6 +2803,7 @@ ${company}`;
                 ville: document.getElementById('vendeur-ville').value.trim(),
                 email: document.getElementById('vendeur-email').value.trim(),
                 tel: document.getElementById('vendeur-tel') ? document.getElementById('vendeur-tel').value.trim() : '',
+                echeance: parseInt(document.getElementById('vendeur-echeance').value) || 30,
                 cotisations: parseFloat(document.getElementById('vendeur-cotisations').value) || 22.2,
                 logo: logoDataUrl || null,
                 clientsSortPreference: clientsSortPref
@@ -3167,6 +3177,16 @@ Seul vous pouvez y accéder.
             pdf.setFontSize(10);
             pdf.setFont(undefined, 'normal');
             pdf.text(`Date: ${doc.date}`, 150, 40);
+            
+            // Date d'échéance pour les factures
+            if (type === 'facture') {
+                const echeanceJours = vendeurInfo?.echeance || 30;
+                const dateFacture = new Date(doc.date);
+                const dateEcheance = new Date(dateFacture);
+                dateEcheance.setDate(dateEcheance.getDate() + echeanceJours);
+                const echeanceStr = dateEcheance.toLocaleDateString('fr-FR');
+                pdf.text(`Date d'échéance: ${echeanceStr}`, 150, 46);
+            }
             
             // Validité pour les devis
             if (type === 'devis') {
