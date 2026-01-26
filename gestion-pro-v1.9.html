@@ -935,7 +935,7 @@
         
         // Variables globales
         let currentUser = null;
-        let currentLicense = null; // Système de licences
+        let currentLicense = null;
         let catalogueArticles = [];
         let devisArticles = [];
         let factureArticles = [];
@@ -957,142 +957,85 @@
             console.log('Firebase init:', e.message); 
         }
 
-        
-// ============================================
-// SYSTÈME DE LICENCES - Configuration
-// ============================================
-const LICENSE_TIERS = {
-  FREE: {
-    id: 'free',
-    name: 'Gratuit',
-    limits: {
-      maxQuotes: 5,
-      maxInvoices: 5,
-      maxClients: 3,
-      maxProducts: 10,
-      canExportPDF: false,
-      canCustomizeLogo: false,
-      hasAdvancedReports: false
-    }
-  },
-  PREMIUM: {
-    id: 'premium',
-    name: 'Premium',
-    limits: {
-      maxQuotes: -1,
-      maxInvoices: -1,
-      maxClients: -1,
-      maxProducts: -1,
-      canExportPDF: true,
-      canCustomizeLogo: true,
-      hasAdvancedReports: true
-    }
-  },
-  LIFETIME: {
-    id: 'lifetime',
-    name: 'Licence à vie',
-    limits: {
-      maxQuotes: -1,
-      maxInvoices: -1,
-      maxClients: -1,
-      maxProducts: -1,
-      canExportPDF: true,
-      canCustomizeLogo: true,
-      hasAdvancedReports: true
-    }
-  }
-};
+        // ============================================
+        // SYSTÈME DE LICENCES
+        // ============================================
+        const LICENSE_TIERS = {
+          FREE: { id: 'free', name: 'Gratuit', limits: { maxQuotes: 5, maxInvoices: 5, maxClients: 3, maxProducts: 10, canExportPDF: false } },
+          PREMIUM: { id: 'premium', name: 'Premium', limits: { maxQuotes: -1, maxInvoices: -1, maxClients: -1, maxProducts: -1, canExportPDF: true } },
+          LIFETIME: { id: 'lifetime', name: 'Licence à vie', limits: { maxQuotes: -1, maxInvoices: -1, maxClients: -1, maxProducts: -1, canExportPDF: true } }
+        };
 
-async function initializeLicense(userId) {
-  try {
-    const licenseRef = firebase.firestore().collection('licenses').doc(userId);
-    const licenseSnap = await licenseRef.get();
-    
-    if (licenseSnap.exists) {
-      currentLicense = licenseSnap.data();
-      console.log('✅ Licence chargée:', currentLicense.tier.toUpperCase());
-      displayLicenseBadge(currentLicense);
-      return currentLicense;
-    } else {
-      console.log('📝 Création licence gratuite...');
-      await createFreeLicense(userId);
-      return await initializeLicense(userId);
-    }
-  } catch (error) {
-    console.error('❌ Erreur licence:', error);
-    return null;
-  }
-}
+        async function initializeLicense(userId) {
+          try {
+            const licenseRef = firebase.firestore().collection('licenses').doc(userId);
+            const licenseSnap = await licenseRef.get();
+            if (licenseSnap.exists) {
+              currentLicense = licenseSnap.data();
+              console.log('✅ Licence chargée:', currentLicense.tier.toUpperCase());
+              displayLicenseBadge(currentLicense);
+              return currentLicense;
+            } else {
+              console.log('📝 Création licence gratuite...');
+              const createLicense = firebase.functions().httpsCallable('createFreeLicense');
+              await createLicense({ userId });
+              const newSnap = await licenseRef.get();
+              if (newSnap.exists) {
+                currentLicense = newSnap.data();
+                console.log('✅ Licence créée:', currentLicense.tier.toUpperCase());
+                displayLicenseBadge(currentLicense);
+                return currentLicense;
+              }
+            }
+          } catch (error) {
+            console.error('❌ Erreur licence:', error);
+            return null;
+          }
+        }
 
-async function createFreeLicense(userId) {
-  try {
-    const createLicense = firebase.functions().httpsCallable('createFreeLicense');
-    await createLicense({ userId });
-    console.log('✅ Licence gratuite créée');
-  } catch (error) {
-    console.error('❌ Erreur création licence:', error);
-  }
-}
+        function displayLicenseBadge(license) {
+          const badge = document.createElement('div');
+          badge.className = `license-badge-app ${license.tier}`;
+          badge.id = 'license-badge';
+          badge.style.cssText = 'cursor:pointer;margin-left:15px;';
+          badge.title = 'Cliquer pour voir les détails';
+          const icons = { free: '🆓', premium: '💎', lifetime: '⭐' };
+          badge.innerHTML = `<span>${icons[license.tier]||'🔒'}</span><span>${license.tier.toUpperCase()}</span>`;
+          const userInfo = document.querySelector('.user-info');
+          if (userInfo && !document.getElementById('license-badge')) {
+            userInfo.appendChild(badge);
+            badge.addEventListener('click', () => showLicenseDetails(license));
+          }
+        }
 
-function displayLicenseBadge(license) {
-  const badge = document.createElement('div');
-  badge.className = `license-badge-app ${license.tier}`;
-  badge.id = 'license-badge';
-  badge.style.cssText = 'cursor:pointer;margin-left:15px;';
-  badge.title = 'Cliquer pour voir les détails';
-  const icons = { free: '🆓', premium: '💎', lifetime: '⭐' };
-  badge.innerHTML = `<span>${icons[license.tier]}</span><span>${license.tier.toUpperCase()}</span>`;
-  const header = document.querySelector('.user-info');
-  if (header) header.appendChild(badge);
-  badge.addEventListener('click', () => showLicenseDetails(license));
-}
+        function isLimitReached(limitType, currentCount) {
+          if (!currentLicense) return true;
+          const tier = LICENSE_TIERS[currentLicense.tier.toUpperCase()];
+          if (!tier) return true;
+          const limit = tier.limits[limitType];
+          return limit !== -1 && currentCount >= limit;
+        }
 
-function isLimitReached(limitType, currentCount) {
-  if (!currentLicense) return true;
-  const tier = LICENSE_TIERS[currentLicense.tier.toUpperCase()];
-  if (!tier) return true;
-  const limit = tier.limits[limitType];
-  if (limit === -1) return false;
-  return currentCount >= limit;
-}
+        function showUpgradeModal(reason = 'limit') {
+          const messages = { limit: 'Vous avez atteint la limite de votre forfait gratuit.', feature: 'Fonctionnalité Premium uniquement.', expired: 'Abonnement expiré.' };
+          const modal = document.createElement('div');
+          modal.className = 'license-modal';
+          modal.innerHTML = `<div class="license-modal-content"><div class="license-modal-header"><h2>🚀 Passez à la version supérieure</h2><button class="license-modal-close">&times;</button></div><div class="license-modal-body"><p class="license-message">${messages[reason]}</p><div class="license-tiers"><div class="license-tier premium"><h3>Premium</h3><div class="license-price">9,99€<span>/mois</span></div><ul class="license-features"><li>✓ Illimité</li><li>✓ Export PDF</li><li>✓ Support prioritaire</li></ul><button class="license-btn premium-btn" onclick="customAlert('🚧 Paiement en développement','info')">Choisir Premium</button></div><div class="license-tier lifetime"><div class="license-badge-top">⭐ Meilleure offre</div><h3>Licence à vie</h3><div class="license-price">99€<span>unique</span></div><ul class="license-features"><li>✓ Tout illimité à vie</li><li>✓ Export PDF</li><li>✓ Mises à jour gratuites</li><li>✓ Support prioritaire</li></ul><button class="license-btn lifetime-btn" onclick="customAlert('🚧 Paiement en développement','info')">Acheter</button></div></div></div></div>`;
+          document.body.appendChild(modal);
+          modal.querySelector('.license-modal-close').addEventListener('click', () => modal.remove());
+          modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+        }
 
-function hasFeature(feature) {
-  if (!currentLicense) return false;
-  const tier = LICENSE_TIERS[currentLicense.tier.toUpperCase()];
-  if (!tier) return false;
-  return tier.limits[feature] === true;
-}
-
-function showUpgradeModal(reason = 'limit') {
-  const messages = {
-    limit: 'Vous avez atteint la limite de votre forfait gratuit.',
-    feature: 'Cette fonctionnalité est disponible uniquement en Premium ou Licence à vie.',
-    expired: 'Votre abonnement a expiré.'
-  };
-  const modal = document.createElement('div');
-  modal.className = 'license-modal';
-  modal.innerHTML = `<div class="license-modal-content"><div class="license-modal-header"><h2>🚀 Passez à la version supérieure</h2><button class="license-modal-close">&times;</button></div><div class="license-modal-body"><p class="license-message">${messages[reason]}</p><div class="license-tiers"><div class="license-tier premium"><h3>Premium</h3><div class="license-price">9,99€<span>/mois</span></div><ul class="license-features"><li>✓ Devis et factures illimités</li><li>✓ Clients illimités</li><li>✓ Export PDF personnalisé</li><li>✓ Rapports avancés</li><li>✓ Support prioritaire</li></ul><button class="license-btn premium-btn" onclick="redirectToPayment('premium')">Choisir Premium</button></div><div class="license-tier lifetime"><div class="license-badge-top">⭐ Meilleure offre</div><h3>Licence à vie</h3><div class="license-price">99€<span>paiement unique</span></div><ul class="license-features"><li>✓ Tout illimité à vie</li><li>✓ Export PDF personnalisé</li><li>✓ Rapports avancés</li><li>✓ Mises à jour gratuites</li><li>✓ Support prioritaire à vie</li></ul><button class="license-btn lifetime-btn" onclick="redirectToPayment('lifetime')">Acheter à vie</button></div></div></div></div>`;
-  document.body.appendChild(modal);
-  modal.querySelector('.license-modal-close').addEventListener('click', () => modal.remove());
-  modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
-}
-
-function showLicenseDetails(license) {
-  const expiryText = license.expiryDate ? new Date(license.expiryDate.toMillis()).toLocaleDateString('fr-FR') : 'Aucune (À vie)';
-  const tierConfig = LICENSE_TIERS[license.tier.toUpperCase()];
-  const modal = document.createElement('div');
-  modal.className = 'license-modal';
-  modal.innerHTML = `<div class="license-modal-content"><div class="license-modal-header"><h2>📋 Ma Licence</h2><button class="license-modal-close">&times;</button></div><div class="license-modal-body"><div style="text-align:center;padding:20px"><div class="license-badge-app ${license.tier}" style="font-size:18px;padding:12px 24px;display:inline-flex">${license.tier === 'lifetime' ? '⭐' : license.tier === 'premium' ? '💎' : '🆓'} ${license.tier.toUpperCase()}</div><div style="margin-top:30px;text-align:left;max-width:500px;margin-left:auto;margin-right:auto"><div style="padding:16px;background:#f9fafb;border-radius:8px;margin-bottom:12px"><strong style="color:#6b7280;font-size:13px;text-transform:uppercase">Clé de licence</strong><div style="font-family:monospace;font-size:16px;margin-top:8px;word-break:break-all">${license.licenseKey}</div></div><div style="padding:16px;background:#f9fafb;border-radius:8px;margin-bottom:12px"><strong style="color:#6b7280;font-size:13px;text-transform:uppercase">Statut</strong><div style="margin-top:8px"><span style="display:inline-block;padding:4px 12px;background:#10b981;color:white;border-radius:12px;font-size:13px;font-weight:600">${license.status === 'active' ? '✓ Active' : license.status}</span></div></div><div style="padding:16px;background:#f9fafb;border-radius:8px;margin-bottom:12px"><strong style="color:#6b7280;font-size:13px;text-transform:uppercase">Expiration</strong><div style="margin-top:8px;font-size:15px">${expiryText}</div></div>${tierConfig ? `<div style="padding:16px;background:#f9fafb;border-radius:8px"><strong style="color:#6b7280;font-size:13px;text-transform:uppercase">Limites actuelles</strong><ul style="margin-top:12px;padding-left:20px"><li style="margin-bottom:8px;color:#4b5563">Devis: ${tierConfig.limits.maxQuotes === -1 ? 'Illimité' : tierConfig.limits.maxQuotes}</li><li style="margin-bottom:8px;color:#4b5563">Factures: ${tierConfig.limits.maxInvoices === -1 ? 'Illimité' : tierConfig.limits.maxInvoices}</li><li style="margin-bottom:8px;color:#4b5563">Clients: ${tierConfig.limits.maxClients === -1 ? 'Illimité' : tierConfig.limits.maxClients}</li></ul></div>` : ''}${license.tier === 'free' ? '<button onclick="showUpgradeModal(\'limit\')" style="margin-top:30px;padding:14px 32px;background:linear-gradient(135deg,#f59e0b 0,#d97706 100%);color:white;border:none;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer">⭐ Upgrader</button>' : ''}</div></div></div></div>`;
-  document.body.appendChild(modal);
-  modal.querySelector('.license-modal-close').addEventListener('click', () => modal.remove());
-  modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
-}
-
-function redirectToPayment(tier) {
-  customAlert(`🚧 Paiement ${tier} - En cours de développement`, 'info');
-  console.log('Redirection paiement:', tier);
-}
-
+        function showLicenseDetails(license) {
+          const expiryText = license.expiryDate ? new Date(license.expiryDate.toMillis()).toLocaleDateString('fr-FR') : 'Aucune (À vie)';
+          const tierConfig = LICENSE_TIERS[license.tier.toUpperCase()];
+          const modal = document.createElement('div');
+          modal.className = 'license-modal';
+          modal.innerHTML = `<div class="license-modal-content"><div class="license-modal-header"><h2>📋 Ma Licence</h2><button class="license-modal-close">&times;</button></div><div class="license-modal-body"><div style="text-align:center;padding:20px"><div class="license-badge-app ${license.tier}" style="font-size:18px;padding:12px 24px;display:inline-flex">${license.tier === 'lifetime' ? '⭐' : license.tier === 'premium' ? '💎' : '🆓'} ${license.tier.toUpperCase()}</div><div style="margin-top:30px;text-align:left;max-width:500px;margin-left:auto;margin-right:auto"><div style="padding:16px;background:#f9fafb;border-radius:8px;margin-bottom:12px"><strong style="color:#6b7280;font-size:13px">CLÉ DE LICENCE</strong><div style="font-family:monospace;font-size:16px;margin-top:8px">${license.licenseKey}</div></div><div style="padding:16px;background:#f9fafb;border-radius:8px;margin-bottom:12px"><strong style="color:#6b7280;font-size:13px">STATUT</strong><div style="margin-top:8px"><span style="padding:4px 12px;background:#10b981;color:white;border-radius:12px;font-size:13px;font-weight:600">${license.status === 'active' ? '✓ Active' : license.status}</span></div></div><div style="padding:16px;background:#f9fafb;border-radius:8px"><strong style="color:#6b7280;font-size:13px">LIMITES</strong><ul style="margin-top:12px;padding-left:20px"><li style="margin-bottom:8px">Devis: ${tierConfig.limits.maxQuotes === -1 ? 'Illimité' : tierConfig.limits.maxQuotes}</li><li style="margin-bottom:8px">Factures: ${tierConfig.limits.maxInvoices === -1 ? 'Illimité' : tierConfig.limits.maxInvoices}</li><li style="margin-bottom:8px">Clients: ${tierConfig.limits.maxClients === -1 ? 'Illimité' : tierConfig.limits.maxClients}</li></ul></div>${license.tier === 'free' ? '<button onclick="showUpgradeModal()" style="margin-top:20px;padding:14px 32px;background:linear-gradient(135deg,#f59e0b,#d97706);color:white;border:none;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer">⭐ Upgrader</button>' : ''}</div></div></div></div>`;
+          document.body.appendChild(modal);
+          modal.querySelector('.license-modal-close').addEventListener('click', () => modal.remove());
+          modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+        }
 
 
         // Charger données
@@ -3255,6 +3198,13 @@ Seul vous pouvez y accéder.
 
         function saveClient(e) {
             e.preventDefault();
+            
+            // Protection limite clients (sauf si édition)
+            if (!editingClientId && isLimitReached('maxClients', allClients.length)) {
+                showUpgradeModal('limit');
+                closeClientModal();
+                return;
+            }
             
             const nom = document.getElementById('client-nom').value.trim();
             
