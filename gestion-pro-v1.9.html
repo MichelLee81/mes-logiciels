@@ -1225,13 +1225,9 @@
           }
         }
 
-        function isLimitReached(limitType, currentCount) {
-          if (!currentLicense) return true;
-          const tier = LICENSE_TIERS[currentLicense.tier.toUpperCase()];
-          if (!tier) return true;
-          const limit = tier.limits[limitType];
-          return limit !== -1 && currentCount >= limit;
-        }
+          function isLimitReached(limitType, currentCount) {
+  return false; // Désactivation des limites - accès illimité pour tous
+}
 
         function showUpgradeModal(reason = 'limit') {
           const messages = { limit: 'Vous avez atteint la limite de votre forfait gratuit.', feature: 'Fonctionnalité Premium uniquement.', expired: 'Abonnement expiré.' };
