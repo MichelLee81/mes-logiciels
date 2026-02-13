@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion Pro - Migration</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        .icon { font-size: 60px; margin-bottom: 15px; }
+        h1 { color: #1e1b4b; font-size: 22px; margin-bottom: 10px; }
+        .subtitle { color: #6b7280; font-size: 15px; line-height: 1.5; margin-bottom: 25px; }
+        .new-url {
+            background: #f0fdf4;
+            border: 2px solid #86efac;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            word-break: break-all;
+        }
+        .new-url a {
+            color: #16a34a;
+            font-weight: 700;
+            text-decoration: none;
+            font-size: 15px;
+        }
+        .new-url small { display: block; color: #4ade80; margin-top: 5px; font-size: 12px; }
+        
+        .data-alert {
+            background: #fef3c7;
+            border: 2px solid #fbbf24;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .data-alert h3 { color: #92400e; font-size: 14px; margin-bottom: 8px; }
+        .data-alert p { color: #78350f; font-size: 13px; line-height: 1.4; }
+        .data-alert .stats { margin-top: 10px; font-size: 13px; color: #92400e; }
+        .data-alert .stats span { font-weight: bold; }
+        
+        .no-data {
+            background: #f0f9ff;
+            border: 2px solid #7dd3fc;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #0369a1;
+            font-size: 13px;
+        }
+        
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-bottom: 10px;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+        .btn:hover { transform: translateY(-2px); opacity: 0.9; }
+        .btn-export {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+        .btn-go {
+            background: linear-gradient(135deg, #4F46E5, #7C3AED);
+            color: white;
+        }
+        .btn-go-secondary {
+            background: transparent;
+            color: #6366f1;
+            border: 2px solid #6366f1;
+        }
+        .countdown {
+            color: #9ca3af;
+            font-size: 13px;
+            margin-top: 15px;
+        }
+        .check { color: #16a34a; font-weight: bold; }
+        
+        .steps {
+            text-align: left;
+            margin: 15px 0;
+            padding: 0;
+            list-style: none;
+        }
+        .steps li {
+            padding: 8px 0;
+            font-size: 13px;
+            color: #4b5563;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .steps li:last-child { border-bottom: none; }
+        .steps li .num {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background: #4F46E5;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">🚀</div>
+        <h1>Gestion Pro a déménagé !</h1>
+        <p class="subtitle">
+            L'application est désormais hébergée sur un serveur plus rapide et plus fiable, avec de nouvelles fonctionnalités.
+        </p>
+        
+        <div class="new-url">
+            🏠 Nouvelle adresse :<br>
+            <a href="https://logiciels.capteurdigital.com/gestionpro/">logiciels.capteurdigital.com/gestionpro</a>
+            <small>✅ Mises à jour automatiques • ☁️ Cloud • 📧 Emails avec PDF</small>
+        </div>
+        
+        <div id="data-section"></div>
+        
+        <div id="buttons-section"></div>
+        
+        <p class="countdown" id="countdown"></p>
+    </div>
+    
+    <script>
+        const NEW_URL = 'https://logiciels.capteurdigital.com/gestionpro/';
+        
+        // Détecter les données existantes
+        function detectData() {
+            let hasData = false;
+            const stats = {};
+            
+            try {
+                const factures = localStorage.getItem('gestion-pro-factures');
+                const devis = localStorage.getItem('gestion-pro-devis');
+                const clients = localStorage.getItem('gestion-pro-clients');
+                const vendeur = localStorage.getItem('gestion-pro-vendeur');
+                const depenses = localStorage.getItem('gestion-pro-depenses');
+                
+                if (factures) { const arr = JSON.parse(factures); stats.factures = arr.length; hasData = arr.length > 0; }
+                if (devis) { const arr = JSON.parse(devis); stats.devis = arr.length; if (arr.length > 0) hasData = true; }
+                if (clients) { const arr = JSON.parse(clients); stats.clients = arr.length; if (arr.length > 0) hasData = true; }
+                if (vendeur) { stats.vendeur = true; hasData = true; }
+                if (depenses) { const arr = JSON.parse(depenses); stats.depenses = arr.length; if (arr.length > 0) hasData = true; }
+            } catch (e) {
+                console.warn('Erreur lecture données:', e);
+            }
+            
+            return { hasData, stats };
+        }
+        
+        function exportData() {
+            const data = {};
+            
+            // Exporter TOUT le localStorage lié à Gestion Pro
+            const keysToExport = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && (
+                    key.startsWith('gestion-pro') || 
+                    key.startsWith('gpc_') ||
+                    key.startsWith('email-template') ||
+                    key.startsWith('auto-send') ||
+                    key.startsWith('relance') ||
+                    key.startsWith('enable-') ||
+                    key.startsWith('company-') ||
+                    key.startsWith('preview-') ||
+                    key === 'vendeur-info' ||
+                    key === 'logo-data'
+                )) {
+                    keysToExport.push(key);
+                }
+            }
+            
+            keysToExport.forEach(key => {
+                try {
+                    data[key] = localStorage.getItem(key);
+                } catch (e) {}
+            });
+            
+            data._exportDate = new Date().toISOString();
+            data._source = 'github-migration';
+            data._version = '1.9';
+            
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `gestion-pro-backup-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+            
+            // Marquer comme exporté
+            document.getElementById('export-btn').innerHTML = '✅ Données exportées !';
+            document.getElementById('export-btn').style.background = '#16a34a';
+            document.getElementById('export-btn').disabled = true;
+            
+            // Afficher les étapes suivantes
+            document.getElementById('post-export').style.display = 'block';
+        }
+        
+        function init() {
+            const { hasData, stats } = detectData();
+            const dataSection = document.getElementById('data-section');
+            const buttonsSection = document.getElementById('buttons-section');
+            
+            if (hasData) {
+                // Il y a des données à sauvegarder
+                let statsHtml = '';
+                if (stats.factures) statsHtml += `<span>${stats.factures}</span> facture(s) • `;
+                if (stats.devis) statsHtml += `<span>${stats.devis}</span> devis • `;
+                if (stats.clients) statsHtml += `<span>${stats.clients}</span> client(s) • `;
+                if (stats.depenses) statsHtml += `<span>${stats.depenses}</span> dépense(s) • `;
+                if (stats.vendeur) statsHtml += `Paramètres entreprise • `;
+                statsHtml = statsHtml.replace(/ • $/, '');
+                
+                dataSection.innerHTML = `
+                    <div class="data-alert">
+                        <h3>⚠️ Vous avez des données sur cette version</h3>
+                        <p>Exportez vos données avant de migrer pour ne rien perdre. Vous pourrez les importer dans la nouvelle version.</p>
+                        <div class="stats">${statsHtml}</div>
+                    </div>
+                `;
+                
+                buttonsSection.innerHTML = `
+                    <button class="btn btn-export" id="export-btn" onclick="exportData()">
+                        💾 Exporter mes données (JSON)
+                    </button>
+                    
+                    <div id="post-export" style="display: none;">
+                        <ul class="steps">
+                            <li><span class="num">1</span> <span class="check">✅</span> Données exportées (fichier téléchargé)</li>
+                            <li><span class="num">2</span> Allez sur la nouvelle app et cliquez <strong>Paramètres → Import / Export → Importer</strong></li>
+                            <li><span class="num">3</span> Sélectionnez le fichier JSON exporté</li>
+                            <li><span class="num">4</span> <strong>Installez la nouvelle app</strong> (Ajouter à l'écran d'accueil)</li>
+                            <li><span class="num">5</span> <strong style="color: #dc2626;">Supprimez l'ancienne app</strong> de votre écran d'accueil (appui long → Supprimer)</li>
+                        </ul>
+                        <a href="${NEW_URL}" class="btn btn-go">🚀 Aller sur la nouvelle version</a>
+                    </div>
+                    
+                    <a href="${NEW_URL}" class="btn btn-go-secondary" style="display: inline-block; margin-top: 5px; font-size: 13px;">
+                        Continuer sans exporter →
+                    </a>
+                `;
+            } else {
+                // Pas de données, redirection directe
+                dataSection.innerHTML = `
+                    <div class="no-data">
+                        ℹ️ Aucune donnée détectée sur cette version. Vous pouvez migrer directement !
+                    </div>
+                `;
+                
+                buttonsSection.innerHTML = `
+                    <a href="${NEW_URL}" class="btn btn-go">🚀 Accéder à la nouvelle version</a>
+                    <p style="margin-top: 12px; font-size: 12px; color: #6b7280; line-height: 1.5;">
+                        💡 Pensez à <strong>installer la nouvelle app</strong> (Ajouter à l'écran d'accueil) puis à <strong>supprimer l'ancienne icône</strong> de votre écran d'accueil.
+                    </p>
+                `;
+                
+                // Auto-redirect après 5 secondes
+                let sec = 5;
+                const countdownEl = document.getElementById('countdown');
+                const timer = setInterval(() => {
+                    countdownEl.textContent = `Redirection automatique dans ${sec} secondes...`;
+                    sec--;
+                    if (sec < 0) {
+                        clearInterval(timer);
+                        window.location.href = NEW_URL;
+                    }
+                }, 1000);
+                countdownEl.textContent = `Redirection automatique dans ${sec} secondes...`;
+            }
+        }
+        
+        init();
+    </script>
+</body>
+</html>
